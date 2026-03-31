@@ -40,7 +40,7 @@ function buildSets(
   return sets
 }
 
-const CYCLE_MS = 3000
+const CYCLE_MS = 4000
 
 type CommunityStripSectionProps = {
   className?: string

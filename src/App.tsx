@@ -1,6 +1,7 @@
 import { EventsSection } from './EventsSection'
 import { Hero } from './Hero'
 import { OurEventsGallerySection } from './OurEventsGallerySection'
+import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 import { TeamSection } from './TeamSection'
 
@@ -14,6 +15,7 @@ function App() {
         <EventsSection />
         <TeamSection />
       </main>
+      <SiteFooter />
     </>
   )
 }

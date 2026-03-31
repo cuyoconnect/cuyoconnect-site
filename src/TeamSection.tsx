@@ -1,6 +1,6 @@
 import { TEAM, type TeamMember } from '@/data/team'
 import { COMMUNITY_LINKS, type CommunityLinkId } from '@/lib/community-links'
-import { SECTION_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
+import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { cn } from '@/lib/utils'
 
 const FALLBACK_IMAGE =
@@ -59,7 +59,7 @@ function InstagramIcon({ className }: { className?: string }) {
 
 const socialIconLinkClass = cn(
   'pointer-events-auto inline-flex size-8 items-center justify-center rounded-lg sm:size-9',
-  'text-white transition hover:bg-white/15',
+  'text-white/95 transition hover:text-white',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
 )
 
@@ -73,7 +73,7 @@ export function TeamSection() {
       )}
       aria-labelledby="equipo-heading"
     >
-      <div className={cn(SECTION_CONTENT_WIDTH_CLASS, 'text-center')}>
+      <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'min-w-0 text-center')}>
         <h2
           id="equipo-heading"
           className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
@@ -88,8 +88,8 @@ export function TeamSection() {
 
       <ul
         className={cn(
-          SECTION_CONTENT_WIDTH_CLASS,
-          'mt-10 grid list-none grid-cols-2 gap-4 sm:mt-12 sm:gap-8 lg:grid-cols-3',
+          HERO_CONTENT_WIDTH_CLASS,
+          'mt-10 grid min-w-0 list-none grid-cols-2 gap-4 sm:mt-12 sm:gap-8 lg:grid-cols-3',
         )}
       >
         {TEAM.map((member) => {
@@ -98,69 +98,59 @@ export function TeamSection() {
             <li key={member.name}>
               <article
                 className={cn(
-                  'h-full overflow-hidden rounded-2xl border border-neutral-200/80 bg-neutral-50/50',
-                  'text-left shadow-sm',
+                  'h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white',
+                  'text-left',
                 )}
               >
                 <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-200">
                   <img
                     src={member.imageSrc ?? FALLBACK_IMAGE}
                     alt=""
-                    className="size-full object-cover object-center"
+                    className="relative z-0 size-full object-cover object-center"
                     width={800}
                     height={1000}
                     loading="lazy"
                     decoding="async"
                   />
-                  {/* Wrapper: anclado abajo, su altura la define el contenido */}
-                  <div className="absolute inset-x-0 bottom-0 z-10">
-                    {/* Backdrop: llena el wrapper + se extiende arriba con -top para el fade */}
-                    <div
-                      className={cn(
-                        'pointer-events-none absolute inset-0 -top-12 sm:-top-16',
-                        'bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125',
-                        '[mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
-                        '[-webkit-mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
-                      )}
-                      aria-hidden
-                    />
-                    {/* Contenido: flujo normal, determina la altura del wrapper */}
-                    <div className="relative z-10 flex flex-col px-3 pb-3 sm:px-5 sm:pb-5">
-                      <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
-                        {member.name}
-                      </h3>
-                      <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
-                        {member.role}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
-                        <a
-                          href={social.linkedin}
-                          className={socialIconLinkClass}
-                          aria-label={`LinkedIn de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <LinkedInIcon className="size-4 sm:size-5" />
-                        </a>
-                        <a
-                          href={social.x}
-                          className={socialIconLinkClass}
-                          aria-label={`Perfil de X de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <XIcon className="size-[0.95rem] sm:size-[1.15rem]" />
-                        </a>
-                        <a
-                          href={social.instagram}
-                          className={socialIconLinkClass}
-                          aria-label={`Instagram de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <InstagramIcon className="size-4 sm:size-5" />
-                        </a>
-                      </div>
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[40%] bg-gradient-to-t from-black/78 via-black/28 to-transparent"
+                    aria-hidden
+                  />
+                  <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-3 pb-3 sm:px-5 sm:pb-5">
+                    <h3 className="text-sm font-semibold tracking-tight text-balance text-white sm:text-lg">
+                      {member.name}
+                    </h3>
+                    <p className="mt-0.5 text-xs leading-relaxed text-white/95 sm:mt-1 sm:text-sm lg:text-base">
+                      {member.role}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
+                      <a
+                        href={social.linkedin}
+                        className={socialIconLinkClass}
+                        aria-label={`LinkedIn de ${member.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <LinkedInIcon className="size-4 sm:size-5" />
+                      </a>
+                      <a
+                        href={social.x}
+                        className={socialIconLinkClass}
+                        aria-label={`Perfil de X de ${member.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <XIcon className="size-[0.95rem] sm:size-[1.15rem]" />
+                      </a>
+                      <a
+                        href={social.instagram}
+                        className={socialIconLinkClass}
+                        aria-label={`Instagram de ${member.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <InstagramIcon className="size-4 sm:size-5" />
+                      </a>
                     </div>
                   </div>
                 </div>

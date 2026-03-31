@@ -1,8 +1,35 @@
+import { useMemo } from 'react'
 import { CommunityStripSection } from '@/CommunityStripSection'
+import { BlurText } from '@/components/ui/blur-text'
 import { cn } from '@/lib/utils'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 
+/** Mismo tono que el resaltado del hero (marcador). */
+const HERO_TOPIC_HIGHLIGHT = '#ffec6b'
+
+const HERO_HEADING =
+  'Comunidad de builders en IA, tecnología y web3'
+
+/** Últimas cuatro palabras: "IA," "tecnología" "y" "web3" */
+const HERO_TOPIC_WORD_COUNT = 4
+
 export function Hero() {
+  const tailHighlight = useMemo(
+    () => ({
+      lastWordCount: HERO_TOPIC_WORD_COUNT,
+      color: HERO_TOPIC_HIGHLIGHT,
+      /** Trazo más grueso + más pasadas = aspecto más “a mano” / desprolijo. */
+      strokeWidth: 2.15,
+      padding: 5,
+      multiline: true,
+      animationDuration: 1500,
+      iterations: 4,
+      className:
+        '[&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950',
+    }),
+    [],
+  )
+
   return (
     <section
       id="inicio"
@@ -37,10 +64,13 @@ export function Hero() {
               'text-2xl sm:text-3xl md:text-4xl',
             )}
           >
-            Comunidad de builders en{' '}
-            <span className="bg-[#ffec6b] decoration-clone box-decoration-clone px-1">
-              IA, tecnología y web3
-            </span>
+            <BlurText
+              text={HERO_HEADING}
+              className="text-inherit"
+              segmentDelay={0.14}
+              duration={0.95}
+              tailHighlight={tailHighlight}
+            />
           </h1>
 
           <div className="mt-8 -mb-3 flex w-full min-w-0 justify-center sm:mt-10 sm:-mb-5 md:-mb-6">

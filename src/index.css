@@ -22,14 +22,15 @@
   }
 }
 
+/* Mismo tono de marcador que el hero (#ffec6b). */
 ::selection {
-  background-color: #ffec6b;
-  color: #141414;
+  background-color: rgba(255, 236, 107, 0.92);
+  color: #0f172a;
 }
 
 ::-moz-selection {
-  background-color: #ffec6b;
-  color: #141414;
+  background-color: rgba(255, 236, 107, 0.92);
+  color: #0f172a;
 }
 
 html {
