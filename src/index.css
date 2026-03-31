@@ -90,8 +90,8 @@ html {
 }
 
 /*
- * Bloqueo de scroll mientras se arrastra / amplía en DomeGallery (móvil).
- * El componente añade la clase `dg-scroll-lock` al body.
+ * Bloqueo de scroll en DomeGallery al abrir el visor ampliado (lightbox).
+ * No se usa durante el arrastre en touch (evita dejar el body fijado si el gesto se cancela).
  */
 body.dg-scroll-lock {
   position: fixed !important;

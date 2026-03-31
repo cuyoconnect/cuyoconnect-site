@@ -277,10 +277,14 @@ export default function DomeGallery({
     window.scrollTo(0, savedScrollYRef.current);
   }, []);
   const forceUnlockScroll = useCallback(() => {
+    const hadScrollLock =
+      scrollLockedRef.current || document.body.classList.contains('dg-scroll-lock');
     scrollLockedRef.current = false;
     document.body.classList.remove('dg-scroll-lock');
     document.body.style.top = '';
-    window.scrollTo(0, savedScrollYRef.current);
+    if (hadScrollLock) {
+      window.scrollTo(0, savedScrollYRef.current);
+    }
   }, []);
 
   const items = useMemo(() => buildItems(images, segments), [images, segments]);
@@ -443,7 +447,8 @@ export default function DomeGallery({
         pointerTypeRef.current =
           pt === 'touch' || pt === 'pen' || pt === 'mouse' ? pt : 'mouse';
         if (pointerTypeRef.current === 'touch') evt.preventDefault();
-        if (pointerTypeRef.current === 'touch') lockScroll();
+        /* No fijar el body en touch: si el gesto lo cancela el navegador (scroll nativo,
+         * pointercancel, etc.) a veces onDrag nunca recibe last y el unlock no corre → UI congelada. */
         draggingRef.current = true;
         cancelTapRef.current = false;
         movedRef.current = false;
@@ -519,7 +524,6 @@ export default function DomeGallery({
           tapTargetRef.current = null;
 
           if (cancelTapRef.current) setTimeout(() => (cancelTapRef.current = false), 120);
-          if (pointerTypeRef.current === 'touch' && !focusedElRef.current) unlockScroll();
           if (movedRef.current) lastDragEndAt.current = performance.now();
           movedRef.current = false;
         }
@@ -527,6 +531,22 @@ export default function DomeGallery({
     },
     { target: mainRef, eventOptions: { passive: false } }
   );
+
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const onPointerCancel = () => {
+      if (rootRef.current?.getAttribute('data-enlarging') === 'true') return;
+      if (focusedElRef.current) return;
+      stopInertia();
+      draggingRef.current = false;
+      startPosRef.current = null;
+      tapTargetRef.current = null;
+      forceUnlockScroll();
+    };
+    main.addEventListener('pointercancel', onPointerCancel);
+    return () => main.removeEventListener('pointercancel', onPointerCancel);
+  }, [forceUnlockScroll, stopInertia]);
 
   useEffect(() => {
     const scrim = scrimRef.current;
@@ -871,8 +891,12 @@ export default function DomeGallery({
 
   useEffect(() => {
     return () => {
+      const hadLock = document.body.classList.contains('dg-scroll-lock');
+      const y = savedScrollYRef.current;
       document.body.classList.remove('dg-scroll-lock');
       document.body.style.top = '';
+      scrollLockedRef.current = false;
+      if (hadLock) window.scrollTo(0, y);
     };
   }, []);
 

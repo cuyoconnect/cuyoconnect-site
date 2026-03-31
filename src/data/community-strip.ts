@@ -15,21 +15,12 @@ export type CommunityStripPartner = {
   logoCellBgClass?: string
   /** Tamaño mayor dentro de la celda (sigue en escala de grises hasta hover) */
   logoColorLarge?: boolean
-  /** Ocultar por debajo de `sm`: grilla 2×2 con cuatro logos en móvil */
-  hideOnMobile?: boolean
 }
 
 /**
- * Aliados: BAF, Nerdconf, Club Blockchain (oculto en móvil), AIWKND, Vendimia Tech.
+ * Aliados: Nerdconf, BAF, Club Blockchain, AIWKND, Vendimia Tech, Crecimiento.
  */
 export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
-  {
-    name: 'BAF',
-    logoAlt: 'Blockchain Acceleration Foundation',
-    logoSrc: '/partners/baf.svg',
-    href: 'https://www.blockchainacceleration.org/',
-    logoInvert: true,
-  },
   {
     name: 'Nerdconf',
     logoAlt: 'Nerdconf',
@@ -38,12 +29,18 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoForLightBg: true,
   },
   {
+    name: 'BAF',
+    logoAlt: 'Blockchain Acceleration Foundation',
+    logoSrc: '/partners/baf.svg',
+    href: 'https://www.blockchainacceleration.org/',
+    logoInvert: true,
+  },
+  {
     name: 'Club Blockchain',
     logoAlt: 'Club Blockchain — Universidad Champagnat',
     logoSrc: '/partners/club-blockchain-uchampagnat.svg',
     href: 'https://www.instagram.com/andes.tech_/',
     logoColorLarge: true,
-    hideOnMobile: true,
   },
   {
     name: 'AI Weekend',
@@ -58,5 +55,12 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoSrc: '/partners/vendimia-tech.png',
     href: 'https://vendimiatech.com/',
     logoInvert: true,
+  },
+  {
+    name: 'Crecimiento',
+    logoAlt: 'Crecimiento',
+    logoSrc: '/partners/crecimiento-sun-black.svg',
+    href: 'https://www.crecimiento.build/',
+    logoColorLarge: true,
   },
 ]
