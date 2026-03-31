@@ -1,7 +1,13 @@
+import { useMemo } from 'react'
+import { motion, useReducedMotion, type Variants } from 'motion/react'
+import { BlurText } from '@/components/ui/blur-text'
 import { TEAM, type TeamMember } from '@/data/team'
 import { COMMUNITY_LINKS, type CommunityLinkId } from '@/lib/community-links'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
+import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
+
+const TEAM_HEADING = 'Nuestro equipo'
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&auto=format&fit=crop&q=80'
@@ -63,7 +69,38 @@ const socialIconLinkClass = cn(
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
 )
 
+/** ease-out suave; el movimiento se reparte mejor en el tiempo que curves más agresivas. */
+const CARD_EASE = [0.33, 1, 0.68, 1] as const
+
+function teamCardVariants(reduceMotion: boolean | null): Variants {
+  const off = reduceMotion === true
+  /** Sin `type: "tween"`, `y` usa spring por defecto y el `duration` casi no se nota. */
+  const enter = {
+    type: 'tween' as const,
+    duration: off ? 0 : 0.95,
+    ease: CARD_EASE,
+  }
+  return {
+    hidden: { opacity: off ? 1 : 0, y: off ? 0 : 32 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        ...enter,
+        delay: off ? 0 : i * 0.12,
+      },
+    }),
+  }
+}
+
 export function TeamSection() {
+  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
+  const reduceMotion = useReducedMotion()
+  const cardVariants = useMemo(
+    () => teamCardVariants(reduceMotion),
+    [reduceMotion],
+  )
+
   return (
     <section
       id="equipo"
@@ -76,9 +113,18 @@ export function TeamSection() {
       <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'min-w-0 text-center')}>
         <h2
           id="equipo-heading"
-          className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
+          className={cn(
+            'w-full max-w-full text-balance text-center text-2xl font-semibold tracking-tight text-neutral-950',
+            'sm:text-3xl md:text-4xl',
+          )}
         >
-          Equipo
+          <BlurText
+            text={TEAM_HEADING}
+            className="text-inherit"
+            segmentDelay={0.14}
+            duration={0.95}
+            tailHighlight={tailHighlight}
+          />
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-pretty text-neutral-600 sm:text-lg">
           Las personas que impulsan la comunidad: estrategia, operaciones y
@@ -92,10 +138,18 @@ export function TeamSection() {
           'mt-10 grid min-w-0 list-none grid-cols-2 gap-4 sm:mt-12 sm:gap-8 lg:grid-cols-3',
         )}
       >
-        {TEAM.map((member) => {
+        {TEAM.map((member, index) => {
           const social = memberSocialUrls(member)
           return (
-            <li key={member.name}>
+            <motion.li
+              key={member.name}
+              className="min-w-0"
+              variants={cardVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 'some' }}
+              custom={index}
+            >
               <article
                 className={cn(
                   'h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white',
@@ -162,7 +216,7 @@ export function TeamSection() {
                   </div>
                 </div>
               </article>
-            </li>
+            </motion.li>
           )
         })}
       </ul>

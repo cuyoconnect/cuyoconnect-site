@@ -1,11 +1,9 @@
 import { useMemo } from 'react'
 import { CommunityStripSection } from '@/CommunityStripSection'
 import { BlurText } from '@/components/ui/blur-text'
-import { cn } from '@/lib/utils'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
-
-/** Mismo tono que el resaltado del hero (marcador). */
-const HERO_TOPIC_HIGHLIGHT = '#ffec6b'
+import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
+import { cn } from '@/lib/utils'
 
 const HERO_HEADING =
   'Comunidad de builders en IA, tecnología y web3'
@@ -15,18 +13,7 @@ const HERO_TOPIC_WORD_COUNT = 4
 
 export function Hero() {
   const tailHighlight = useMemo(
-    () => ({
-      lastWordCount: HERO_TOPIC_WORD_COUNT,
-      color: HERO_TOPIC_HIGHLIGHT,
-      /** Trazo más grueso + más pasadas = aspecto más “a mano” / desprolijo. */
-      strokeWidth: 2.15,
-      padding: 5,
-      multiline: true,
-      animationDuration: 1500,
-      iterations: 4,
-      className:
-        '[&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950',
-    }),
+    () => heroTopicTailHighlight(HERO_TOPIC_WORD_COUNT),
     [],
   )
 
