@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+::selection {
+  background-color: #ffec6b;
+  color: #141414;
+}
+
+::-moz-selection {
+  background-color: #ffec6b;
+  color: #141414;
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  /* Evita que al ocultar el scroll (modal) el layout se mueva horizontalmente */
+  scrollbar-gutter: stable;
+  /* Cabecera fija: #eventos, #contacto, etc. no quedan tapados */
+  scroll-padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media (min-width: 640px) {
+  html {
+    scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* Desvanecido lateral del PNG del hero (opacidad vía mask, no overlay blanco) */
+.hero-image-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 10%,
+    #000 90%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 10%,
+    #000 90%,
+    transparent
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/*
+ * Bloqueo de scroll mientras se arrastra / amplía en DomeGallery (móvil).
+ * El componente añade la clase `dg-scroll-lock` al body.
+ */
+body.dg-scroll-lock {
+  position: fixed !important;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: contain !important;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+main {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+}
+
+/*
+ * Hero a altura de ventana (lvh cuando hay soporte).
+ * El padding-top del section compensa la barra fija; min-height es el viewport completo.
+ */
+.hero-viewport {
+  min-height: 100dvh;
+}
+
+@supports (height: 100lvh) {
+  .hero-viewport {
+    min-height: 100lvh;
+  }
+}
