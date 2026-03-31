@@ -2,22 +2,6 @@ import { COMMUNITY_STRIP_PARTNERS } from '@/data/community-strip'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { cn } from '@/lib/utils'
 
-function ArrowRightFilledIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      fill="currentColor"
-      viewBox="0 0 256 256"
-      aria-hidden
-    >
-      <path d="M221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32Z" />
-    </svg>
-  )
-}
-
 const PARTNER_CELL_MIN_H = 'min-h-[3.25rem] sm:min-h-14' as const
 const PARTNER_CELL_MIN_H_LARGE = 'min-h-[4.25rem] sm:min-h-[4.75rem]' as const
 
@@ -119,25 +103,13 @@ export function CommunityStripSection({ className }: CommunityStripSectionProps)
       <div className={cn(HERO_CONTENT_WIDTH_CLASS)}>
         <div className="overflow-hidden rounded-lg border border-neutral-200/90">
           <div className="flex items-stretch justify-between border-b border-neutral-200/90">
-            <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-3 sm:py-2">
+            <div className="flex min-w-0 flex-1 flex-col items-center justify-center py-3 sm:py-2">
               <p
                 id="community-strip-heading"
                 className="text-center font-mono text-[11px] font-medium uppercase leading-snug tracking-wide text-neutral-600"
               >
                 Algunas organizaciones que confían en nosotros.
               </p>
-              <a
-                href="#nuestros-eventos"
-                className={cn(
-                  'inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-neutral-950 no-underline underline-offset-4',
-                  'decoration-neutral-950/30 decoration-1 transition-colors',
-                  'hover:text-[#1d1d1f] hover:underline hover:decoration-neutral-950/55',
-                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
-                )}
-              >
-                Galería de encuentros anteriores
-                <ArrowRightFilledIcon className="shrink-0 opacity-90" />
-              </a>
             </div>
           </div>
 
