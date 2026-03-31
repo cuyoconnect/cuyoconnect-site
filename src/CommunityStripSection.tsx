@@ -38,16 +38,15 @@ function PartnerCell({
       loading="lazy"
       decoding="async"
       className={cn(
-        'w-auto object-contain transition-all duration-300',
+        'w-auto object-contain grayscale',
         fillCell
-          ? 'max-h-5 max-w-[6.75rem] opacity-95 group-hover:opacity-100 sm:max-h-6 sm:max-w-[7.5rem]'
+          ? 'max-h-5 max-w-[6.75rem] opacity-95 sm:max-h-6 sm:max-w-[7.5rem]'
           : logoInvert
-            ? 'max-h-7 max-w-[7.5rem] invert brightness-95 group-hover:brightness-100 sm:max-h-8 sm:max-w-[8.5rem]'
+            ? 'max-h-7 max-w-[7.5rem] invert brightness-100 sm:max-h-8 sm:max-w-[8.5rem]'
             : logoColorLarge
-              ? 'max-h-12 max-w-[11rem] opacity-[0.98] group-hover:opacity-100 sm:max-h-14 sm:max-w-[12.5rem]'
-              : 'max-h-7 max-w-[7.5rem] grayscale brightness-90 group-hover:grayscale-0 sm:max-h-8 sm:max-w-[8.5rem]',
-        logoForLightBg &&
-          'brightness-0 contrast-[0.95] group-hover:contrast-100 grayscale-0',
+              ? 'max-h-12 max-w-[11rem] opacity-[0.98] sm:max-h-14 sm:max-w-[12.5rem]'
+              : 'max-h-7 max-w-[7.5rem] brightness-90 sm:max-h-8 sm:max-w-[8.5rem]',
+        logoForLightBg && 'brightness-0 contrast-[0.95]',
       )}
     />
   )
@@ -65,12 +64,11 @@ function PartnerCell({
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          'group flex w-full flex-1 items-center justify-center px-1.5 py-2 no-underline transition-[filter,opacity]',
+          'flex w-full flex-1 items-center justify-center px-1.5 py-2 no-underline',
           cellMin,
           logoColorLarge && 'px-1 sm:px-2',
           logoCellBgClass,
-          !fillCell && 'bg-white hover:bg-neutral-50/80',
-          fillCell && 'hover:brightness-[1.06]',
+          !fillCell && 'bg-white',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px]',
           fillCell
             ? 'focus-visible:outline-white/80'
@@ -96,14 +94,13 @@ export function CommunityStripSection({ className }: CommunityStripSectionProps)
       className={cn(
         'w-full shrink-0 bg-white py-10 text-neutral-950 sm:py-12',
         '[color-scheme:light]',
-        'px-4 sm:px-6',
         className,
       )}
     >
       <div className={cn(HERO_CONTENT_WIDTH_CLASS)}>
         <div className="overflow-hidden rounded-lg border border-neutral-200/90">
           <div className="flex items-stretch justify-between border-b border-neutral-200/90">
-            <div className="flex min-w-0 flex-1 flex-col items-center justify-center py-3 sm:py-2">
+            <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-3 sm:px-6 sm:py-2">
               <p
                 id="community-strip-heading"
                 className="text-center font-mono text-[11px] font-medium uppercase leading-snug tracking-wide text-neutral-600"

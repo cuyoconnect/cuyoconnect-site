@@ -4,6 +4,33 @@
   --font-sans:
     'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol';
+  --animate-marquee: marquee var(--marquee-duration, 45s) linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none !important;
+  }
+}
+
+/* Equipo (marquee): al pasar el mouse por el carrusel, las demás tarjetas en B&N;
+   la tarjeta con hover sigue en color. Las utilidades group-hover de Tailwind
+   terminaban en un orden donde el grayscale del “marquee” pisaba al del “card”. */
+.cc-team-marquee:hover .cc-team-card .cc-team-photo {
+  filter: grayscale(1);
+}
+
+.cc-team-marquee .cc-team-card:hover .cc-team-photo {
+  filter: grayscale(0);
 }
 
 ::selection {

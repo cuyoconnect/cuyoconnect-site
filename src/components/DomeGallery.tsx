@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGesture } from '@use-gesture/react';
+import { openCommunityLink } from '@/lib/community-links';
 
 type ImageItem =
   | string
@@ -27,7 +28,16 @@ type DomeGalleryProps = {
   /** Si se define (0–1), manda sobre `grayscale`: 1 = color pleno, 0.8 ≈ 80 % color. */
   colorAmount?: number;
   grayscale?: boolean;
+  /** Multiplicador CSS `saturate()`: 1 = 100 %, 0.5 = mitad de saturación. Omitir = sin ajuste. */
+  saturation?: number;
   autoRotationSpeed?: number;
+  /**
+   * Si se define, tap/clic abre esta URL en una pestaña nueva en lugar del visor ampliado
+   * (no bloquea el scroll de la página).
+   */
+  tileTapExternalHref?: string;
+  /** Accesible: solo aplica cuando hay `tileTapExternalHref`. */
+  tileTapAriaLabel?: string;
 };
 
 type ItemDef = {
@@ -81,15 +91,28 @@ const DEFAULTS = {
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
-function imageFilterFromProps(grayscale: boolean, colorAmount: number | undefined): string {
+function imageFilterFromProps(
+  grayscale: boolean,
+  colorAmount: number | undefined,
+  saturation: number | undefined,
+): string {
+  const parts: string[] = [];
+  if (saturation !== undefined) {
+    const s = clamp(saturation, 0, 2);
+    if (s !== 1) parts.push(`saturate(${s})`);
+  }
+
   if (colorAmount !== undefined) {
     const c = clamp(colorAmount, 0, 1);
     const g = 1 - c;
-    if (g <= 0) return 'none';
-    if (g >= 1) return 'grayscale(1)';
-    return `grayscale(${g})`;
+    if (g >= 1) parts.push('grayscale(1)');
+    else if (g > 0) parts.push(`grayscale(${g})`);
+  } else if (grayscale) {
+    parts.push('grayscale(1)');
   }
-  return grayscale ? 'grayscale(1)' : 'none';
+
+  if (parts.length === 0) return 'none';
+  return parts.join(' ');
 }
 const normalizeAngle = (d: number) => ((d % 360) + 360) % 360;
 const wrapAngleSigned = (deg: number) => {
@@ -187,9 +210,13 @@ export default function DomeGallery({
   openedImageBorderRadius = '30px',
   colorAmount: colorAmountProp,
   grayscale = true,
-  autoRotationSpeed = 0
+  saturation: saturationProp,
+  /** Grados por frame (~60 fps); 0 desactiva. */
+  autoRotationSpeed = 0.02,
+  tileTapExternalHref,
+  tileTapAriaLabel
 }: DomeGalleryProps) {
-  const imageFilter = imageFilterFromProps(grayscale, colorAmountProp);
+  const imageFilter = imageFilterFromProps(grayscale, colorAmountProp, saturationProp);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -217,8 +244,20 @@ export default function DomeGallery({
   const openingRef = useRef(false);
   const openStartedAtRef = useRef(0);
   const lastDragEndAt = useRef(0);
-  
+  const externalTapGuardAt = useRef(0);
+
   const autoRotateRAF = useRef<number | null>(null);
+  const autoRotationSpeedRef = useRef(autoRotationSpeed);
+  autoRotationSpeedRef.current = autoRotationSpeed;
+  const resumeAutoRotationRef = useRef<() => void>(() => {});
+
+  const openTileExternal = useCallback(() => {
+    if (!tileTapExternalHref) return;
+    const now = performance.now();
+    if (now - externalTapGuardAt.current < 400) return;
+    externalTapGuardAt.current = now;
+    openCommunityLink(tileTapExternalHref);
+  }, [tileTapExternalHref]);
 
   const scrollLockedRef = useRef(false);
   const savedScrollYRef = useRef(0);
@@ -252,6 +291,27 @@ export default function DomeGallery({
       el.style.transform = `translateZ(calc(var(--radius) * -1)) rotateX(${xDeg}deg) rotateY(${yDeg}deg)`;
     }
   };
+
+  const resumeAutoRotation = useCallback(() => {
+    if (autoRotateRAF.current != null) {
+      cancelAnimationFrame(autoRotateRAF.current);
+      autoRotateRAF.current = null;
+    }
+    if (autoRotationSpeedRef.current === 0) return;
+    const tick = () => {
+      const speed = autoRotationSpeedRef.current;
+      if (speed === 0) {
+        autoRotateRAF.current = null;
+        return;
+      }
+      rotationRef.current.y += speed;
+      applyTransform(rotationRef.current.x, rotationRef.current.y);
+      autoRotateRAF.current = requestAnimationFrame(tick);
+    };
+    autoRotateRAF.current = requestAnimationFrame(tick);
+  }, []);
+
+  resumeAutoRotationRef.current = resumeAutoRotation;
 
   const lockedRadiusRef = useRef<number | null>(null);
 
@@ -315,23 +375,16 @@ export default function DomeGallery({
   useEffect(() => {
     applyTransform(rotationRef.current.x, rotationRef.current.y);
   }, []);
-  
-  // Auto rotation effect
+
   useEffect(() => {
-    if (autoRotationSpeed === 0) return;
-
-    const animate = () => {
-      rotationRef.current.y += autoRotationSpeed;
-      applyTransform(rotationRef.current.x, rotationRef.current.y);
-      autoRotateRAF.current = requestAnimationFrame(animate);
-    };
-
-    autoRotateRAF.current = requestAnimationFrame(animate);
-
+    resumeAutoRotation();
     return () => {
-      if (autoRotateRAF.current) cancelAnimationFrame(autoRotateRAF.current);
+      if (autoRotateRAF.current != null) {
+        cancelAnimationFrame(autoRotateRAF.current);
+        autoRotateRAF.current = null;
+      }
     };
-  }, [autoRotationSpeed]);
+  }, [autoRotationSpeed, resumeAutoRotation]);
 
   const stopInertia = useCallback(() => {
     if (inertiaRAF.current) {
@@ -355,10 +408,12 @@ export default function DomeGallery({
         vY *= frictionMul;
         if (Math.abs(vX) < stopThreshold && Math.abs(vY) < stopThreshold) {
           inertiaRAF.current = null;
+          resumeAutoRotationRef.current();
           return;
         }
         if (++frames > maxFrames) {
           inertiaRAF.current = null;
+          resumeAutoRotationRef.current();
           return;
         }
         const nextX = clamp(rotationRef.current.x - vY / 200, -maxVerticalRotationDeg, maxVerticalRotationDeg);
@@ -451,12 +506,15 @@ export default function DomeGallery({
 
           if (!isTap && (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005)) {
             startInertia(vx, vy);
+          } else {
+            resumeAutoRotation();
           }
           startPosRef.current = null;
           cancelTapRef.current = !isTap;
 
           if (isTap && tapTargetRef.current && !focusedElRef.current) {
-            openItemFromElement(tapTargetRef.current);
+            if (tileTapExternalHref) openTileExternal();
+            else openItemFromElement(tapTargetRef.current);
           }
           tapTargetRef.current = null;
 
@@ -968,13 +1026,23 @@ export default function DomeGallery({
                 >
                   <div
                     className="item__image absolute block overflow-hidden cursor-pointer bg-gray-200 transition-transform duration-300"
-                    role="button"
+                    role={tileTapExternalHref ? 'link' : 'button'}
                     tabIndex={0}
-                    aria-label={it.alt || 'Open image'}
+                    aria-label={
+                      tileTapExternalHref
+                        ? (tileTapAriaLabel ??
+                          'Abrir enlace en una pestaña nueva')
+                        : (it.alt || 'Open image')
+                    }
                     onClick={e => {
                       if (draggingRef.current) return;
                       if (movedRef.current) return;
                       if (performance.now() - lastDragEndAt.current < 80) return;
+                      if (tileTapExternalHref) {
+                        e.preventDefault();
+                        openTileExternal();
+                        return;
+                      }
                       if (openingRef.current) return;
                       openItemFromElement(e.currentTarget as HTMLElement);
                     }}
@@ -983,9 +1051,22 @@ export default function DomeGallery({
                       if (draggingRef.current) return;
                       if (movedRef.current) return;
                       if (performance.now() - lastDragEndAt.current < 80) return;
+                      if (tileTapExternalHref) {
+                        openTileExternal();
+                        return;
+                      }
                       if (openingRef.current) return;
                       openItemFromElement(e.currentTarget as HTMLElement);
                     }}
+                    onKeyDown={
+                      tileTapExternalHref
+                        ? e => {
+                            if (e.key !== 'Enter' && e.key !== ' ') return;
+                            e.preventDefault();
+                            openTileExternal();
+                          }
+                        : undefined
+                    }
                     style={{
                       inset: '7px',
                       borderRadius: `var(--tile-radius, ${imageBorderRadius})`,

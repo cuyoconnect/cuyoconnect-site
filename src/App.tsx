@@ -2,6 +2,7 @@ import { EventsSection } from './EventsSection'
 import { Hero } from './Hero'
 import { OurEventsGallerySection } from './OurEventsGallerySection'
 import { SiteHeader } from './SiteHeader'
+import { TeamSection } from './TeamSection'
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <main>
         <Hero />
         <OurEventsGallerySection />
+        <TeamSection />
         <EventsSection />
       </main>
     </>

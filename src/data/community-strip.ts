@@ -13,14 +13,14 @@ export type CommunityStripPartner = {
    * El logo se centra encima sin un “pastilla” aparte.
    */
   logoCellBgClass?: string
-  /** Sin grayscale y tamaño mayor dentro de la celda */
+  /** Tamaño mayor dentro de la celda (sigue en escala de grises hasta hover) */
   logoColorLarge?: boolean
   /** Ocultar por debajo de `sm`: grilla 2×2 con cuatro logos en móvil */
   hideOnMobile?: boolean
 }
 
 /**
- * Aliados: BAF, Nerdconf, Club Blockchain (tercera celda oculta en móvil), AIWKND, Vendimia Tech.
+ * Aliados: BAF, Nerdconf, Club Blockchain (oculto en móvil), AIWKND, Vendimia Tech.
  */
 export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
   {
@@ -28,7 +28,7 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoAlt: 'Blockchain Acceleration Foundation',
     logoSrc: '/partners/baf.svg',
     href: 'https://www.blockchainacceleration.org/',
-    logoCellBgClass: 'bg-[#6A1CF2]',
+    logoInvert: true,
   },
   {
     name: 'Nerdconf',
@@ -57,6 +57,6 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoAlt: 'Vendimia Tech',
     logoSrc: '/partners/vendimia-tech.png',
     href: 'https://vendimiatech.com/',
-    logoCellBgClass: 'bg-neutral-950',
+    logoInvert: true,
   },
 ]

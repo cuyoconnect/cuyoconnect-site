@@ -4,24 +4,11 @@ import {
   DOME_STAGE_WIDTH_CLASS,
   HERO_CONTENT_WIDTH_CLASS,
 } from '@/lib/content-width'
+import { COMMUNITY_LINKS } from '@/lib/community-links'
 import { cn } from '@/lib/utils'
 
-function ArrowRightIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M5 12h14M12 5l7 7-7 7" />
-    </svg>
-  )
-}
+const INSTAGRAM_HREF =
+  COMMUNITY_LINKS.find((l) => l.id === 'instagram')?.href ?? ''
 
 export function OurEventsGallerySection() {
   const published = EVENTS_GALLERY.filter((e) => e.published).sort(
@@ -84,8 +71,10 @@ export function OurEventsGallerySection() {
                 maxVerticalRotationDeg={0}
                 imageBorderRadius="14px"
                 overlayBlurColor="#ffffff"
-                colorAmount={0.8}
-                autoRotationSpeed={0.02}
+                colorAmount={1}
+                saturation={0.5}
+                tileTapExternalHref={INSTAGRAM_HREF || undefined}
+                tileTapAriaLabel="Instagram — fotos y novedades de CuyoConnect"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-neutral-400">
@@ -93,21 +82,6 @@ export function OurEventsGallerySection() {
               </div>
             )}
           </div>
-        </div>
-
-        <div
-          className={cn(
-            'mx-auto mt-10 w-full min-w-0 text-center sm:mt-12',
-            HERO_CONTENT_WIDTH_CLASS,
-          )}
-        >
-          <a
-            href="#eventos"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-neutral-950 px-7 text-sm font-medium text-white transition hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
-          >
-            Ver calendario y próximas fechas
-            <ArrowRightIcon className="h-4 w-4 shrink-0" />
-          </a>
         </div>
       </div>
     </section>

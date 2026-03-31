@@ -21,7 +21,7 @@ export function Hero() {
       <div
         className={cn(
           'relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4',
-          'pb-8 sm:px-0 sm:pb-12 md:pb-16',
+          'sm:px-0',
         )}
       >
         <div
