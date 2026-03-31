@@ -40,7 +40,7 @@ function buildSets(
   return sets
 }
 
-const CYCLE_MS = 4000
+const CYCLE_MS = 4500
 
 type CommunityStripSectionProps = {
   className?: string
@@ -90,39 +90,40 @@ export function CommunityStripSection({
           Algunas organizaciones que confían en nosotros
         </p>
 
-        {/* Altura fija + overflow para que el ciclo de logos no mueva el flujo ni desborde al animar */}
-        <div className="relative mt-12 min-h-[6.5rem] h-[6.5rem] [contain:layout] sm:mt-16 sm:min-h-14 sm:h-14">
-          <AnimatePresence mode="wait" presenceAffectsLayout={false}>
-            <motion.div
-              key={`${perSet}-${activeSet}`}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={{
-                hidden: {},
-                visible: { transition: { staggerChildren: 0.1 } },
-                exit: { transition: { staggerChildren: 0.05 } },
-              }}
-              className="absolute inset-0 grid grid-cols-2 items-center justify-items-stretch gap-x-3 gap-y-4 sm:grid-cols-3 sm:gap-x-0 sm:gap-y-0"
-            >
-              {sets[activeSet].map(
-                (partner: CommunityStripPartner, i: number) => (
-                  <motion.div
-                    key={`${partner.name}-${i}`}
-                    className="flex min-w-0 items-center justify-center max-sm:px-3"
-                    variants={{
-                      hidden: { y: 40, filter: 'blur(10px)', opacity: 0 },
-                      visible: { y: 0, filter: 'blur(0px)', opacity: 1 },
-                      exit: { y: -40, filter: 'blur(10px)', opacity: 0 },
-                    }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  >
-                    <LogoItem partner={partner} />
-                  </motion.div>
-                ),
-              )}
-            </motion.div>
-          </AnimatePresence>
+        <div className="mt-6 pb-12 sm:mt-8 sm:pb-16">
+          <div className="relative min-h-[6.5rem] h-[6.5rem] [contain:layout] sm:min-h-14 sm:h-14">
+            <AnimatePresence mode="wait" presenceAffectsLayout={false}>
+              <motion.div
+                key={`${perSet}-${activeSet}`}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={{
+                  hidden: {},
+                  visible: { transition: { staggerChildren: 0.1 } },
+                  exit: { transition: { staggerChildren: 0.05 } },
+                }}
+                className="absolute inset-0 grid grid-cols-2 items-center justify-items-stretch gap-x-3 gap-y-4 sm:grid-cols-3 sm:gap-x-0 sm:gap-y-0"
+              >
+                {sets[activeSet].map(
+                  (partner: CommunityStripPartner, i: number) => (
+                    <motion.div
+                      key={`${partner.name}-${i}`}
+                      className="flex min-w-0 items-center justify-center max-sm:px-3"
+                      variants={{
+                        hidden: { y: 40, filter: 'blur(10px)', opacity: 0 },
+                        visible: { y: 0, filter: 'blur(0px)', opacity: 1 },
+                        exit: { y: -40, filter: 'blur(10px)', opacity: 0 },
+                      }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                    >
+                      <LogoItem partner={partner} />
+                    </motion.div>
+                  ),
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
