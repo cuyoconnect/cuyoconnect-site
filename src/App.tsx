@@ -11,8 +11,8 @@ function App() {
       <main>
         <Hero />
         <OurEventsGallerySection />
-        <TeamSection />
         <EventsSection />
+        <TeamSection />
       </main>
     </>
   )

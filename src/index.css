@@ -22,17 +22,6 @@
   }
 }
 
-/* Equipo (marquee): al pasar el mouse por el carrusel, las demás tarjetas en B&N;
-   la tarjeta con hover sigue en color. Las utilidades group-hover de Tailwind
-   terminaban en un orden donde el grayscale del “marquee” pisaba al del “card”. */
-.cc-team-marquee:hover .cc-team-card .cc-team-photo {
-  filter: grayscale(1);
-}
-
-.cc-team-marquee .cc-team-card:hover .cc-team-photo {
-  filter: grayscale(0);
-}
-
 ::selection {
   background-color: #ffec6b;
   color: #141414;

@@ -15,19 +15,17 @@ export type CommunityStripPartner = {
   logoCellBgClass?: string
   /** Tamaño mayor dentro de la celda (sigue en escala de grises hasta hover) */
   logoColorLarge?: boolean
+  /** Clases extra para la imagen (ajustar tamaño de logos individuales) */
+  imgClassName?: string
 }
 
 /**
- * Aliados: Nerdconf, BAF, Club Blockchain, AIWKND, Vendimia Tech, Crecimiento.
+ * Aliados ordenados para minimizar layout shift entre sets.
+ * Set 0: BAF | Nerdconf | Club Blockchain
+ * Set 1: AI Weekend | Crecimiento | Vendimia Tech
  */
 export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
-  {
-    name: 'Nerdconf',
-    logoAlt: 'Nerdconf',
-    logoSrc: '/partners/nerdconf.svg',
-    href: 'https://www.nerdconf.com/',
-    logoForLightBg: true,
-  },
+  // --- Set 0 ---
   {
     name: 'BAF',
     logoAlt: 'Blockchain Acceleration Foundation',
@@ -36,12 +34,21 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoInvert: true,
   },
   {
+    name: 'Nerdconf',
+    logoAlt: 'Nerdconf',
+    logoSrc: '/partners/nerdconf.svg',
+    href: 'https://www.nerdconf.com/',
+    logoForLightBg: true,
+    imgClassName: 'max-w-[min(100%,11rem)] sm:max-w-56',
+  },
+  {
     name: 'Club Blockchain',
     logoAlt: 'Club Blockchain — Universidad Champagnat',
     logoSrc: '/partners/club-blockchain-uchampagnat.svg',
     href: 'https://www.instagram.com/andes.tech_/',
     logoColorLarge: true,
   },
+  // --- Set 1 ---
   {
     name: 'AI Weekend',
     logoAlt: 'AIWKND — AI Weekend',
@@ -50,17 +57,17 @@ export const COMMUNITY_STRIP_PARTNERS: CommunityStripPartner[] = [
     logoInvert: true,
   },
   {
-    name: 'Vendimia Tech',
-    logoAlt: 'Vendimia Tech',
-    logoSrc: '/partners/vendimia-tech.png',
-    href: 'https://vendimiatech.com/',
-    logoInvert: true,
-  },
-  {
     name: 'Crecimiento',
     logoAlt: 'Crecimiento',
     logoSrc: '/partners/crecimiento-sun-black.svg',
     href: 'https://www.crecimiento.build/',
     logoColorLarge: true,
+  },
+  {
+    name: 'Vendimia Tech',
+    logoAlt: 'Vendimia Tech',
+    logoSrc: '/partners/vendimia-tech.png',
+    href: 'https://vendimiatech.com/',
+    logoInvert: true,
   },
 ]

@@ -6,7 +6,13 @@ export type TeamMember = {
   role: string
   /** Imagen del miembro (ruta pública, p. ej. `/team/foto.jpg`). */
   imageSrc?: string
-  /** URL del botón (flecha) en la tarjeta. Si no se define, usa el LinkedIn de CuyoConnect. */
+  /** Enlaces sociales; lo que falta usa las URLs de la comunidad (LinkedIn, X, Instagram). */
+  social?: {
+    linkedin?: string
+    x?: string
+    instagram?: string
+  }
+  /** @deprecated Usá `social.linkedin`. */
   href?: string
 }
 
