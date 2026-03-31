@@ -38,7 +38,7 @@ export function OurEventsGallerySection() {
     <section
       id="nuestros-eventos"
       className={cn(
-        'scroll-mt-[6rem] bg-white py-16 text-neutral-950 sm:scroll-mt-[7rem] sm:py-20',
+        'bg-white py-16 text-neutral-950 sm:py-20',
         'px-4 sm:px-6',
       )}
       aria-labelledby="nuestros-eventos-heading"

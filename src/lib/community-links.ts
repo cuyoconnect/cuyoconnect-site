@@ -41,31 +41,7 @@ export type CommunityLinkId = (typeof COMMUNITY_LINKS)[number]['id']
 export const LUMA_CALENDAR_EMBED_SRC =
   'https://luma.com/embed/calendar/cal-GDIEkhScyp1dPKU/events?theme=light'
 
+/** Abre el enlace en una pestaña nueva (comportamiento de navegador, no popup). */
 export function openCommunityLink(href: string) {
-  const w = 640
-  const h = 720
-  const dualScreenLeft = window.screenLeft ?? window.screenX ?? 0
-  const dualScreenTop = window.screenTop ?? window.screenY ?? 0
-  const vw =
-    window.innerWidth ??
-    document.documentElement.clientWidth ??
-    window.screen.width
-  const vh =
-    window.innerHeight ??
-    document.documentElement.clientHeight ??
-    window.screen.height
-  const left = vw / 2 - w / 2 + dualScreenLeft
-  const top = vh / 2 - h / 2 + dualScreenTop
-  const features = [
-    'popup=yes',
-    `width=${w}`,
-    `height=${h}`,
-    `left=${Math.round(left)}`,
-    `top=${Math.round(top)}`,
-    'scrollbars=yes',
-    'resizable=yes',
-  ].join(',')
-
-  const win = window.open(href, 'cuyoconnect_community', features)
-  if (win) win.opener = null
+  window.open(href, '_blank', 'noopener,noreferrer')
 }

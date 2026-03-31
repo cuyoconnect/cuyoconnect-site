@@ -7,7 +7,7 @@ export function EventsSection() {
     <section
       id="eventos"
       className={cn(
-        'scroll-mt-[6rem] py-16 sm:py-20',
+        'py-16 sm:py-20',
         'bg-white text-neutral-950 [color-scheme:light]',
         'px-4 sm:px-6',
       )}

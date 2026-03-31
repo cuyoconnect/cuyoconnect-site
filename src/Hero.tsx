@@ -1,3 +1,4 @@
+import { CommunityStripSection } from '@/CommunityStripSection'
 import { cn } from '@/lib/utils'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 
@@ -8,7 +9,6 @@ export function Hero() {
       className={cn(
         'hero-viewport relative isolate m-0 flex flex-col items-center overflow-x-hidden bg-white p-0',
         'pt-14 sm:pt-16',
-        'max-sm:pb-[env(safe-area-inset-bottom,0px)]',
         'sm:m-0 sm:px-6',
       )}
       aria-labelledby="hero-heading"
@@ -65,6 +65,8 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      <CommunityStripSection className="py-6 sm:py-8 max-sm:pb-[max(1rem,env(safe-area-inset-bottom,0px))]" />
     </section>
   )
 }

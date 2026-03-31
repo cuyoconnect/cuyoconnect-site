@@ -62,7 +62,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                 Elegí dónde conectar
               </h2>
               <p className="mt-1 text-sm text-neutral-600">
-                Abrimos una ventana nueva con el enlace que elijas.
+                Abrimos una pestaña nueva con el enlace que elijas.
               </p>
             </div>
             <button

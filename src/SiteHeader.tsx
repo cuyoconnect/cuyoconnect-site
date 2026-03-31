@@ -163,7 +163,7 @@ export function SiteHeader() {
             )}
             onClick={() => setJoinOpen(true)}
           >
-            Únete
+            unite
             <ArrowUpRightIcon
               aria-hidden
               className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"

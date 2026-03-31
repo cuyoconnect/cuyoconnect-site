@@ -8,7 +8,7 @@ type Props = {
   className?: string
 }
 
-/** Iconos del modal “Únete” con color de marca reconocible. */
+/** Iconos del modal “unite” con color de marca reconocible. */
 export function CommunityBrandIcon({ id, className }: Props) {
   const safeId = useId().replace(/:/g, '')
   const cls = cn('shrink-0', className)

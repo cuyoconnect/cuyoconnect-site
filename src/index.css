@@ -21,8 +21,11 @@ html {
   scroll-behavior: smooth;
   /* Evita que al ocultar el scroll (modal) el layout se mueva horizontalmente */
   scrollbar-gutter: stable;
-  /* Cabecera fija: #eventos, #contacto, etc. no quedan tapados */
-  scroll-padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  /*
+   * Cabecera fija: una sola compensación (evita sumar con scroll-margin en <section>).
+   * Incluye modo barra ancha y modo “pill” (margin-top 1.5rem + min-h-14/16 + padding).
+   */
+  scroll-padding-top: calc(6.5rem + env(safe-area-inset-top, 0px));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -33,7 +36,7 @@ html {
 
 @media (min-width: 640px) {
   html {
-    scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+    scroll-padding-top: calc(7rem + env(safe-area-inset-top, 0px));
   }
 }
 
