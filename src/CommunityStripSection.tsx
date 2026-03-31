@@ -91,7 +91,7 @@ export function CommunityStripSection({
         </p>
 
         {/* Altura fija + overflow para que el ciclo de logos no mueva el flujo ni desborde al animar */}
-        <div className="relative mt-6 min-h-[6.5rem] h-[6.5rem] [contain:layout] sm:mt-8 sm:min-h-14 sm:h-14">
+        <div className="relative mt-12 min-h-[6.5rem] h-[6.5rem] [contain:layout] sm:mt-16 sm:min-h-14 sm:h-14">
           <AnimatePresence mode="wait" presenceAffectsLayout={false}>
             <motion.div
               key={`${perSet}-${activeSet}`}
