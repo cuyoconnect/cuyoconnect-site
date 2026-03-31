@@ -112,45 +112,52 @@ export function TeamSection() {
                     loading="lazy"
                     decoding="async"
                   />
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[40%] bg-gradient-to-t from-black/78 via-black/28 to-transparent"
-                    aria-hidden
-                  />
-                  <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-3 pb-3 sm:px-5 sm:pb-5">
-                    <h3 className="text-sm font-semibold tracking-tight text-balance text-white sm:text-lg">
-                      {member.name}
-                    </h3>
-                    <p className="mt-0.5 text-xs leading-relaxed text-white/95 sm:mt-1 sm:text-sm lg:text-base">
-                      {member.role}
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
-                      <a
-                        href={social.linkedin}
-                        className={socialIconLinkClass}
-                        aria-label={`LinkedIn de ${member.name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <LinkedInIcon className="size-4 sm:size-5" />
-                      </a>
-                      <a
-                        href={social.x}
-                        className={socialIconLinkClass}
-                        aria-label={`Perfil de X de ${member.name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <XIcon className="size-[0.95rem] sm:size-[1.15rem]" />
-                      </a>
-                      <a
-                        href={social.instagram}
-                        className={socialIconLinkClass}
-                        aria-label={`Instagram de ${member.name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <InstagramIcon className="size-4 sm:size-5" />
-                      </a>
+                  <div className="absolute inset-x-0 bottom-0 z-10">
+                    <div
+                      className={cn(
+                        'pointer-events-none absolute inset-0 -top-12 sm:-top-16',
+                        'bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125',
+                        '[mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
+                        '[-webkit-mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
+                      )}
+                      aria-hidden
+                    />
+                    <div className="relative z-10 flex flex-col px-3 pb-3 sm:px-5 sm:pb-5">
+                      <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
+                        {member.name}
+                      </h3>
+                      <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
+                        {member.role}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
+                        <a
+                          href={social.linkedin}
+                          className={socialIconLinkClass}
+                          aria-label={`LinkedIn de ${member.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <LinkedInIcon className="size-4 sm:size-5" />
+                        </a>
+                        <a
+                          href={social.x}
+                          className={socialIconLinkClass}
+                          aria-label={`Perfil de X de ${member.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <XIcon className="size-[0.95rem] sm:size-[1.15rem]" />
+                        </a>
+                        <a
+                          href={social.instagram}
+                          className={socialIconLinkClass}
+                          aria-label={`Instagram de ${member.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <InstagramIcon className="size-4 sm:size-5" />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
