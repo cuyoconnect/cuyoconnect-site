@@ -4,7 +4,14 @@ import { openCommunityLink } from '@/lib/community-links';
 
 type ImageItem =
   | string
-  | { src: string; alt?: string; slug?: string; href?: string };
+  | {
+      src: string;
+      alt?: string;
+      slug?: string;
+      href?: string;
+      overlayTitle?: string;
+      overlayDateLabel?: string;
+    };
 
 type DomeGalleryProps = {
   images?: ImageItem[];
@@ -45,6 +52,8 @@ type ItemDef = {
   alt: string;
   slug?: string;
   href?: string;
+  overlayTitle?: string;
+  overlayDateLabel?: string;
   x: number;
   y: number;
   sizeX: number;
@@ -125,6 +134,49 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+function createCalendarBadgeIcon() {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', '14');
+  svg.setAttribute('height', '14');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const rect = document.createElementNS(svgNS, 'rect');
+  rect.setAttribute('x', '3');
+  rect.setAttribute('y', '4');
+  rect.setAttribute('width', '18');
+  rect.setAttribute('height', '18');
+  rect.setAttribute('rx', '2');
+  rect.setAttribute('ry', '2');
+
+  const lineLeft = document.createElementNS(svgNS, 'line');
+  lineLeft.setAttribute('x1', '16');
+  lineLeft.setAttribute('y1', '2');
+  lineLeft.setAttribute('x2', '16');
+  lineLeft.setAttribute('y2', '6');
+
+  const lineRight = document.createElementNS(svgNS, 'line');
+  lineRight.setAttribute('x1', '8');
+  lineRight.setAttribute('y1', '2');
+  lineRight.setAttribute('x2', '8');
+  lineRight.setAttribute('y2', '6');
+
+  const topDivider = document.createElementNS(svgNS, 'line');
+  topDivider.setAttribute('x1', '3');
+  topDivider.setAttribute('y1', '10');
+  topDivider.setAttribute('x2', '21');
+  topDivider.setAttribute('y2', '10');
+
+  svg.append(rect, lineLeft, lineRight, topDivider);
+  return svg;
+}
+
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
   const evenYs = [-4, -2, 0, 2, 4];
@@ -143,18 +195,29 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       alt: '',
       slug: undefined,
       href: undefined,
+      overlayTitle: undefined,
+      overlayDateLabel: undefined,
     }));
   }
 
   const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return { src: image, alt: '', slug: undefined, href: undefined };
+      return {
+        src: image,
+        alt: '',
+        slug: undefined,
+        href: undefined,
+        overlayTitle: undefined,
+        overlayDateLabel: undefined,
+      };
     }
     return {
       src: image.src || '',
       alt: image.alt || '',
       slug: image.slug,
       href: image.href,
+      overlayTitle: image.overlayTitle,
+      overlayDateLabel: image.overlayDateLabel,
     };
   });
 
@@ -180,6 +243,8 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     alt: usedImages[i].alt,
     slug: usedImages[i].slug,
     href: usedImages[i].href,
+    overlayTitle: usedImages[i].overlayTitle,
+    overlayDateLabel: usedImages[i].overlayDateLabel,
   }));
 }
 
@@ -249,7 +314,6 @@ export default function DomeGallery({
   const autoRotateRAF = useRef<number | null>(null);
   const autoRotationSpeedRef = useRef(autoRotationSpeed);
   autoRotationSpeedRef.current = autoRotationSpeed;
-  const resumeAutoRotationRef = useRef<() => void>(() => {});
 
   const openTileExternal = useCallback(() => {
     if (!tileTapExternalHref) return;
@@ -314,8 +378,6 @@ export default function DomeGallery({
     };
     autoRotateRAF.current = requestAnimationFrame(tick);
   }, []);
-
-  resumeAutoRotationRef.current = resumeAutoRotation;
 
   const lockedRadiusRef = useRef<number | null>(null);
 
@@ -412,12 +474,10 @@ export default function DomeGallery({
         vY *= frictionMul;
         if (Math.abs(vX) < stopThreshold && Math.abs(vY) < stopThreshold) {
           inertiaRAF.current = null;
-          resumeAutoRotationRef.current();
           return;
         }
         if (++frames > maxFrames) {
           inertiaRAF.current = null;
-          resumeAutoRotationRef.current();
           return;
         }
         const nextX = clamp(rotationRef.current.x - vY / 200, -maxVerticalRotationDeg, maxVerticalRotationDeg);
@@ -511,8 +571,6 @@ export default function DomeGallery({
 
           if (!isTap && (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005)) {
             startInertia(vx, vy);
-          } else {
-            resumeAutoRotation();
           }
           startPosRef.current = null;
           cancelTapRef.current = !isTap;
@@ -687,7 +745,7 @@ export default function DomeGallery({
       scrim.removeEventListener('click', close);
       window.removeEventListener('keydown', onKey);
     };
-  }, [enlargeTransitionMs, openedImageBorderRadius, imageFilter]);
+  }, [enlargeTransitionMs, openedImageBorderRadius, imageFilter, forceUnlockScroll]);
 
   const openItemFromElement = (el: HTMLElement) => {
     if (openingRef.current) return;
@@ -747,6 +805,8 @@ export default function DomeGallery({
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
     const rawSlug = parent.dataset.slug || '';
     const rawHref = parent.dataset.href || '';
+    const rawOverlayTitle = parent.dataset.overlayTitle || '';
+    const rawOverlayDateLabel = parent.dataset.overlayDateLabel || '';
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = rawAlt;
@@ -760,7 +820,7 @@ export default function DomeGallery({
         top: 0;
         left: 0;
         width: 100%;
-        padding: 32px;
+        padding: 24px;
         background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
@@ -769,19 +829,59 @@ export default function DomeGallery({
         justify-content: flex-start;
         z-index: 20;
     `;
-    
-    const nameText = (rawAlt || '').split(' - ')[0];
+
+    const headerContent = document.createElement('div');
+    headerContent.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        max-width: min(100%, 320px);
+    `;
+
+    const nameText = rawOverlayTitle || (rawAlt || '').split(' - ')[0];
     const title = document.createElement('h3');
     title.textContent = nameText;
     title.style.cssText = `
         font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
         color: white;
-        font-size: 32px;
+        font-size: clamp(18px, 2.4vw, 24px);
         margin: 0;
-        font-weight: 400;
+        font-weight: 500;
+        line-height: 1.15;
         letter-spacing: 0.02em;
     `;
-    header.appendChild(title);
+
+    headerContent.appendChild(title);
+
+    if (rawOverlayDateLabel) {
+      const dateBadge = document.createElement('div');
+      dateBadge.style.cssText = `
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        color: white;
+        font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        border: 1px solid rgba(255,255,255,0.16);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      `;
+
+      const dateText = document.createElement('span');
+      dateText.textContent = rawOverlayDateLabel;
+
+      dateBadge.append(createCalendarBadgeIcon(), dateText);
+      headerContent.appendChild(dateBadge);
+    }
+
+    header.appendChild(headerContent);
     overlay.appendChild(header);
 
     // Footer (Button)
@@ -821,12 +921,14 @@ export default function DomeGallery({
     `;
     btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
     btn.onmouseout = () => btn.style.transform = 'scale(1)';
-    
+
     if (rawHref) {
+      btn.setAttribute('aria-label', 'Abrir calendario del evento');
       btn.onclick = () => {
         window.open(rawHref, '_blank', 'noopener,noreferrer');
       };
     } else if (rawSlug) {
+      btn.setAttribute('aria-label', 'Abrir detalle');
       btn.onclick = () => {
         window.location.href = `/talentos/${rawSlug}`;
       };
@@ -1031,6 +1133,8 @@ export default function DomeGallery({
                   data-alt={it.alt}
                   data-slug={it.slug || ''}
                   data-href={it.href || ''}
+                  data-overlay-title={it.overlayTitle || ''}
+                  data-overlay-date-label={it.overlayDateLabel || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}

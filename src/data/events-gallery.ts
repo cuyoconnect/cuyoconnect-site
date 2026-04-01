@@ -9,6 +9,10 @@ export type GalleryEventRecord = {
   title: string
   subtitle?: string
   href: string
+  /** Override del nombre mostrado en el visor expandido. */
+  overlayTitle?: string
+  /** Fecha mostrada en el chip superior del visor. */
+  eventDateLabel?: string
 }
 
 const LUMA_CAL =

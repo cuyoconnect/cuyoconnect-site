@@ -4,11 +4,9 @@ import {
   DOME_STAGE_WIDTH_CLASS,
   HERO_CONTENT_WIDTH_CLASS,
 } from '@/lib/content-width'
-import { COMMUNITY_LINKS } from '@/lib/community-links'
 import { cn } from '@/lib/utils'
 
-const INSTAGRAM_HREF =
-  COMMUNITY_LINKS.find((l) => l.id === 'instagram')?.href ?? ''
+const DEFAULT_EVENT_DATE_LABEL = 'Fecha a confirmar'
 
 export function OurEventsGallerySection() {
   const published = EVENTS_GALLERY.filter((e) => e.published).sort(
@@ -19,6 +17,8 @@ export function OurEventsGallerySection() {
     src: ev.image,
     alt: `${ev.title}${ev.subtitle ? ` - ${ev.subtitle}` : ''}`,
     href: ev.href,
+    overlayTitle: ev.overlayTitle ?? ev.title,
+    overlayDateLabel: ev.eventDateLabel ?? DEFAULT_EVENT_DATE_LABEL,
   }))
 
   return (
@@ -73,8 +73,6 @@ export function OurEventsGallerySection() {
                 overlayBlurColor="#ffffff"
                 colorAmount={1}
                 saturation={0.5}
-                tileTapExternalHref={INSTAGRAM_HREF || undefined}
-                tileTapAriaLabel="Instagram — fotos y novedades de CuyoConnect"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-neutral-400">

@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const siteUrl = (env.VITE_SITE_URL ?? '').replace(/\/$/, '')
   const ogImage = siteUrl
-    ? `${siteUrl}/cuyo-connect-hero.png`
-    : '/cuyo-connect-hero.png'
+    ? `${siteUrl}/cuyo-connect-og.webp`
+    : '/cuyo-connect-og.webp'
   const ogUrl = siteUrl ? `${siteUrl}/` : '/'
 
   return {
