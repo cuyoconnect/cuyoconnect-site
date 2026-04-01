@@ -79,20 +79,6 @@ html {
   mask-repeat: no-repeat;
 }
 
-/*
- * Bloqueo de scroll en DomeGallery al abrir el visor ampliado (lightbox).
- * No se usa durante el arrastre en touch (evita dejar el body fijado si el gesto se cancela).
- */
-body.dg-scroll-lock {
-  position: fixed !important;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-  overscroll-behavior: contain !important;
-}
-
 body {
   margin: 0;
   font-family: var(--font-sans);

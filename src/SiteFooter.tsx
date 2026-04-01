@@ -1,31 +1,17 @@
+import { Highlighter } from '@/components/ui/highlighter'
 import { SectionLabel } from '@/components/SectionLabel'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
+import { HERO_TOPIC_HIGHLIGHT } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
 const CONTACT_EMAIL = 'cuyoconnect@gmail.com'
+const FOOTER_HEADING = 'Sigamos la conversación'
 
 const footerNavLinkClass = cn(
   'inline-flex shrink-0 whitespace-nowrap rounded-[10px] font-medium transition',
   'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
   'px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
 )
-
-function ArrowUpRightIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M7 17 17 7M7 7h10v10" />
-    </svg>
-  )
-}
 
 export function SiteFooter() {
   return (
@@ -49,7 +35,7 @@ export function SiteFooter() {
                 id="footer-heading"
                 className="mt-3 text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
               >
-                Sigamos la conversación
+                {FOOTER_HEADING}
               </h2>
               <p className="mt-3 max-w-2xl text-pretty text-neutral-600 sm:mt-4 sm:text-lg">
                 Si querés sumarte, proponer algo o charlar un rato, mandanos un mail.
@@ -60,21 +46,24 @@ export function SiteFooter() {
                 <a
                   href={`mailto:${CONTACT_EMAIL}?subject=Hola%20CuyoConnect`}
                   className={cn(
-                    'group inline-flex max-w-full items-center gap-2 rounded-2xl border border-neutral-200/80',
+                    'inline-flex max-w-full items-center rounded-2xl',
                     'bg-white px-4 py-3 font-semibold text-neutral-950 transition',
-                    'hover:border-neutral-300 hover:bg-neutral-50',
+                    'hover:bg-neutral-50',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
                   )}
                 >
-                  <span
-                    className={cn(
-                      'min-w-0 break-words underline decoration-[#ffec6b] decoration-[0.22em] decoration-solid underline-offset-[0.28em]',
-                      'transition group-hover:decoration-neutral-950/25',
-                    )}
+                  <Highlighter
+                    className="min-w-0 break-words [&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950"
+                    color={HERO_TOPIC_HIGHLIGHT}
+                    strokeWidth={2.15}
+                    animationDuration={1500}
+                    iterations={4}
+                    padding={5}
+                    multiline
+                    isView
                   >
                     {CONTACT_EMAIL}
-                  </span>
-                  <ArrowUpRightIcon className="size-4 shrink-0 text-neutral-600 transition group-hover:text-neutral-950" />
+                  </Highlighter>
                 </a>
               </div>
 

@@ -4,14 +4,7 @@ import { openCommunityLink } from '@/lib/community-links';
 
 type ImageItem =
   | string
-  | {
-      src: string;
-      alt?: string;
-      slug?: string;
-      href?: string;
-      overlayTitle?: string;
-      overlayDateLabel?: string;
-    };
+  | { src: string; alt?: string; slug?: string; href?: string; date?: string };
 
 type DomeGalleryProps = {
   images?: ImageItem[];
@@ -32,15 +25,9 @@ type DomeGalleryProps = {
   openedImageHeight?: string;
   imageBorderRadius?: string;
   openedImageBorderRadius?: string;
-  /** Si se define (0–1), manda sobre `grayscale`: 1 = color pleno, 0.8 ≈ 80 % color. */
-  colorAmount?: number;
-  grayscale?: boolean;
-  /** Multiplicador CSS `saturate()`: 1 = 100 %, 0.5 = mitad de saturación. Omitir = sin ajuste. */
-  saturation?: number;
   autoRotationSpeed?: number;
   /**
-   * Si se define, tap/clic abre esta URL en una pestaña nueva en lugar del visor ampliado
-   * (no bloquea el scroll de la página).
+   * Si se define, tap/clic abre esta URL en una pestaña nueva en lugar del visor ampliado.
    */
   tileTapExternalHref?: string;
   /** Accesible: solo aplica cuando hay `tileTapExternalHref`. */
@@ -52,8 +39,7 @@ type ItemDef = {
   alt: string;
   slug?: string;
   href?: string;
-  overlayTitle?: string;
-  overlayDateLabel?: string;
+  date?: string;
   x: number;
   y: number;
   sizeX: number;
@@ -99,30 +85,6 @@ const DEFAULTS = {
 };
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
-
-function imageFilterFromProps(
-  grayscale: boolean,
-  colorAmount: number | undefined,
-  saturation: number | undefined,
-): string {
-  const parts: string[] = [];
-  if (saturation !== undefined) {
-    const s = clamp(saturation, 0, 2);
-    if (s !== 1) parts.push(`saturate(${s})`);
-  }
-
-  if (colorAmount !== undefined) {
-    const c = clamp(colorAmount, 0, 1);
-    const g = 1 - c;
-    if (g >= 1) parts.push('grayscale(1)');
-    else if (g > 0) parts.push(`grayscale(${g})`);
-  } else if (grayscale) {
-    parts.push('grayscale(1)');
-  }
-
-  if (parts.length === 0) return 'none';
-  return parts.join(' ');
-}
 const normalizeAngle = (d: number) => ((d % 360) + 360) % 360;
 const wrapAngleSigned = (deg: number) => {
   const a = (((deg + 180) % 360) + 360) % 360;
@@ -133,49 +95,6 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
   const n = attr == null ? NaN : parseFloat(attr);
   return Number.isFinite(n) ? n : fallback;
 };
-
-function createCalendarBadgeIcon() {
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
-  svg.setAttribute('width', '14');
-  svg.setAttribute('height', '14');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  svg.setAttribute('aria-hidden', 'true');
-
-  const rect = document.createElementNS(svgNS, 'rect');
-  rect.setAttribute('x', '3');
-  rect.setAttribute('y', '4');
-  rect.setAttribute('width', '18');
-  rect.setAttribute('height', '18');
-  rect.setAttribute('rx', '2');
-  rect.setAttribute('ry', '2');
-
-  const lineLeft = document.createElementNS(svgNS, 'line');
-  lineLeft.setAttribute('x1', '16');
-  lineLeft.setAttribute('y1', '2');
-  lineLeft.setAttribute('x2', '16');
-  lineLeft.setAttribute('y2', '6');
-
-  const lineRight = document.createElementNS(svgNS, 'line');
-  lineRight.setAttribute('x1', '8');
-  lineRight.setAttribute('y1', '2');
-  lineRight.setAttribute('x2', '8');
-  lineRight.setAttribute('y2', '6');
-
-  const topDivider = document.createElementNS(svgNS, 'line');
-  topDivider.setAttribute('x1', '3');
-  topDivider.setAttribute('y1', '10');
-  topDivider.setAttribute('x2', '21');
-  topDivider.setAttribute('y2', '10');
-
-  svg.append(rect, lineLeft, lineRight, topDivider);
-  return svg;
-}
 
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
@@ -195,29 +114,20 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       alt: '',
       slug: undefined,
       href: undefined,
-      overlayTitle: undefined,
-      overlayDateLabel: undefined,
+      date: undefined,
     }));
   }
 
   const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return {
-        src: image,
-        alt: '',
-        slug: undefined,
-        href: undefined,
-        overlayTitle: undefined,
-        overlayDateLabel: undefined,
-      };
+      return { src: image, alt: '', slug: undefined, href: undefined, date: undefined };
     }
     return {
       src: image.src || '',
       alt: image.alt || '',
       slug: image.slug,
       href: image.href,
-      overlayTitle: image.overlayTitle,
-      overlayDateLabel: image.overlayDateLabel,
+      date: image.date,
     };
   });
 
@@ -243,8 +153,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     alt: usedImages[i].alt,
     slug: usedImages[i].slug,
     href: usedImages[i].href,
-    overlayTitle: usedImages[i].overlayTitle,
-    overlayDateLabel: usedImages[i].overlayDateLabel,
+    date: usedImages[i].date,
   }));
 }
 
@@ -273,16 +182,11 @@ export default function DomeGallery({
   openedImageHeight = '400px',
   imageBorderRadius = '30px',
   openedImageBorderRadius = '30px',
-  colorAmount: colorAmountProp,
-  grayscale = true,
-  saturation: saturationProp,
   /** Grados por frame (~60 fps); 0 desactiva. */
   autoRotationSpeed = 0.02,
   tileTapExternalHref,
   tileTapAriaLabel
 }: DomeGalleryProps) {
-  const imageFilter = imageFilterFromProps(grayscale, colorAmountProp, saturationProp);
-
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const sphereRef = useRef<HTMLDivElement>(null);
@@ -314,6 +218,7 @@ export default function DomeGallery({
   const autoRotateRAF = useRef<number | null>(null);
   const autoRotationSpeedRef = useRef(autoRotationSpeed);
   autoRotationSpeedRef.current = autoRotationSpeed;
+  const resumeAutoRotationRef = useRef<() => void>(() => {});
 
   const openTileExternal = useCallback(() => {
     if (!tileTapExternalHref) return;
@@ -322,34 +227,6 @@ export default function DomeGallery({
     externalTapGuardAt.current = now;
     openCommunityLink(tileTapExternalHref);
   }, [tileTapExternalHref]);
-
-  const scrollLockedRef = useRef(false);
-  const savedScrollYRef = useRef(0);
-  const lockScroll = useCallback(() => {
-    if (scrollLockedRef.current) return;
-    savedScrollYRef.current = window.scrollY;
-    scrollLockedRef.current = true;
-    document.body.style.top = `-${savedScrollYRef.current}px`;
-    document.body.classList.add('dg-scroll-lock');
-  }, []);
-  const unlockScroll = useCallback(() => {
-    if (!scrollLockedRef.current) return;
-    if (rootRef.current?.getAttribute('data-enlarging') === 'true') return;
-    scrollLockedRef.current = false;
-    document.body.classList.remove('dg-scroll-lock');
-    document.body.style.top = '';
-    window.scrollTo(0, savedScrollYRef.current);
-  }, []);
-  const forceUnlockScroll = useCallback(() => {
-    const hadScrollLock =
-      scrollLockedRef.current || document.body.classList.contains('dg-scroll-lock');
-    scrollLockedRef.current = false;
-    document.body.classList.remove('dg-scroll-lock');
-    document.body.style.top = '';
-    if (hadScrollLock) {
-      window.scrollTo(0, savedScrollYRef.current);
-    }
-  }, []);
 
   const items = useMemo(() => buildItems(images, segments), [images, segments]);
 
@@ -378,6 +255,8 @@ export default function DomeGallery({
     };
     autoRotateRAF.current = requestAnimationFrame(tick);
   }, []);
+
+  resumeAutoRotationRef.current = resumeAutoRotation;
 
   const lockedRadiusRef = useRef<number | null>(null);
 
@@ -420,7 +299,6 @@ export default function DomeGallery({
       root.style.setProperty('--overlay-blur-color', overlayBlurColor);
       root.style.setProperty('--tile-radius', imageBorderRadius);
       root.style.setProperty('--enlarge-radius', openedImageBorderRadius);
-      root.style.setProperty('--image-filter', imageFilter);
       applyTransform(rotationRef.current.x, rotationRef.current.y);
     });
     ro.observe(root);
@@ -433,7 +311,6 @@ export default function DomeGallery({
     padFactor,
     heightGuardFactor,
     overlayBlurColor,
-    imageFilter,
     imageBorderRadius,
     openedImageBorderRadius
   ]);
@@ -474,10 +351,12 @@ export default function DomeGallery({
         vY *= frictionMul;
         if (Math.abs(vX) < stopThreshold && Math.abs(vY) < stopThreshold) {
           inertiaRAF.current = null;
+          resumeAutoRotationRef.current();
           return;
         }
         if (++frames > maxFrames) {
           inertiaRAF.current = null;
+          resumeAutoRotationRef.current();
           return;
         }
         const nextX = clamp(rotationRef.current.x - vY / 200, -maxVerticalRotationDeg, maxVerticalRotationDeg);
@@ -506,9 +385,6 @@ export default function DomeGallery({
         const pt = evt.pointerType;
         pointerTypeRef.current =
           pt === 'touch' || pt === 'pen' || pt === 'mouse' ? pt : 'mouse';
-        if (pointerTypeRef.current === 'touch') evt.preventDefault();
-        /* No fijar el body en touch: si el gesto lo cancela el navegador (scroll nativo,
-         * pointercancel, etc.) a veces onDrag nunca recibe last y el unlock no corre → UI congelada. */
         draggingRef.current = true;
         cancelTapRef.current = false;
         movedRef.current = false;
@@ -521,7 +397,6 @@ export default function DomeGallery({
         if (focusedElRef.current || !draggingRef.current || !startPosRef.current) return;
 
         const evt = event as PointerEvent;
-        if (pointerTypeRef.current === 'touch') evt.preventDefault();
 
         const dxTotal = evt.clientX - startPosRef.current.x;
         const dyTotal = evt.clientY - startPosRef.current.y;
@@ -571,6 +446,8 @@ export default function DomeGallery({
 
           if (!isTap && (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005)) {
             startInertia(vx, vy);
+          } else {
+            resumeAutoRotation();
           }
           startPosRef.current = null;
           cancelTapRef.current = !isTap;
@@ -587,7 +464,7 @@ export default function DomeGallery({
         }
       }
     },
-    { target: mainRef, eventOptions: { passive: false } }
+    { target: mainRef, eventOptions: { passive: true } }
   );
 
   useEffect(() => {
@@ -600,11 +477,10 @@ export default function DomeGallery({
       draggingRef.current = false;
       startPosRef.current = null;
       tapTargetRef.current = null;
-      forceUnlockScroll();
     };
     main.addEventListener('pointercancel', onPointerCancel);
     return () => main.removeEventListener('pointercancel', onPointerCancel);
-  }, [forceUnlockScroll, stopInertia]);
+  }, [stopInertia]);
 
   useEffect(() => {
     const scrim = scrimRef.current;
@@ -620,8 +496,10 @@ export default function DomeGallery({
 
       const refDiv = parent.querySelector('.item__image--reference') as HTMLElement | null;
 
-      const originalPos = originalTilePositionRef.current;
-      if (!originalPos) {
+      const targetTileRect =
+        refDiv?.getBoundingClientRect() ??
+        originalTilePositionRef.current;
+      if (!targetTileRect) {
         overlay.remove();
         if (refDiv) refDiv.remove();
         parent.style.setProperty('--rot-y-delta', `0deg`);
@@ -631,18 +509,18 @@ export default function DomeGallery({
         focusedElRef.current = null;
         rootRef.current?.removeAttribute('data-enlarging');
         openingRef.current = false;
-        forceUnlockScroll();
+        resumeAutoRotationRef.current();
         return;
       }
 
       const currentRect = overlay.getBoundingClientRect();
       const rootRect = rootRef.current!.getBoundingClientRect();
 
-      const originalPosRelativeToRoot = {
-        left: originalPos.left - rootRect.left,
-        top: originalPos.top - rootRect.top,
-        width: originalPos.width,
-        height: originalPos.height
+      const targetTileRelativeToRoot = {
+        left: targetTileRect.left - rootRect.left,
+        top: targetTileRect.top - rootRect.top,
+        width: targetTileRect.width,
+        height: targetTileRect.height
       };
 
       const overlayRelativeToRoot = {
@@ -668,7 +546,6 @@ export default function DomeGallery({
         pointer-events: none;
         margin: 0;
         transform: none;
-        filter: ${imageFilter};
       `;
 
       const originalImg = overlay.querySelector('img');
@@ -684,10 +561,10 @@ export default function DomeGallery({
       void animatingOverlay.getBoundingClientRect();
 
       requestAnimationFrame(() => {
-        animatingOverlay.style.left = originalPosRelativeToRoot.left + 'px';
-        animatingOverlay.style.top = originalPosRelativeToRoot.top + 'px';
-        animatingOverlay.style.width = originalPosRelativeToRoot.width + 'px';
-        animatingOverlay.style.height = originalPosRelativeToRoot.height + 'px';
+        animatingOverlay.style.left = targetTileRelativeToRoot.left + 'px';
+        animatingOverlay.style.top = targetTileRelativeToRoot.top + 'px';
+        animatingOverlay.style.width = targetTileRelativeToRoot.width + 'px';
+        animatingOverlay.style.height = targetTileRelativeToRoot.height + 'px';
         animatingOverlay.style.opacity = '0';
       });
 
@@ -722,7 +599,7 @@ export default function DomeGallery({
                 el.style.transition = '';
                 el.style.opacity = '';
                 openingRef.current = false;
-                forceUnlockScroll();
+                resumeAutoRotationRef.current();
               }, 300);
             });
           });
@@ -745,7 +622,7 @@ export default function DomeGallery({
       scrim.removeEventListener('click', close);
       window.removeEventListener('keydown', onKey);
     };
-  }, [enlargeTransitionMs, openedImageBorderRadius, imageFilter, forceUnlockScroll]);
+  }, [enlargeTransitionMs, openedImageBorderRadius]);
 
   const openItemFromElement = (el: HTMLElement) => {
     if (openingRef.current) return;
@@ -755,7 +632,6 @@ export default function DomeGallery({
     }
     openingRef.current = true;
     openStartedAtRef.current = performance.now();
-    lockScroll();
     const parent = el.parentElement as HTMLElement;
     focusedElRef.current = el;
     el.setAttribute('data-focused', 'true');
@@ -786,7 +662,6 @@ export default function DomeGallery({
       openingRef.current = false;
       focusedElRef.current = null;
       parent.removeChild(refDiv);
-      unlockScroll();
       return;
     }
 
@@ -805,83 +680,106 @@ export default function DomeGallery({
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
     const rawSlug = parent.dataset.slug || '';
     const rawHref = parent.dataset.href || '';
-    const rawOverlayTitle = parent.dataset.overlayTitle || '';
-    const rawOverlayDateLabel = parent.dataset.overlayDateLabel || '';
+    const rawDate = parent.dataset.date || '';
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = rawAlt;
-    img.style.cssText = `width:100%; height:100%; object-fit:cover; filter:${imageFilter};`;
+    img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
     overlay.appendChild(img);
 
-    // Header (Name)
+    // Header (Name + optional date + close button)
     const header = document.createElement('div');
     header.style.cssText = `
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        padding: 24px;
+        padding: 20px 20px;
         background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
         pointer-events: none;
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
+        align-items: flex-start;
         z-index: 20;
     `;
 
-    const headerContent = document.createElement('div');
-    headerContent.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        max-width: min(100%, 320px);
-    `;
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = `display:flex; flex-direction:column; gap:6px; min-width:0; flex:1;`;
 
-    const nameText = rawOverlayTitle || (rawAlt || '').split(' - ')[0];
+    const nameText = (rawAlt || '').split(' - ')[0];
     const title = document.createElement('h3');
     title.textContent = nameText;
     title.style.cssText = `
         font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
         color: white;
-        font-size: clamp(18px, 2.4vw, 24px);
+        font-size: 22px;
         margin: 0;
         font-weight: 500;
-        line-height: 1.15;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
     `;
+    headerLeft.appendChild(title);
 
-    headerContent.appendChild(title);
-
-    if (rawOverlayDateLabel) {
-      const dateBadge = document.createElement('div');
-      dateBadge.style.cssText = `
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.14);
-        color: white;
-        font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1;
-        letter-spacing: 0.02em;
-        border: 1px solid rgba(255,255,255,0.16);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+    if (rawDate) {
+      const dateLine = document.createElement('div');
+      dateLine.style.cssText = `display:flex; align-items:center; gap:6px;`;
+      const calSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      calSvg.setAttribute('width', '14');
+      calSvg.setAttribute('height', '14');
+      calSvg.setAttribute('viewBox', '0 0 24 24');
+      calSvg.setAttribute('fill', 'none');
+      calSvg.setAttribute('stroke', 'rgba(255,255,255,0.7)');
+      calSvg.setAttribute('stroke-width', '2');
+      calSvg.setAttribute('stroke-linecap', 'round');
+      calSvg.setAttribute('stroke-linejoin', 'round');
+      calSvg.innerHTML =
+        '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
+        '<line x1="16" y1="2" x2="16" y2="6"/>' +
+        '<line x1="8" y1="2" x2="8" y2="6"/>' +
+        '<line x1="3" y1="10" x2="21" y2="10"/>';
+      dateLine.appendChild(calSvg);
+      const dateSpan = document.createElement('span');
+      dateSpan.textContent = rawDate;
+      dateSpan.style.cssText = `
+          font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+          color: rgba(255,255,255,0.7);
+          font-size: 13px;
+          font-weight: 400;
       `;
-
-      const dateText = document.createElement('span');
-      dateText.textContent = rawOverlayDateLabel;
-
-      dateBadge.append(createCalendarBadgeIcon(), dateText);
-      headerContent.appendChild(dateBadge);
+      dateLine.appendChild(dateSpan);
+      headerLeft.appendChild(dateLine);
     }
+    header.appendChild(headerLeft);
 
-    header.appendChild(headerContent);
+    const closeBtn = document.createElement('button');
+    closeBtn.setAttribute('aria-label', 'Cerrar');
+    closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    closeBtn.style.cssText = `
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.35);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: auto;
+        transition: background 0.2s ease;
+        margin-left: 12px;
+    `;
+    closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(0,0,0,0.55)'; };
+    closeBtn.onmouseout = () => { closeBtn.style.background = 'rgba(0,0,0,0.35)'; };
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      scrimRef.current?.click();
+    };
+    header.appendChild(closeBtn);
+
     overlay.appendChild(header);
 
     // Footer (Button)
@@ -921,14 +819,12 @@ export default function DomeGallery({
     `;
     btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
     btn.onmouseout = () => btn.style.transform = 'scale(1)';
-
+    
     if (rawHref) {
-      btn.setAttribute('aria-label', 'Abrir calendario del evento');
       btn.onclick = () => {
         window.open(rawHref, '_blank', 'noopener,noreferrer');
       };
     } else if (rawSlug) {
-      btn.setAttribute('aria-label', 'Abrir detalle');
       btn.onclick = () => {
         window.location.href = `/talentos/${rawSlug}`;
       };
@@ -991,17 +887,6 @@ export default function DomeGallery({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      const hadLock = document.body.classList.contains('dg-scroll-lock');
-      const y = savedScrollYRef.current;
-      document.body.classList.remove('dg-scroll-lock');
-      document.body.style.top = '';
-      scrollLockedRef.current = false;
-      if (hadLock) window.scrollTo(0, y);
-    };
-  }, []);
-
   const cssStyles = `
     .sphere-root {
       --radius: 520px;
@@ -1063,16 +948,6 @@ export default function DomeGallery({
       }
     }
     
-    // body.dg-scroll-lock {
-    //   position: fixed !important;
-    //   top: 0;
-    //   left: 0;
-    //   width: 100% !important;
-    //   height: 100% !important;
-    //   overflow: hidden !important;
-    //   touch-action: none !important;
-    //   overscroll-behavior: contain !important;
-    // }
     .item__image {
       position: absolute;
       inset: 7px;
@@ -1111,7 +986,6 @@ export default function DomeGallery({
             '--overlay-blur-color': overlayBlurColor,
             '--tile-radius': imageBorderRadius,
             '--enlarge-radius': openedImageBorderRadius,
-            '--image-filter': imageFilter,
           } as React.CSSProperties
         }
       >
@@ -1119,7 +993,7 @@ export default function DomeGallery({
           ref={mainRef}
           className="absolute inset-0 grid place-items-center overflow-hidden select-none bg-transparent"
           style={{
-            touchAction: 'none',
+            touchAction: 'pan-y',
             WebkitUserSelect: 'none'
           }}
         >
@@ -1133,8 +1007,7 @@ export default function DomeGallery({
                   data-alt={it.alt}
                   data-slug={it.slug || ''}
                   data-href={it.href || ''}
-                  data-overlay-title={it.overlayTitle || ''}
-                  data-overlay-date-label={it.overlayDateLabel || ''}
+                  data-date={it.date || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}
@@ -1207,8 +1080,7 @@ export default function DomeGallery({
                       alt={it.alt}
                       className="w-full h-full object-cover pointer-events-none"
                       style={{
-                        backfaceVisibility: 'hidden',
-                        filter: `var(--image-filter, ${imageFilter})`
+                        backfaceVisibility: 'hidden'
                       }}
                     />
                   </div>
@@ -1221,15 +1093,6 @@ export default function DomeGallery({
             className="absolute inset-0 m-auto z-[3] pointer-events-none"
             style={{
               backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 65%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
-            }}
-          />
-
-          <div
-            className="absolute inset-0 m-auto z-[3] pointer-events-none"
-            style={{
-              WebkitMaskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`,
-              maskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`,
-              backdropFilter: 'blur(3px)'
             }}
           />
 
@@ -1253,10 +1116,12 @@ export default function DomeGallery({
           >
             <div
               ref={scrimRef}
-              className="scrim absolute inset-0 z-10 pointer-events-none opacity-0 transition-opacity duration-500"
+              className="scrim absolute z-10 pointer-events-none opacity-0 transition-opacity duration-500"
               style={{
-                background: 'rgba(0, 0, 0, 0.4)',
-                backdropFilter: 'blur(3px)'
+                inset: '-25%',
+                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.50) 0%, rgba(0,0,0,0.38) 30%, rgba(0,0,0,0.18) 55%, transparent 75%)',
+                WebkitMaskImage: 'radial-gradient(ellipse at center, black 35%, transparent 75%)',
+                maskImage: 'radial-gradient(ellipse at center, black 35%, transparent 75%)',
               }}
             />
             <div

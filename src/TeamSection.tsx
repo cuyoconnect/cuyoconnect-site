@@ -16,12 +16,8 @@ function communityHref(id: CommunityLinkId) {
   return COMMUNITY_LINKS.find((l) => l.id === id)!.href
 }
 
-function memberSocialUrls(member: TeamMember) {
-  return {
-    linkedin: member.social?.linkedin ?? member.href ?? communityHref('linkedin'),
-    x: member.social?.x ?? communityHref('x'),
-    instagram: member.social?.instagram ?? communityHref('instagram'),
-  }
+function memberLinkedInHref(member: TeamMember) {
+  return member.social?.linkedin ?? member.href ?? communityHref('linkedin')
 }
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -37,34 +33,8 @@ function LinkedInIcon({ className }: { className?: string }) {
   )
 }
 
-function XIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  )
-}
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-    </svg>
-  )
-}
-
 const socialIconLinkClass = cn(
-  'pointer-events-auto inline-flex size-8 items-center justify-center rounded-lg sm:size-9',
+  'pointer-events-auto inline-flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10',
   'text-white/95 transition hover:text-white',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
 )
@@ -139,7 +109,7 @@ export function TeamSection() {
         )}
       >
         {TEAM.map((member, index) => {
-          const social = memberSocialUrls(member)
+          const linkedInHref = memberLinkedInHref(member)
           return (
             <motion.li
               key={member.name}
@@ -169,49 +139,31 @@ export function TeamSection() {
                   <div className="absolute inset-x-0 bottom-0 z-10">
                     <div
                       className={cn(
-                        'pointer-events-none absolute inset-0 -top-12 sm:-top-16',
+                        'pointer-events-none absolute inset-0 -top-16 sm:-top-22',
                         'bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125',
                         '[mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
                         '[-webkit-mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
                       )}
                       aria-hidden
                     />
-                    <div className="relative z-10 flex flex-col px-3 pb-3 sm:px-5 sm:pb-5">
-                      <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
-                        {member.name}
-                      </h3>
-                      <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
-                        {member.role}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
-                        <a
-                          href={social.linkedin}
-                          className={socialIconLinkClass}
-                          aria-label={`LinkedIn de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <LinkedInIcon className="size-4 sm:size-5" />
-                        </a>
-                        <a
-                          href={social.x}
-                          className={socialIconLinkClass}
-                          aria-label={`Perfil de X de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <XIcon className="size-[0.95rem] sm:size-[1.15rem]" />
-                        </a>
-                        <a
-                          href={social.instagram}
-                          className={socialIconLinkClass}
-                          aria-label={`Instagram de ${member.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <InstagramIcon className="size-4 sm:size-5" />
-                        </a>
+                    <div className="relative z-10 flex flex-row items-center justify-between gap-3 px-4 pt-5 pb-6 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-7">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
+                          {member.name}
+                        </h3>
+                        <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
+                          {member.role}
+                        </p>
                       </div>
+                      <a
+                        href={linkedInHref}
+                        className={socialIconLinkClass}
+                        aria-label={`LinkedIn de ${member.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <LinkedInIcon className="size-5 sm:size-6" />
+                      </a>
                     </div>
                   </div>
                 </div>

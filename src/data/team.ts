@@ -25,12 +25,32 @@ export const TEAM: TeamMember[] = [
   },
   {
     name: 'Matías Boldrini',
-    role: 'Operaciones y eventos',
+    role: 'Diseño y operaciones',
     imageSrc: '/team/Matias_Boldrini.jpg',
   },
   {
     name: 'Joaquín Cortez',
     role: 'Comunidad y contenido',
     imageSrc: '/team/Joaquin_Cortez.jpg',
+  },
+  {
+    name: 'Julio Márquez',
+    role: 'Marketing y comunicación',
+    imageSrc: '/team/Julio_Marquez.jpg',
+  },
+  {
+    name: 'Arturo Marín',
+    role: 'Desarrollo y tecnología',
+    imageSrc: '/team/Arturo_Marin.jpg',
+  },
+  {
+    name: 'Ticiana Angelucci',
+    role: 'Eventos y experiencia',
+    imageSrc: '/team/Ticiana_Angelucci.jpg',
+  },
+  {
+    name: 'Mauricio Medina',
+    role: 'Alianzas y partnerships',
+    imageSrc: '/team/Mauricio_Medina.jpg',
   },
 ]

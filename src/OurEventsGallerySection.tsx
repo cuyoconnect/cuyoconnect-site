@@ -6,8 +6,6 @@ import {
 } from '@/lib/content-width'
 import { cn } from '@/lib/utils'
 
-const DEFAULT_EVENT_DATE_LABEL = 'Fecha a confirmar'
-
 export function OurEventsGallerySection() {
   const published = EVENTS_GALLERY.filter((e) => e.published).sort(
     (a, b) => a.order - b.order,
@@ -15,10 +13,9 @@ export function OurEventsGallerySection() {
 
   const images = published.map((ev) => ({
     src: ev.image,
-    alt: `${ev.title}${ev.subtitle ? ` - ${ev.subtitle}` : ''}`,
+    alt: ev.title,
     href: ev.href,
-    overlayTitle: ev.overlayTitle ?? ev.title,
-    overlayDateLabel: ev.eventDateLabel ?? DEFAULT_EVENT_DATE_LABEL,
+    date: ev.date,
   }))
 
   return (
@@ -71,8 +68,6 @@ export function OurEventsGallerySection() {
                 maxVerticalRotationDeg={0}
                 imageBorderRadius="14px"
                 overlayBlurColor="#ffffff"
-                colorAmount={1}
-                saturation={0.5}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-neutral-400">
