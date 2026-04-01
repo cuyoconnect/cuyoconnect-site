@@ -684,7 +684,8 @@ export default function DomeGallery({
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = rawAlt;
-    img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+    img.style.cssText =
+      'width:100%; height:100%; object-fit:cover; position:relative; z-index:0;';
     overlay.appendChild(img);
 
     // Header (Name + optional date + close button)
@@ -693,15 +694,21 @@ export default function DomeGallery({
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        padding: 20px 20px;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+        right: 0;
+        width: auto;
+        box-sizing: border-box;
+        padding-top: max(36px, calc(18px + env(safe-area-inset-top, 0px)));
+        padding-right: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-right, 0px)));
+        padding-bottom: 28px;
+        padding-left: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-left, 0px)));
+        background: linear-gradient(to bottom, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 52%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
         pointer-events: none;
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        gap: 20px;
         z-index: 20;
     `;
 
@@ -768,9 +775,8 @@ export default function DomeGallery({
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        pointer-events: auto;
+        pointer-events: none;
         transition: background 0.2s ease;
-        margin-left: 12px;
     `;
     closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(0,0,0,0.55)'; };
     closeBtn.onmouseout = () => { closeBtn.style.background = 'rgba(0,0,0,0.35)'; };
@@ -788,12 +794,17 @@ export default function DomeGallery({
         position: absolute;
         bottom: 0;
         left: 0;
-        width: 100%;
-        padding: 32px;
+        right: 0;
+        width: auto;
+        box-sizing: border-box;
+        padding-top: 40px;
+        padding-right: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-right, 0px)));
+        padding-bottom: max(52px, calc(24px + env(safe-area-inset-bottom, 0px)));
+        padding-left: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-left, 0px)));
         display: flex;
         justify-content: flex-end;
         align-items: flex-end;
-        background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+        background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 52%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
         z-index: 20;
@@ -813,7 +824,7 @@ export default function DomeGallery({
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        pointer-events: auto;
+        pointer-events: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         transition: transform 0.2s ease;
     `;
@@ -832,6 +843,12 @@ export default function DomeGallery({
     
     footer.appendChild(btn);
     overlay.appendChild(footer);
+
+    /** Móvil: tras abrir el overlay, el `click` sintético del toque puede llegar al botón de enlace recién montado. */
+    window.setTimeout(() => {
+      closeBtn.style.pointerEvents = 'auto';
+      btn.style.pointerEvents = 'auto';
+    }, 400);
 
     viewerRef.current!.appendChild(overlay);
     const tx0 = tileR.left - frameR.left;
@@ -1041,18 +1058,6 @@ export default function DomeGallery({
                       if (performance.now() - lastDragEndAt.current < 80) return;
                       if (tileTapExternalHref) {
                         e.preventDefault();
-                        openTileExternal();
-                        return;
-                      }
-                      if (openingRef.current) return;
-                      openItemFromElement(e.currentTarget as HTMLElement);
-                    }}
-                    onPointerUp={e => {
-                      if ((e.nativeEvent as PointerEvent).pointerType !== 'touch') return;
-                      if (draggingRef.current) return;
-                      if (movedRef.current) return;
-                      if (performance.now() - lastDragEndAt.current < 80) return;
-                      if (tileTapExternalHref) {
                         openTileExternal();
                         return;
                       }
