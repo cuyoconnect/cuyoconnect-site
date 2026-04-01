@@ -42,12 +42,13 @@ export function SiteFooter() {
                 Leemos todo.
               </p>
 
-              <div className="mt-8 sm:mt-10">
+              <div className="mt-8 flex justify-center sm:mt-10">
                 <a
                   href={`mailto:${CONTACT_EMAIL}?subject=Hola%20CuyoConnect`}
                   className={cn(
                     'inline-flex max-w-full items-center rounded-2xl',
-                    'bg-white px-4 py-3 font-semibold text-neutral-950 transition',
+                    'bg-white px-5 py-4 text-xl font-semibold text-neutral-950 transition',
+                    'sm:px-6 sm:py-4 sm:text-2xl',
                     'hover:bg-neutral-50',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
                   )}
@@ -58,7 +59,7 @@ export function SiteFooter() {
                     strokeWidth={2.15}
                     animationDuration={1500}
                     iterations={4}
-                    padding={5}
+                    padding={6}
                     multiline
                     isView
                   >

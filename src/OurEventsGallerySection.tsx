@@ -1,12 +1,18 @@
+import { useMemo } from 'react'
 import DomeGallery from '@/components/DomeGallery'
+import { BlurText } from '@/components/ui/blur-text'
 import { EVENTS_GALLERY } from '@/data/events-gallery'
 import {
   DOME_STAGE_WIDTH_CLASS,
   HERO_CONTENT_WIDTH_CLASS,
 } from '@/lib/content-width'
+import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
+const EVENTS_GALLERY_HEADING = 'Eventos anteriores'
+
 export function OurEventsGallerySection() {
+  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
   const published = EVENTS_GALLERY.filter((e) => e.published).sort(
     (a, b) => a.order - b.order,
   )
@@ -36,9 +42,18 @@ export function OurEventsGallerySection() {
         >
           <h2
             id="nuestros-eventos-heading"
-            className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
+            className={cn(
+              'w-full max-w-full text-balance text-2xl font-semibold tracking-tight text-neutral-950',
+              'sm:text-3xl md:text-4xl',
+            )}
           >
-            Eventos anteriores
+            <BlurText
+              text={EVENTS_GALLERY_HEADING}
+              className="text-inherit"
+              segmentDelay={0.14}
+              duration={0.95}
+              tailHighlight={tailHighlight}
+            />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
             Momentos del ecosistema CuyoConnect: deslizá, ampliá y abrí el
