@@ -190,7 +190,8 @@ export function SiteHeader() {
           <a
             href="#nuestros-eventos"
             className={cn(
-              'shrink-0 whitespace-nowrap rounded-full font-medium transition hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
+              'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+              'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
               scrolled
                 ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
                 : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
@@ -203,7 +204,8 @@ export function SiteHeader() {
           <button
             type="button"
             className={cn(
-              'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
+              'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+              'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
               scrolled
                 ? 'inline-flex gap-1 px-3 py-2 text-xs shadow-sm sm:gap-1.5 sm:px-5 sm:text-sm'
                 : 'ml-2 inline-flex h-9 gap-1 px-3 text-xs sm:ml-3 sm:gap-1.5 sm:px-4 sm:text-sm',

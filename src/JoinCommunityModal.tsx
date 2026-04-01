@@ -88,7 +88,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-[10px] p-2 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+                  className="shrink-0 rounded-[10px] p-2 text-neutral-500 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
                   aria-label="Cerrar"
                   onClick={onClose}
                 >
@@ -120,7 +120,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                   >
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 rounded-[10px] px-3 py-3.5 text-left text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+                      className="flex w-full items-center justify-between gap-3 rounded-[10px] px-3 py-3.5 text-left text-sm font-medium text-neutral-900 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
                       onClick={() => {
                         openCommunityLink(href)
                         onClose()

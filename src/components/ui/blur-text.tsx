@@ -163,6 +163,31 @@ export function BlurText({
       multiline: th.multiline ?? true,
     })
     annotationRef.current = ann
+
+    // rough-notation: un segundo `show()` mientras ya está `showing` vuelve a
+    // pintar con `animate: false` (sin trazo). Nuestro ResizeObserver y el RO
+    // interno del paquete pueden disparar eso al cerrar el blur; bloqueamos
+    // esas repeticiones hasta terminar la animación del marcador.
+    const rawShow = ann.show.bind(ann)
+    const guardMs =
+      (th.animationDuration ?? 1200) + Math.max(400, (th.iterations ?? 2) * 120)
+    let markerShowGuardStart = 0
+    ann.show = () => {
+      const wasShowing = ann.isShowing()
+      const now = Date.now()
+      if (
+        wasShowing &&
+        markerShowGuardStart !== 0 &&
+        now - markerShowGuardStart < guardMs
+      ) {
+        return
+      }
+      rawShow()
+      if (!wasShowing) {
+        markerShowGuardStart = now
+      }
+    }
+
     ann.show()
 
     const redrawWithoutAnimation = () => {

@@ -8,7 +8,7 @@ const CONTACT_EMAIL = 'cuyoconnect@gmail.com'
 const FOOTER_HEADING = 'Sigamos la conversación'
 
 const footerNavLinkClass = cn(
-  'inline-flex shrink-0 whitespace-nowrap rounded-[10px] font-medium transition',
+  'inline-flex shrink-0 whitespace-nowrap rounded-[10px] font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
   'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
   'px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
 )
@@ -47,7 +47,7 @@ export function SiteFooter() {
                   href={`mailto:${CONTACT_EMAIL}?subject=Hola%20CuyoConnect`}
                   className={cn(
                     'inline-flex max-w-full items-center rounded-2xl',
-                    'bg-white px-5 py-4 text-xl font-semibold text-neutral-950 transition',
+                    'bg-white px-5 py-4 text-xl font-semibold text-neutral-950 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
                     'sm:px-6 sm:py-4 sm:text-2xl',
                     'hover:bg-neutral-50',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',

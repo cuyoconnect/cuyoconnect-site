@@ -40,7 +40,7 @@ function buildSets(
   return sets
 }
 
-const CYCLE_MS = 4500
+const CYCLE_MS = 3200
 
 type CommunityStripSectionProps = {
   className?: string
@@ -159,7 +159,7 @@ function LogoItem({ partner }: { partner: CommunityStripPartner }) {
         href={partner.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex max-w-full min-w-0 items-center justify-center transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+        className="inline-flex max-w-full min-w-0 items-center justify-center transition-opacity duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:opacity-70 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
         aria-label={`${partner.name} — sitio oficial (se abre en una pestaña nueva)`}
       >
         {img}

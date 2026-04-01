@@ -54,8 +54,8 @@ export function Hero() {
             <BlurText
               text={HERO_HEADING}
               className="text-inherit"
-              segmentDelay={0.14}
-              duration={0.95}
+              segmentDelay={0.08}
+              duration={0.55}
               tailHighlight={tailHighlight}
             />
           </h1>

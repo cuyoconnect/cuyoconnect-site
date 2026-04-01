@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, useReducedMotion, type Variants } from 'motion/react'
 import { BlurText } from '@/components/ui/blur-text'
 import { TEAM, type TeamMember } from '@/data/team'
@@ -20,24 +20,23 @@ function memberLinkedInHref(member: TeamMember) {
   return member.social?.linkedin ?? member.href ?? communityHref('linkedin')
 }
 
-function LinkedInIcon({ className }: { className?: string }) {
+/** Misma marca que el CTA «Unite» en `SiteHeader`. */
+function ArrowUpRightIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden
     >
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      <path d="M7 17 17 7M7 7h10v10" />
     </svg>
   )
 }
-
-const socialIconLinkClass = cn(
-  'pointer-events-auto inline-flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10',
-  'text-white/95 transition hover:text-white',
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-)
 
 /** ease-out suave; el movimiento se reparte mejor en el tiempo que curves más agresivas. */
 const CARD_EASE = [0.33, 1, 0.68, 1] as const
@@ -70,6 +69,7 @@ export function TeamSection() {
     () => teamCardVariants(reduceMotion),
     [reduceMotion],
   )
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
 
   return (
     <section
@@ -110,6 +110,19 @@ export function TeamSection() {
       >
         {TEAM.map((member, index) => {
           const linkedInHref = memberLinkedInHref(member)
+          const isHoveredCard = hoveredCardIndex === index
+          const isPeerDimmed =
+            hoveredCardIndex !== null && hoveredCardIndex !== index
+
+          const sat =
+            hoveredCardIndex === null
+              ? 0.75
+              : isHoveredCard
+                ? 1
+                : 0.48
+          const gray = isPeerDimmed ? 0.42 : 0
+          const filterValue = `saturate(${sat}) grayscale(${gray})`
+
           return (
             <motion.li
               key={member.name}
@@ -119,14 +132,49 @@ export function TeamSection() {
               whileInView="visible"
               viewport={{ once: true, amount: 'some' }}
               custom={index}
+              onMouseEnter={() => setHoveredCardIndex(index)}
+              onMouseLeave={() => setHoveredCardIndex(null)}
             >
               <article
                 className={cn(
-                  'h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white',
+                  'group/team-card relative h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white',
                   'text-left',
                 )}
+                style={
+                  reduceMotion
+                    ? {
+                        filter: filterValue,
+                        WebkitFilter: filterValue,
+                      }
+                    : {
+                        filter: filterValue,
+                        WebkitFilter: filterValue,
+                        transitionProperty: 'filter',
+                        transitionDuration:
+                          hoveredCardIndex === null ? '420ms' : '280ms',
+                        transitionDelay:
+                          hoveredCardIndex === null ? '90ms' : '0ms',
+                        transitionTimingFunction:
+                          'cubic-bezier(0.33, 1, 0.68, 1)',
+                      }
+                }
               >
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-200">
+                <div
+                  className={cn(
+                    'pointer-events-none absolute right-3 top-3 z-20 sm:right-4 sm:top-4',
+                    'flex size-8 items-center justify-center rounded-full sm:size-9',
+                    'bg-yellow-300 text-neutral-950 ring-1 ring-black/10',
+                    'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]',
+                  )}
+                  style={{
+                    opacity: isHoveredCard ? 1 : 0,
+                    transition: 'opacity 300ms cubic-bezier(0.33, 1, 0.68, 1)',
+                  }}
+                  aria-hidden
+                >
+                  <ArrowUpRightIcon className="size-3.5 shrink-0 sm:size-4" />
+                </div>
+                <div className="relative z-0 aspect-[4/5] w-full overflow-hidden bg-neutral-200">
                   <img
                     src={member.imageSrc ?? FALLBACK_IMAGE}
                     alt=""
@@ -139,34 +187,33 @@ export function TeamSection() {
                   <div className="absolute inset-x-0 bottom-0 z-10">
                     <div
                       className={cn(
-                        'pointer-events-none absolute inset-0 -top-16 sm:-top-22',
+                        'absolute inset-0 -top-16 sm:-top-22',
                         'bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125',
                         '[mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
                         '[-webkit-mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
                       )}
                       aria-hidden
                     />
-                    <div className="relative z-10 flex flex-row items-center justify-between gap-3 px-4 pt-5 pb-6 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-7">
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
-                          {member.name}
-                        </h3>
-                        <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
-                          {member.role}
-                        </p>
-                      </div>
-                      <a
-                        href={linkedInHref}
-                        className={socialIconLinkClass}
-                        aria-label={`LinkedIn de ${member.name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <LinkedInIcon className="size-5 sm:size-6" />
-                      </a>
+                    <div className="relative z-10 px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-7">
+                      <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
+                        {member.name}
+                      </h3>
+                      <p className="mt-0.5 text-xs leading-relaxed text-white sm:mt-1 sm:text-sm lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
+                        {member.role}
+                      </p>
                     </div>
                   </div>
                 </div>
+                <a
+                  href={linkedInHref}
+                  className={cn(
+                    'absolute inset-0 z-10 cursor-pointer rounded-2xl',
+                    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950',
+                  )}
+                  aria-label={`Abrir LinkedIn de ${member.name}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
               </article>
             </motion.li>
           )

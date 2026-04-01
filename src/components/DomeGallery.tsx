@@ -178,8 +178,8 @@ export default function DomeGallery({
   enlargeTransitionMs = DEFAULTS.enlargeTransitionMs,
   segments = DEFAULTS.segments,
   dragDampening = 2,
-  openedImageWidth = '400px',
-  openedImageHeight = '400px',
+  openedImageWidth,
+  openedImageHeight,
   imageBorderRadius = '30px',
   openedImageBorderRadius = '30px',
   /** Grados por frame (~60 fps); 0 desactiva. */
@@ -698,10 +698,10 @@ export default function DomeGallery({
         width: auto;
         box-sizing: border-box;
         padding-top: max(36px, calc(18px + env(safe-area-inset-top, 0px)));
-        padding-right: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-right, 0px)));
+        padding-right: max(var(--overlay-inline-pad), calc(20px + env(safe-area-inset-right, 0px)));
         padding-bottom: 28px;
-        padding-left: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-left, 0px)));
-        background: linear-gradient(to bottom, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 52%, transparent 100%);
+        padding-left: max(var(--overlay-inline-pad), calc(20px + env(safe-area-inset-left, 0px)));
+        background: linear-gradient(to bottom, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.58) 22%, rgba(0,0,0,0.28) 52%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
         pointer-events: none;
@@ -798,9 +798,9 @@ export default function DomeGallery({
         width: auto;
         box-sizing: border-box;
         padding-top: 40px;
-        padding-right: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-right, 0px)));
+        padding-right: max(var(--overlay-inline-pad), calc(20px + env(safe-area-inset-right, 0px)));
         padding-bottom: max(52px, calc(24px + env(safe-area-inset-bottom, 0px)));
-        padding-left: max(clamp(40px, 11vw, 72px), calc(20px + env(safe-area-inset-left, 0px)));
+        padding-left: max(var(--overlay-inline-pad), calc(20px + env(safe-area-inset-left, 0px)));
         display: flex;
         justify-content: flex-end;
         align-items: flex-end;
@@ -908,6 +908,7 @@ export default function DomeGallery({
     .sphere-root {
       --radius: 520px;
       --viewer-pad: 72px;
+      --overlay-inline-pad: clamp(24px, 6vw, 40px);
       --circ: calc(var(--radius) * 3.14);
       --rot-y: calc((360deg / var(--segments-x)) / 2);
       --rot-x: calc((360deg / var(--segments-y)) / 2);
@@ -962,6 +963,12 @@ export default function DomeGallery({
       .viewer-frame {
         height: auto !important;
         width: 100% !important;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .sphere-root {
+        --overlay-inline-pad: clamp(20px, 2.6vw, 28px);
       }
     }
     
