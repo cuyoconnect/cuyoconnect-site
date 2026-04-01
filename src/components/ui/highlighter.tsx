@@ -55,6 +55,8 @@ export function Highlighter({
     let annotation: RoughAnnotation | null = null
     let resizeObserver: ResizeObserver | null = null
     let showTimeoutId: ReturnType<typeof setTimeout> | null = null
+    let redrawFrameId: number | null = null
+    let detachViewportListeners: (() => void) | null = null
 
     const element = elementRef.current
     if (!(shouldShow && element)) {
@@ -79,12 +81,35 @@ export function Highlighter({
       annotation = currentAnnotation
       currentAnnotation.show()
 
+      const redrawWithoutAnimation = () => {
+        if (annotation !== currentAnnotation || redrawFrameId != null) return
+        redrawFrameId = window.requestAnimationFrame(() => {
+          redrawFrameId = null
+          if (annotation !== currentAnnotation) return
+          currentAnnotation.show()
+        })
+      }
+
       resizeObserver = new ResizeObserver(() => {
-        currentAnnotation.hide()
-        currentAnnotation.show()
+        redrawWithoutAnimation()
       })
 
       resizeObserver.observe(el)
+
+      // `visualViewport` cubre los cambios de barras del navegador móvil que
+      // mueven el texto sin disparar un resize del propio span.
+      const handleViewportShift = () => {
+        redrawWithoutAnimation()
+      }
+      const vv = window.visualViewport
+      window.addEventListener('resize', handleViewportShift)
+      vv?.addEventListener('resize', handleViewportShift)
+      vv?.addEventListener('scroll', handleViewportShift)
+      detachViewportListeners = () => {
+        window.removeEventListener('resize', handleViewportShift)
+        vv?.removeEventListener('resize', handleViewportShift)
+        vv?.removeEventListener('scroll', handleViewportShift)
+      }
     }
 
     if (annotationDelayMs > 0) {
@@ -95,6 +120,10 @@ export function Highlighter({
 
     return () => {
       if (showTimeoutId != null) window.clearTimeout(showTimeoutId)
+      if (redrawFrameId != null) window.cancelAnimationFrame(redrawFrameId)
+      if (detachViewportListeners) {
+        detachViewportListeners()
+      }
       annotation?.remove()
       if (resizeObserver) {
         resizeObserver.disconnect()

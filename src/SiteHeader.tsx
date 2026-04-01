@@ -10,6 +10,7 @@ const SCROLL_PILL_THRESHOLD = 100
 const NAV_LOGO = { w: 59, h: 80 } as const
 
 const navShellEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const navTransitionDuration = '0.56s'
 
 function NavLogoMark({ className }: { className?: string }) {
   return (
@@ -45,6 +46,7 @@ export function SiteHeader() {
   const [joinOpen, setJoinOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const reduceMotion = useReducedMotion()
+  const navTransitionTiming = `${navTransitionDuration} ${navShellEase}`
 
   useEffect(() => {
     const onScroll = () => {
@@ -56,6 +58,41 @@ export function SiteHeader() {
   }, [])
 
   /** Barra ancha al inicio; al hacer scroll, ancho al contenido (`max-content`), no un % del viewport. */
+  const navLayoutStyle: CSSProperties = {
+    transition: reduceMotion
+      ? 'none'
+      : [
+          `gap ${navTransitionTiming}`,
+          `padding ${navTransitionTiming}`,
+          `min-height ${navTransitionTiming}`,
+        ].join(', '),
+  }
+
+  const navItemStyle: CSSProperties = {
+    transition: reduceMotion
+      ? 'none'
+      : [
+          `gap ${navTransitionTiming}`,
+          `padding ${navTransitionTiming}`,
+          `margin ${navTransitionTiming}`,
+          `font-size ${navTransitionTiming}`,
+          `color ${navTransitionTiming}`,
+          `background-color ${navTransitionTiming}`,
+          `box-shadow ${navTransitionTiming}`,
+        ].join(', '),
+  }
+
+  const navSpacerStyle: CSSProperties = {
+    flexGrow: scrolled ? 0 : 1,
+    transition: reduceMotion
+      ? 'none'
+      : [
+          `flex-grow ${navTransitionTiming}`,
+          `min-width ${navTransitionTiming}`,
+          `opacity 0.28s linear`,
+        ].join(', '),
+  }
+
   const shellStyle: CSSProperties = {
     width: scrolled ? 'max-content' : '100%',
     maxWidth: scrolled
@@ -68,24 +105,22 @@ export function SiteHeader() {
       : 0,
     borderRadius: scrolled ? 9999 : 18,
     backgroundColor: scrolled
-      ? 'rgba(255, 255, 255, 0.52)'
+      ? 'rgba(255, 255, 255, 0.44)'
       : 'rgba(255, 255, 255, 0.58)',
-    backdropFilter: scrolled
-      ? 'blur(28px) saturate(1.25)'
-      : 'blur(22px) saturate(1.2)',
+    backdropFilter: scrolled ? 'blur(14px) saturate(1.08)' : 'blur(22px) saturate(1.2)',
     WebkitBackdropFilter: scrolled
-      ? 'blur(28px) saturate(1.25)'
+      ? 'blur(14px) saturate(1.08)'
       : 'blur(22px) saturate(1.2)',
     boxShadow: 'none' as const,
     /* No animar width/max-width: 100% ↔ max-content interpola mal en varios engines. */
     transition: reduceMotion
       ? 'none'
       : [
-          `margin-top 0.34s ${navShellEase}`,
-          `border-radius 0.34s ${navShellEase}`,
-          `background-color 0.34s ${navShellEase}`,
-          `backdrop-filter 0.34s ${navShellEase}`,
-          `-webkit-backdrop-filter 0.34s ${navShellEase}`,
+          `margin-top ${navTransitionTiming}`,
+          `border-radius ${navTransitionTiming}`,
+          `background-color ${navTransitionTiming}`,
+          `backdrop-filter ${navTransitionTiming}`,
+          `-webkit-backdrop-filter ${navTransitionTiming}`,
         ].join(', '),
   }
 
@@ -103,7 +138,9 @@ export function SiteHeader() {
         <div
           className={cn(
             'pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10',
-            'bg-[linear-gradient(180deg,rgb(255_255_255_/_.35)_0%,rgb(255_255_255_/_.18)_45%,transparent_100%)]',
+            scrolled
+              ? 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]'
+              : 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.35)_0%,rgb(255_255_255_/_.18)_45%,transparent_100%)]',
           )}
           aria-hidden
         />
@@ -115,6 +152,7 @@ export function SiteHeader() {
               ? 'w-max max-w-full justify-start gap-3 px-2 py-2 sm:gap-4 sm:px-3'
               : 'w-full min-w-0 justify-between gap-2 px-2 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-5 sm:px-6',
           )}
+          style={navLayoutStyle}
         >
           <a
             href="#inicio"
@@ -125,6 +163,7 @@ export function SiteHeader() {
                 : 'px-1 py-1 text-sm text-neutral-950 sm:gap-2.5 sm:px-0 sm:py-0 sm:text-base md:text-lg',
             )}
             aria-label="CuyoConnect — inicio"
+            style={navItemStyle}
           >
             <NavLogoMark className="h-7 shrink-0 sm:h-9" />
             {!scrolled ? (
@@ -139,7 +178,14 @@ export function SiteHeader() {
             )}
           </a>
 
-          {!scrolled && <div className="min-w-1 flex-1 sm:min-w-2" />}
+          <div
+            aria-hidden
+            className={cn(
+              'basis-0 shrink',
+              scrolled ? 'min-w-0 opacity-0' : 'min-w-1 opacity-100 sm:min-w-2',
+            )}
+            style={navSpacerStyle}
+          />
 
           <a
             href="#nuestros-eventos"
@@ -149,6 +195,7 @@ export function SiteHeader() {
                 ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
                 : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
             )}
+            style={navItemStyle}
           >
             Eventos
           </a>
@@ -162,6 +209,7 @@ export function SiteHeader() {
                 : 'ml-2 inline-flex h-9 gap-1 px-3 text-xs sm:ml-3 sm:gap-1.5 sm:px-4 sm:text-sm',
             )}
             onClick={() => setJoinOpen(true)}
+            style={navItemStyle}
           >
             Unite
             <ArrowUpRightIcon

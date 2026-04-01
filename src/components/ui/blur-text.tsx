@@ -81,6 +81,8 @@ export function BlurText({
   const tailRef = useRef<HTMLSpanElement>(null)
   const annotationRef = useRef<RoughAnnotation | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
+  const redrawFrameRef = useRef<number | null>(null)
+  const viewportListenersCleanupRef = useRef<(() => void) | null>(null)
   const completeRef = useRef(false)
   const annotationStartedRef = useRef(false)
   const lastWordRevealDoneRef = useRef(false)
@@ -145,6 +147,11 @@ export function BlurText({
 
     annotationRef.current?.remove()
     resizeObserverRef.current?.disconnect()
+    viewportListenersCleanupRef.current?.()
+    if (redrawFrameRef.current != null) {
+      window.cancelAnimationFrame(redrawFrameRef.current)
+      redrawFrameRef.current = null
+    }
 
     const ann = annotate(el, {
       type: 'highlight',
@@ -158,14 +165,38 @@ export function BlurText({
     annotationRef.current = ann
     ann.show()
 
+    const redrawWithoutAnimation = () => {
+      if (annotationRef.current !== ann || redrawFrameRef.current != null) return
+      redrawFrameRef.current = window.requestAnimationFrame(() => {
+        redrawFrameRef.current = null
+        if (annotationRef.current !== ann) return
+        ann.show()
+      })
+    }
+
     // Solo el span del tail: observar `document.body` disparaba hide/show al
     // interactuar con el DOME (layout/WebGL) y repetía la animación del marcador.
     const ro = new ResizeObserver(() => {
-      ann.hide()
-      ann.show()
+      redrawWithoutAnimation()
     })
     resizeObserverRef.current = ro
     ro.observe(el)
+
+    // En Safari/iOS puede cambiar la barra del navegador y mover el texto sin
+    // redimensionar el span. Escuchar `visualViewport` mantiene el marcador
+    // alineado sin volver a animarlo.
+    const handleViewportShift = () => {
+      redrawWithoutAnimation()
+    }
+    const vv = window.visualViewport
+    window.addEventListener('resize', handleViewportShift)
+    vv?.addEventListener('resize', handleViewportShift)
+    vv?.addEventListener('scroll', handleViewportShift)
+    viewportListenersCleanupRef.current = () => {
+      window.removeEventListener('resize', handleViewportShift)
+      vv?.removeEventListener('resize', handleViewportShift)
+      vv?.removeEventListener('scroll', handleViewportShift)
+    }
   }, [animateBy])
 
   const fireOnCompleteOnce = useCallback(() => {
@@ -224,8 +255,14 @@ export function BlurText({
       window.clearTimeout(id)
       annotationRef.current?.remove()
       resizeObserverRef.current?.disconnect()
+      viewportListenersCleanupRef.current?.()
+      if (redrawFrameRef.current != null) {
+        window.cancelAnimationFrame(redrawFrameRef.current)
+      }
       annotationRef.current = null
       resizeObserverRef.current = null
+      viewportListenersCleanupRef.current = null
+      redrawFrameRef.current = null
     }
   }, [
     animateBy,
