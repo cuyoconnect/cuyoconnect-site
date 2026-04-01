@@ -158,13 +158,14 @@ export function BlurText({
     annotationRef.current = ann
     ann.show()
 
+    // Solo el span del tail: observar `document.body` disparaba hide/show al
+    // interactuar con el DOME (layout/WebGL) y repetía la animación del marcador.
     const ro = new ResizeObserver(() => {
       ann.hide()
       ann.show()
     })
     resizeObserverRef.current = ro
     ro.observe(el)
-    ro.observe(document.body)
   }, [animateBy])
 
   const fireOnCompleteOnce = useCallback(() => {

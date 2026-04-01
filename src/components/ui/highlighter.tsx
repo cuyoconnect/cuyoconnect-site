@@ -85,7 +85,6 @@ export function Highlighter({
       })
 
       resizeObserver.observe(el)
-      resizeObserver.observe(document.body)
     }
 
     if (annotationDelayMs > 0) {
