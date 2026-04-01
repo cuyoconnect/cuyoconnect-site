@@ -868,17 +868,22 @@ export default function DomeGallery({
       header.style.opacity = '1';
       footer.style.opacity = '1';
     }, 16);
-    const wantsResize = openedImageWidth || openedImageHeight;
-    if (wantsResize) {
+    const autoWidth = (() => {
+      const dim = Math.min(mainR.width, mainR.height);
+      if (mainR.width < 640) return `${Math.round(dim * 0.94)}px`;
+      return `${Math.min(480, Math.round(dim * 0.6))}px`;
+    })();
+    const targetWidth = openedImageWidth || autoWidth;
+    const targetHeight = openedImageHeight || targetWidth;
+
+    {
       const onFirstEnd = (ev: TransitionEvent) => {
         if (ev.propertyName !== 'transform') return;
         overlay.removeEventListener('transitionend', onFirstEnd);
         const prevTransition = overlay.style.transition;
         overlay.style.transition = 'none';
-        const tempWidth = openedImageWidth || `${frameR.width}px`;
-        const tempHeight = openedImageHeight || `${frameR.height}px`;
-        overlay.style.width = tempWidth;
-        overlay.style.height = tempHeight;
+        overlay.style.width = targetWidth;
+        overlay.style.height = targetHeight;
         const newRect = overlay.getBoundingClientRect();
         overlay.style.width = frameR.width + 'px';
         overlay.style.height = frameR.height + 'px';
@@ -889,8 +894,8 @@ export default function DomeGallery({
         requestAnimationFrame(() => {
           overlay.style.left = `${centeredLeft}px`;
           overlay.style.top = `${centeredTop}px`;
-          overlay.style.width = tempWidth;
-          overlay.style.height = tempHeight;
+          overlay.style.width = targetWidth;
+          overlay.style.height = targetHeight;
         });
         const cleanupSecond = () => {
           overlay.removeEventListener('transitionend', cleanupSecond);
