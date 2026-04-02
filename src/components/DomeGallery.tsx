@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
-import { useGesture } from '@use-gesture/react';
+import { useDrag } from '@use-gesture/react';
 import { openCommunityLink } from '@/lib/community-links';
 
 type ImageItem =
@@ -94,6 +94,34 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
   const attr = el.dataset[name] ?? el.getAttribute(`data-${name}`);
   const n = attr == null ? NaN : parseFloat(attr);
   return Number.isFinite(n) ? n : fallback;
+};
+
+type GestureDragEvent = MouseEvent | PointerEvent | TouchEvent;
+
+const getGesturePoint = (event: GestureDragEvent) => {
+  if ('touches' in event && event.touches.length > 0) {
+    const touch = event.touches[0];
+    return { x: touch.clientX, y: touch.clientY };
+  }
+  if ('changedTouches' in event && event.changedTouches.length > 0) {
+    const touch = event.changedTouches[0];
+    return { x: touch.clientX, y: touch.clientY };
+  }
+  if ('clientX' in event && 'clientY' in event) {
+    return { x: event.clientX, y: event.clientY };
+  }
+  return null;
+};
+
+const getGesturePointerType = (event: GestureDragEvent): 'mouse' | 'pen' | 'touch' => {
+  if ('pointerType' in event) {
+    const pointerType = event.pointerType;
+    if (pointerType === 'mouse' || pointerType === 'pen' || pointerType === 'touch') {
+      return pointerType;
+    }
+  }
+  if ('touches' in event || 'changedTouches' in event) return 'touch';
+  return 'mouse';
 };
 
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
@@ -204,6 +232,7 @@ export default function DomeGallery({
   const rotationRef = useRef({ x: 0, y: 0 });
   const startRotRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
+  const gestureStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
   const cancelTapRef = useRef(false);
   const movedRef = useRef(false);
@@ -371,35 +400,53 @@ export default function DomeGallery({
     [dragDampening, maxVerticalRotationDeg, stopInertia]
   );
 
-  useGesture(
-    {
-      onDragStart: ({ event }) => {
-        if (autoRotateRAF.current) {
-            cancelAnimationFrame(autoRotateRAF.current);
-            autoRotateRAF.current = null;
-        }
-        if (focusedElRef.current) return;
-        stopInertia();
+  useDrag(
+    ({ event, first, last, velocity: velArr = [0, 0], direction: dirArr = [0, 0], movement }) => {
+      if (focusedElRef.current) return;
 
-        const evt = event as PointerEvent;
-        const pt = evt.pointerType;
-        pointerTypeRef.current =
-          pt === 'touch' || pt === 'pen' || pt === 'mouse' ? pt : 'mouse';
-        draggingRef.current = true;
+      const evt = event as GestureDragEvent;
+      const point = getGesturePoint(evt);
+      if (!point) return;
+
+      if (first) {
+        pointerTypeRef.current = getGesturePointerType(evt);
         cancelTapRef.current = false;
         movedRef.current = false;
-        startRotRef.current = { ...rotationRef.current };
-        startPosRef.current = { x: evt.clientX, y: evt.clientY };
-        const potential = (evt.target as Element).closest?.('.item__image') as HTMLElement | null;
+        draggingRef.current = false;
+        gestureStartPosRef.current = point;
+        startPosRef.current = null;
+        const potential = (event.target as Element | null)?.closest?.('.item__image') as HTMLElement | null;
         tapTargetRef.current = potential || null;
-      },
-      onDrag: ({ event, last, velocity: velArr = [0, 0], direction: dirArr = [0, 0], movement }) => {
-        if (focusedElRef.current || !draggingRef.current || !startPosRef.current) return;
+      }
 
-        const evt = event as PointerEvent;
+      const gestureStart = gestureStartPosRef.current ?? point;
+      const rawDx = point.x - gestureStart.x;
+      const rawDy = point.y - gestureStart.y;
 
-        const dxTotal = evt.clientX - startPosRef.current.x;
-        const dyTotal = evt.clientY - startPosRef.current.y;
+      if (!draggingRef.current) {
+        const absDx = Math.abs(rawDx);
+        const absDy = Math.abs(rawDy);
+        const activationDistance = pointerTypeRef.current === 'touch' ? 14 : 4;
+        const dominanceRatio = pointerTypeRef.current === 'touch' ? 1.35 : 1.1;
+        const horizontalIntent =
+          absDx >= activationDistance && absDx > absDy * dominanceRatio;
+
+        if (horizontalIntent) {
+          if (autoRotateRAF.current) {
+            cancelAnimationFrame(autoRotateRAF.current);
+            autoRotateRAF.current = null;
+          }
+          stopInertia();
+          draggingRef.current = true;
+          movedRef.current = true;
+          startRotRef.current = { ...rotationRef.current };
+          startPosRef.current = point;
+        }
+      }
+
+      if (draggingRef.current && startPosRef.current) {
+        const dxTotal = point.x - startPosRef.current.x;
+        const dyTotal = point.y - startPosRef.current.y;
 
         if (!movedRef.current) {
           const dist2 = dxTotal * dxTotal + dyTotal * dyTotal;
@@ -418,68 +465,87 @@ export default function DomeGallery({
           rotationRef.current = { x: nextX, y: nextY };
           applyTransform(nextX, nextY);
         }
+      }
 
-        if (last) {
-          draggingRef.current = false;
-          let isTap = false;
+      if (last) {
+        const wasDragging = draggingRef.current;
+        draggingRef.current = false;
+        let isTap = false;
 
-          if (startPosRef.current) {
-            const dx = evt.clientX - startPosRef.current.x;
-            const dy = evt.clientY - startPosRef.current.y;
-            const dist2 = dx * dx + dy * dy;
-            const TAP_THRESH_PX = pointerTypeRef.current === 'touch' ? 10 : 6;
-            if (dist2 <= TAP_THRESH_PX * TAP_THRESH_PX) {
-              isTap = true;
-            }
+        if (!wasDragging && gestureStartPosRef.current) {
+          const dx = point.x - gestureStartPosRef.current.x;
+          const dy = point.y - gestureStartPosRef.current.y;
+          const dist2 = dx * dx + dy * dy;
+          const TAP_THRESH_PX = pointerTypeRef.current === 'touch' ? 10 : 6;
+          if (dist2 <= TAP_THRESH_PX * TAP_THRESH_PX) {
+            isTap = true;
           }
+        }
 
+        if (wasDragging) {
           const [vMagX, vMagY] = velArr;
           const [dirX, dirY] = dirArr;
           let vx = vMagX * dirX;
           let vy = vMagY * dirY;
 
-          if (!isTap && Math.abs(vx) < 0.001 && Math.abs(vy) < 0.001 && Array.isArray(movement)) {
+          if (Math.abs(vx) < 0.001 && Math.abs(vy) < 0.001 && Array.isArray(movement)) {
             const [mx, my] = movement;
             vx = (mx / dragSensitivity) * 0.02;
             vy = (my / dragSensitivity) * 0.02;
           }
 
-          if (!isTap && (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005)) {
+          if (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005) {
             startInertia(vx, vy);
           } else {
             resumeAutoRotation();
           }
-          startPosRef.current = null;
+          cancelTapRef.current = true;
+          lastDragEndAt.current = performance.now();
+        } else {
           cancelTapRef.current = !isTap;
-
-          if (isTap && tapTargetRef.current && !focusedElRef.current) {
-            if (tileTapExternalHref) openTileExternal();
-            else openItemFromElement(tapTargetRef.current);
-          }
-          tapTargetRef.current = null;
-
-          if (cancelTapRef.current) setTimeout(() => (cancelTapRef.current = false), 120);
-          if (movedRef.current) lastDragEndAt.current = performance.now();
-          movedRef.current = false;
         }
+
+        if (isTap && tapTargetRef.current && !focusedElRef.current) {
+          if (tileTapExternalHref) openTileExternal();
+          else openItemFromElement(tapTargetRef.current);
+        }
+        gestureStartPosRef.current = null;
+        startPosRef.current = null;
+        tapTargetRef.current = null;
+
+        if (cancelTapRef.current) setTimeout(() => (cancelTapRef.current = false), 120);
+        movedRef.current = false;
       }
     },
-    { target: mainRef, eventOptions: { passive: true } }
+    {
+      target: mainRef,
+      filterTaps: true,
+      pointer: { capture: false },
+    }
   );
 
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
-    const onPointerCancel = () => {
+    const onCancel = () => {
       if (rootRef.current?.getAttribute('data-enlarging') === 'true') return;
       if (focusedElRef.current) return;
-      stopInertia();
+      const wasDragging = draggingRef.current;
       draggingRef.current = false;
+      gestureStartPosRef.current = null;
       startPosRef.current = null;
       tapTargetRef.current = null;
+      movedRef.current = false;
+      if (!wasDragging) return;
+      stopInertia();
+      resumeAutoRotationRef.current();
     };
-    main.addEventListener('pointercancel', onPointerCancel);
-    return () => main.removeEventListener('pointercancel', onPointerCancel);
+    main.addEventListener('pointercancel', onCancel);
+    main.addEventListener('touchcancel', onCancel);
+    return () => {
+      main.removeEventListener('pointercancel', onCancel);
+      main.removeEventListener('touchcancel', onCancel);
+    };
   }, [stopInertia]);
 
   useEffect(() => {
