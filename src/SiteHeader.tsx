@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 
 const SCROLL_PILL_THRESHOLD = 100
 
-/** Dimensiones reales de public/logo.png (recorte + resize) */
-const NAV_LOGO = { w: 59, h: 80 } as const
+/** Dimensiones intrínsecas de public/logo.png */
+const NAV_LOGO = { w: 882, h: 882 } as const
 
 const navShellEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const navTransitionDuration = '0.56s'
