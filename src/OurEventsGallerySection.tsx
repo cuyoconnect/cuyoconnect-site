@@ -53,8 +53,7 @@ export function OurEventsGallerySection() {
             />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-            Momentos del ecosistema CuyoConnect: deslizá, ampliá y abrí el
-            calendario para reservar tu próximo encuentro.
+            Así se viven los encuentros de nuestra comunidad.
           </p>
         </div>
 

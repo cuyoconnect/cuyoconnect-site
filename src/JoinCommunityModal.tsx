@@ -46,20 +46,17 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           role="presentation"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.18 }}
+          initial={false}
         >
           <motion.button
             type="button"
-            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-black/35 backdrop-blur-sm"
             aria-label="Cerrar"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+            transition={{ duration: reduceMotion ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
           />
           <motion.div
             role="dialog"
@@ -71,7 +68,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
             initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 6 }}
-            transition={reduceMotion ? { duration: 0 } : springPanel}
+            transition={reduceMotion ? { duration: 0 } : { ...springPanel, delay: 0.1 }}
           >
             <div className="flex max-h-[min(36rem,min(90dvh,calc(100dvh-2rem)))] flex-col">
               <div className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4 sm:px-6">
@@ -80,10 +77,10 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                     id={titleId}
                     className="text-lg font-semibold tracking-tight text-neutral-950"
                   >
-                    Elegí dónde conectar
+                    Conectemos
                   </h2>
                   <p className="mt-1 text-sm text-neutral-600">
-                    Abrimos una pestaña nueva con el enlace que elijas.
+                    Elegí la plataforma que más uses.
                   </p>
                 </div>
                 <button
@@ -115,7 +112,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                     transition={
                       reduceMotion
                         ? { duration: 0 }
-                        : { duration: 0.28, delay: 0.06 + i * 0.035, ease: [0.22, 1, 0.36, 1] }
+                        : { duration: 0.38, delay: 0.12 + i * 0.055, ease: [0.22, 1, 0.36, 1] }
                     }
                   >
                     <button
