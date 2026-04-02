@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 import { CommunityBrandIcon } from '@/components/CommunityBrandIcon'
 import { COMMUNITY_LINKS, openCommunityLink } from '@/lib/community-links'
-import { cn } from '@/lib/utils'
 
 type JoinCommunityModalProps = {
   open: boolean
@@ -62,9 +61,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className={cn(
-              'relative z-10 max-h-[min(36rem,min(90dvh,calc(100dvh-2rem)))] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-lg',
-            )}
+            className="relative z-10 max-h-[min(36rem,min(90dvh,calc(100dvh-2rem)))] w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-lg"
             initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 6 }}
@@ -117,7 +114,7 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                   >
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 rounded-[10px] px-3 py-3.5 text-left text-sm font-medium text-neutral-900 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+                      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[10px] px-3 py-3.5 text-left text-sm font-medium text-neutral-900 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
                       onClick={() => {
                         openCommunityLink(href)
                         onClose()

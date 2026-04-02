@@ -1,5 +1,4 @@
 import { Highlighter } from '@/components/ui/highlighter'
-import { SectionLabel } from '@/components/SectionLabel'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { HERO_TOPIC_HIGHLIGHT } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
