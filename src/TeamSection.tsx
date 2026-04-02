@@ -194,7 +194,7 @@ export function TeamSection() {
                       )}
                       aria-hidden
                     />
-                    <div className="relative z-10 px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-7">
+                    <div className="relative z-10 px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5">
                       <h3 className="text-sm font-semibold tracking-tight text-balance text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-lg">
                         {member.name}
                       </h3>

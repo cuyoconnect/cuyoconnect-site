@@ -27,16 +27,13 @@ export function OurEventsGallerySection() {
   return (
     <section
       id="nuestros-eventos"
-      className={cn(
-        'bg-white py-16 text-neutral-950 sm:py-20',
-        'px-4 sm:px-6',
-      )}
+      className="bg-white py-16 text-neutral-950 sm:py-20"
       aria-labelledby="nuestros-eventos-heading"
     >
       <div className="w-full">
         <div
           className={cn(
-            'mx-auto w-full min-w-0 text-left',
+            'mx-auto w-full min-w-0 px-4 text-left sm:px-6',
             HERO_CONTENT_WIDTH_CLASS,
           )}
         >
