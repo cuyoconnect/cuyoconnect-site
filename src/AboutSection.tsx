@@ -424,38 +424,21 @@ function AboutFlowImage({
   item,
   className,
   squiggleClipId,
-  delay = 0,
+  containerRef,
 }: {
   item: AboutGalleryItem
   className: string
   squiggleClipId?: string
-  delay?: number
+  containerRef?: Ref<HTMLDivElement>
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-10%' })
-
   return (
-    <motion.div
-      ref={ref}
-      className="relative z-10"
-      initial={{ opacity: 0, y: 28, scale: 0.96 }}
-      animate={
-        isInView
-          ? { opacity: 1, y: 0, scale: 1 }
-          : { opacity: 0, y: 28, scale: 0.96 }
-      }
-      transition={{
-        duration: 0.72,
-        delay,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
+    <div ref={containerRef} className="relative z-10 will-change-transform">
       <AboutImageCard
         item={item}
         className={className}
         squiggleClipId={squiggleClipId}
       />
-    </motion.div>
+    </div>
   )
 }
 
@@ -571,6 +554,8 @@ export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
+  const topFlowRef = useRef<HTMLDivElement>(null)
+  const bottomFlowRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
   const reduceMotion = useReducedMotion()
 
@@ -587,15 +572,33 @@ export function AboutSection() {
       const animateCards = (scale: number) => {
         const stage = stageRef.current
         const text = textRef.current
+        const topFlow = topFlowRef.current
+        const bottomFlow = bottomFlowRef.current
         const cards = cardRefs.current.slice(0, ABOUT_STAGE_GALLERY_ITEMS.length).filter(
           (card): card is HTMLDivElement => card !== null,
         )
 
-        if (!stage || !text || cards.length !== ABOUT_STAGE_GALLERY_ITEMS.length) {
+        if (!stage || !text || !topFlow || !bottomFlow || cards.length !== ABOUT_STAGE_GALLERY_ITEMS.length) {
           return
         }
 
         const s = scale
+
+        const initialOffsets = [
+          { x: -76 * s, y: -56 * s, rotate: -18 },
+          { x: -70 * s, y: 64 * s, rotate: -14 },
+          { x: 74 * s, y: -58 * s, rotate: 17 },
+          { x: 72 * s, y: 66 * s, rotate: 12 },
+        ]
+
+        const settleRotations = [-9, -4, 8, 4]
+
+        const driftOffsets = [
+          { x: -8 * s, y: -16 * s, rotate: -11 },
+          { x: -6 * s, y: -12 * s, rotate: -2 },
+          { x: 8 * s, y: -16 * s, rotate: 10 },
+          { x: 6 * s, y: -12 * s, rotate: 6 },
+        ]
 
         gsap.set(text, {
           autoAlpha: 0,
@@ -610,107 +613,163 @@ export function AboutSection() {
           transformOrigin: '50% 50%',
         })
 
-        gsap.set(cards[0], { x: -76 * s, y: -56 * s, rotate: -18 })
-        gsap.set(cards[1], { x: -70 * s, y: 64 * s, rotate: -14 })
-        gsap.set(cards[2], { x: 74 * s, y: -58 * s, rotate: 17 })
-        gsap.set(cards[3], { x: 72 * s, y: 66 * s, rotate: 12 })
+        cards.forEach((card, i) => {
+          gsap.set(card, initialOffsets[i])
+        })
 
-        const intro = gsap.timeline({
+        gsap.set(topFlow, {
+          autoAlpha: 0,
+          y: 36 * s,
+          scale: 0.92,
+          rotate: 4,
+          transformOrigin: '50% 50%',
+        })
+
+        gsap.set(bottomFlow, {
+          autoAlpha: 0,
+          y: 36 * s,
+          scale: 0.92,
+          rotate: -4,
+          transformOrigin: '50% 50%',
+        })
+
+        // cards[0]=top-left, cards[1]=bottom-left, cards[2]=top-right, cards[3]=bottom-right
+        const topCards = [cards[0], cards[2]]
+        const bottomCards = [cards[1], cards[3]]
+        const topSettleRotations = [settleRotations[0], settleRotations[2]]
+        const bottomSettleRotations = [settleRotations[1], settleRotations[3]]
+
+        const tl = gsap.timeline({
           scrollTrigger: {
             trigger: stage,
-            start: 'top 78%',
-            end: 'top 32%',
-            toggleActions: 'play none none reverse',
+            start: 'top 82%',
+            end: 'bottom 20%',
+            scrub: 1.2,
           },
         })
 
-        intro.to(
+        // --- Phase 1: top row reveal (0 – 0.28) ---
+
+        tl.to(
+          topFlow,
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            rotate: 0,
+            duration: 0.28,
+            ease: 'power2.out',
+          },
+          0,
+        )
+
+        topCards.forEach((card, i) => {
+          tl.to(
+            card,
+            {
+              autoAlpha: 1,
+              x: 0,
+              y: 0,
+              rotate: topSettleRotations[i],
+              scale: 1,
+              duration: 0.28,
+              ease: 'power2.out',
+            },
+            0.02 + i * 0.02,
+          )
+        })
+
+        tl.to(
           text,
           {
             autoAlpha: 1,
             y: 0,
             scale: 1,
-            duration: 0.96,
-            ease: 'power3.out',
+            duration: 0.28,
+            ease: 'power2.out',
           },
-          0.1,
+          0.04,
         )
 
-        const revealTargets = [
-          { x: 8, y: 6, rotate: -6, settleRotate: -9 },
-          { x: 6, y: 8, rotate: -2, settleRotate: -4 },
-          { x: -8, y: 6, rotate: 10, settleRotate: 8 },
-          { x: -6, y: 8, rotate: 6, settleRotate: 4 },
-        ] as const
+        // --- Phase 2: bottom row reveal (0.35 – 0.58) ---
 
-        cards.forEach((card, index) => {
-          const target = revealTargets[index]!
-          intro.to(
+        bottomCards.forEach((card, i) => {
+          tl.to(
             card,
             {
               autoAlpha: 1,
-              x: target.x * s,
-              y: target.y * s,
-              rotate: target.rotate,
-              scale: 1.02,
-              duration: 0.88,
-              ease: 'back.out(1.3)',
-            },
-            index * 0.07,
-          )
-          intro.to(
-            card,
-            {
               x: 0,
               y: 0,
-              rotate: target.settleRotate,
+              rotate: bottomSettleRotations[i],
               scale: 1,
-              duration: 0.46,
+              duration: 0.23,
               ease: 'power2.out',
             },
-            0.62 + index * 0.04,
+            0.35 + i * 0.02,
           )
         })
 
-        const drift = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 72%',
-            end: 'bottom top',
-            scrub: 0.9,
+        tl.to(
+          bottomFlow,
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            rotate: 0,
+            duration: 0.23,
+            ease: 'power2.out',
           },
-        })
+          0.37,
+        )
 
-        drift.to(
+        // --- Phase 3: drift for all (0.6 – 1.0) ---
+
+        tl.to(
+          topFlow,
+          {
+            y: -10 * s,
+            rotate: 2,
+            duration: 0.4,
+            ease: 'sine.inOut',
+          },
+          0.6,
+        )
+
+        tl.to(
           text,
           {
             y: -14 * s,
             scale: 1.005,
+            duration: 0.4,
             ease: 'sine.inOut',
           },
-          0,
+          0.6,
         )
 
-        const driftTargets = [
-          { x: -8, y: -16, rotate: -11 },
-          { x: -6, y: -12, rotate: -2 },
-          { x: 8, y: -16, rotate: 10 },
-          { x: 6, y: -12, rotate: 6 },
-        ] as const
-
-        cards.forEach((card, index) => {
-          const target = driftTargets[index]!
-          drift.to(
+        cards.forEach((card, i) => {
+          tl.to(
             card,
             {
-              x: target.x * s,
-              y: target.y * s,
-              rotate: target.rotate,
+              x: driftOffsets[i].x,
+              y: driftOffsets[i].y,
+              rotate: driftOffsets[i].rotate,
+              duration: 0.4,
               ease: 'sine.inOut',
             },
-            0,
+            0.6,
           )
         })
+
+        tl.to(
+          bottomFlow,
+          {
+            y: -8 * s,
+            rotate: -2,
+            duration: 0.4,
+            ease: 'sine.inOut',
+          },
+          0.6,
+        )
       }
 
       mm.add('(max-width: 639px)', () => animateCards(0.42))
@@ -730,7 +789,7 @@ export function AboutSection() {
       id="quienes-somos"
       className="relative overflow-x-clip bg-white py-16 text-neutral-950 [color-scheme:light] sm:py-20"
     >
-      <div className="mx-auto max-w-[92rem] px-4 sm:px-6">
+      <div className="mx-auto max-w-[92rem]">
         <div
           ref={stageRef}
           className="relative isolate mx-auto flex min-h-[36rem] items-center justify-center py-6 sm:min-h-[42rem] sm:py-8 lg:min-h-[52rem] lg:py-12 xl:min-h-[58rem]"
@@ -759,7 +818,7 @@ export function AboutSection() {
               item={ABOUT_TOP_FLOW_ITEM}
               className="mx-auto w-[10rem] sm:w-[12.5rem] lg:w-[14.5rem] xl:w-[15.5rem]"
               squiggleClipId={squiggleClipId}
-              delay={0.08}
+              containerRef={topFlowRef}
             />
 
             <AboutTextBlock
@@ -773,7 +832,7 @@ export function AboutSection() {
               item={ABOUT_BOTTOM_FLOW_ITEM}
               className="mx-auto mt-4 w-[10rem] sm:mt-6 sm:w-[12.5rem] lg:mt-8 lg:w-[14.5rem] xl:w-[15.5rem]"
               squiggleClipId={squiggleClipId}
-              delay={0.18}
+              containerRef={bottomFlowRef}
             />
           </div>
         </div>
