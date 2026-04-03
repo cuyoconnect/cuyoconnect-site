@@ -25,7 +25,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 1,
     image: '/events/event-09.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -33,7 +33,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 2,
     image: '/events/event-01.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   {
@@ -41,7 +41,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 3,
     image: '/events/event-10.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -57,7 +57,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 5,
     image: '/events/event-02.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   /* ── col 1 ── */
@@ -66,7 +66,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 6,
     image: '/events/event-03.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   {
@@ -74,7 +74,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 7,
     image: '/events/event-11.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -90,7 +90,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 9,
     image: '/events/event-12.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -98,7 +98,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 10,
     image: '/events/event-13.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   /* ── col 2 ── */
@@ -115,7 +115,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 12,
     image: '/events/event-14.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -123,7 +123,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 13,
     image: '/events/event-04.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   {
@@ -131,7 +131,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 14,
     image: '/events/event-15.webp',
     title: "Aleph's Hackathon",
-    date: '17 dic 2025',
+    date: '29 ago 2025',
     href: INSTAGRAM_URL,
   },
   {
@@ -139,7 +139,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 15,
     image: '/events/event-05.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   /* ── col 3 ── */
@@ -164,7 +164,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 18,
     image: '/events/event-06.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   {
@@ -181,7 +181,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 20,
     image: '/events/event-07.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   {
@@ -213,7 +213,7 @@ export const EVENTS_GALLERY: GalleryEventRecord[] = [
     order: 24,
     image: '/events/event-08.webp',
     title: 'CURSOR',
-    date: '16 dic 2025',
+    date: '19 feb 2026',
     href: INSTAGRAM_URL,
   },
   /* ── col 5 (parcial) ── */

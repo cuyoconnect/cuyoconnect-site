@@ -53,9 +53,9 @@ function makeCards(photos: string[], title: string, date: string): EventCard[] {
   return photos.map((image) => ({ image, title, date }))
 }
 
-const CURSOR_CARDS = makeCards(CURSOR_PHOTOS, 'CURSOR', '16 dic 2025')
+const CURSOR_CARDS = makeCards(CURSOR_PHOTOS, 'CURSOR', '19 feb 2026')
 
-const ALEPH_CARDS = makeCards(ALEPH_PHOTOS, "Aleph's Hackathon", '17 dic 2025')
+const ALEPH_CARDS = makeCards(ALEPH_PHOTOS, "Aleph's Hackathon", '29 ago 2025')
 
 const STELLAR_CARDS = makeCards(
   STELLAR_PHOTOS,
