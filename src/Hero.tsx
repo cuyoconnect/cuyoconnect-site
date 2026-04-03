@@ -68,10 +68,10 @@ export function Hero() {
               )}
             >
               <img
-                src="/cuyo-connect-hero.png"
+                src="/cuyo-connect-hero.webp"
                 alt=""
-                width={1920}
-                height={747}
+                width={1664}
+                height={647}
                 decoding="async"
                 className="relative z-0 mx-0 mt-0 mb-0 block h-auto w-full max-w-full max-sm:rounded-none"
               />

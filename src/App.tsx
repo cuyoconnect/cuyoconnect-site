@@ -4,6 +4,7 @@ import { AboutSection } from './AboutSection'
 import { EventsSection } from './EventsSection'
 import { Hero } from './Hero'
 import { OurEventsGallerySection } from './OurEventsGallerySection'
+import { PastEventsSliderSection } from './PastEventsSliderSection'
 import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 import { TeamSection } from './TeamSection'
@@ -38,6 +39,7 @@ function App() {
         <Hero />
         <AboutSection />
         <OurEventsGallerySection />
+        <PastEventsSliderSection />
         <EventsSection />
         <TeamSection />
       </main>

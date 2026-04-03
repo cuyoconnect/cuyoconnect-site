@@ -68,7 +68,7 @@ export function GitHubJoinCta({ className }: GitHubJoinCtaProps) {
         onClick={() => void handleJoin()}
         disabled={!isAuthReady || isSigningIn}
         className={cn(
-          'inline-flex w-fit max-w-full items-center justify-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-3 text-sm font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-black hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300 sm:px-6',
+          'inline-flex w-fit max-w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-3 text-sm font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-black hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300 sm:px-6',
         )}
       >
         <GitHubMark className="h-4 w-4" />
