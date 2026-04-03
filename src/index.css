@@ -129,11 +129,12 @@ main {
   z-index: 1;
   pointer-events: none;
   background-image:
+    linear-gradient(to bottom, rgb(255 255 255 / 1), rgb(255 255 255 / 0)),
     linear-gradient(to right, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0)),
     linear-gradient(to left, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
-  background-position: left, right;
+  background-position: top, left, right;
   background-repeat: no-repeat;
-  background-size: 13% 100%, 13% 100%;
+  background-size: 100% 18%, 13% 100%, 13% 100%;
 }
 
 .about-sticky-grid {
@@ -231,7 +232,7 @@ main {
   }
 
   .about-sticky-gallery-fade {
-    background-size: 14% 100%, 14% 100%;
+    background-size: 100% 20%, 14% 100%, 14% 100%;
   }
 
 }
@@ -252,7 +253,7 @@ main {
   }
 
   .about-sticky-gallery-fade {
-    background-size: 15% 100%, 15% 100%;
+    background-size: 100% 22%, 15% 100%, 15% 100%;
   }
 
 }
