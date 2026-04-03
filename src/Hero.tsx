@@ -73,6 +73,7 @@ export function Hero() {
                 width={1664}
                 height={647}
                 decoding="async"
+                fetchPriority="high"
                 className="relative z-0 mx-0 mt-0 mb-0 block h-auto w-full max-w-full max-sm:rounded-none"
               />
               <p className="mb-6 w-full px-4 pb-3 pt-0 text-center text-2xl font-semibold tracking-tight text-neutral-950 sm:mb-8 sm:px-5 sm:pb-4 sm:text-3xl md:text-4xl">
