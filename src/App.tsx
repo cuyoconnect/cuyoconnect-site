@@ -1,3 +1,4 @@
+import { AboutStickyGridSection } from './AboutStickyGridSection'
 import { EventsSection } from './EventsSection'
 import { Hero } from './Hero'
 import { OurEventsGallerySection } from './OurEventsGallerySection'
@@ -11,6 +12,7 @@ function App() {
       <SiteHeader />
       <main>
         <Hero />
+        <AboutStickyGridSection />
         <OurEventsGallerySection />
         <EventsSection />
         <TeamSection />
