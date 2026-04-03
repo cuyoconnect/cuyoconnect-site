@@ -1,7 +1,17 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import {
+  useEffect,
+  useState,
+  type AnchorHTMLAttributes,
+  type CSSProperties,
+} from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 import { JoinCommunityModal } from '@/JoinCommunityModal'
+import {
+  SECTION_PATH_TO_ID,
+  scheduleScrollToSectionId,
+  type SectionPathname,
+} from '@/lib/section-scroll'
 import { cn } from '@/lib/utils'
 
 const SCROLL_PILL_THRESHOLD = 100
@@ -39,6 +49,49 @@ function ArrowUpRightIcon({ className }: { className?: string }) {
     >
       <path d="M7 17 17 7M7 7h10v10" />
     </svg>
+  )
+}
+
+const navTextLinkClass = cn(
+  'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+  'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
+)
+
+function SectionNavLink({
+  path,
+  className,
+  style,
+  children,
+  ...rest
+}: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+  path: SectionPathname
+}) {
+  const sectionId = SECTION_PATH_TO_ID[path]
+  return (
+    <a
+      href={path}
+      className={className}
+      style={style}
+      {...rest}
+      onClick={(e) => {
+        rest.onClick?.(e)
+        if (e.defaultPrevented) return
+        if (
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey
+        ) {
+          return
+        }
+        e.preventDefault()
+        window.history.pushState(null, '', path)
+        scheduleScrollToSectionId(sectionId)
+      }}
+    >
+      {children}
+    </a>
   )
 }
 
@@ -187,19 +240,18 @@ export function SiteHeader() {
             style={navSpacerStyle}
           />
 
-          <a
-            href="#miembros"
+          <SectionNavLink
+            path="/eventos"
             className={cn(
-              'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
-              'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
+              navTextLinkClass,
               scrolled
                 ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
                 : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
             )}
             style={navItemStyle}
           >
-            Comunidad
-          </a>
+            Eventos
+          </SectionNavLink>
 
           <button
             type="button"
