@@ -54,17 +54,18 @@ type AboutGalleryItem = {
   frameClassName: string
   outlineClassName: string
   accentClassName: string
+  sizes?: string
   objectPosition?: string
   useSquiggleClip?: boolean
   shapeClassName?: string
   imageClassName?: string
 }
 
-const ABOUT_GALLERY_ITEMS: AboutGalleryItem[] = [
+const ABOUT_STAGE_GALLERY_ITEMS: AboutGalleryItem[] = [
   {
-    src: '/events/event-09.webp',
+    src: '/events/event-24.webp',
     positionClassName:
-      'left-[7%] top-[4%] w-[5.2rem] sm:w-[7rem] lg:w-[9.8rem] xl:left-[8%] xl:top-[5%] xl:w-[12rem]',
+      'left-[3%] top-[3%] w-[6.2rem] sm:left-[6%] sm:w-[7.5rem] lg:left-[15%] lg:top-[7%] lg:w-[9.8rem] xl:left-[16%] xl:top-[4%] xl:w-[12rem]',
     frameClassName:
       'aspect-[4/5] rounded-[46%_54%_52%_48%/38%_42%_58%_62%] rotate-[-9deg]',
     outlineClassName:
@@ -74,33 +75,21 @@ const ABOUT_GALLERY_ITEMS: AboutGalleryItem[] = [
     objectPosition: 'center 28%',
   },
   {
-    src: '/events/about-joaco-y-tici.webp',
+    src: '/events/about-artur.webp',
     positionClassName:
-      'left-[11%] top-[24%] w-[5.8rem] sm:w-[7.5rem] lg:w-[11rem] xl:left-[13%] xl:top-[23%] xl:w-[13.2rem]',
+      'left-[4%] bottom-[5%] w-[6.2rem] sm:left-[7%] sm:w-[7.5rem] lg:left-[13%] lg:bottom-[14%] lg:w-[10.4rem] xl:left-[14%] xl:bottom-[11%] xl:w-[12.8rem]',
     frameClassName:
-      'aspect-[6/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[7deg]',
+      'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[4deg]',
     outlineClassName:
-      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-5deg]',
+      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-7deg]',
     accentClassName:
-      '-bottom-3 -left-3 h-[45%] w-[32%] rounded-[60%_40%_44%_56%/37%_47%_53%_63%] bg-[#d9d2ff]/80',
-    objectPosition: 'center 44%',
-  },
-  {
-    src: '/events/event-24.webp',
-    positionClassName:
-      'left-[8%] bottom-[7%] w-[5.5rem] sm:w-[7.2rem] lg:w-[10.4rem] xl:left-[10%] xl:bottom-[8%] xl:w-[12.8rem]',
-    frameClassName:
-      'aspect-[5/6] rounded-[58%_42%_37%_63%/39%_58%_42%_61%] rotate-[-4deg]',
-    outlineClassName:
-      'rounded-[53%_47%_41%_59%/42%_55%_45%_58%] rotate-[8deg]',
-    accentClassName:
-      '-right-2 bottom-[-0.6rem] h-[32%] w-[40%] rounded-[44%_56%_38%_62%/55%_36%_64%_45%] bg-[#ffd9df]/80',
-    objectPosition: 'center 38%',
+      '-left-3 bottom-[-0.5rem] h-[35%] w-[42%] rounded-[64%_36%_45%_55%/40%_63%_37%_60%] bg-[#d7f3d2]/85',
+    objectPosition: 'center 34%',
   },
   {
     src: '/events/event-14.webp',
     positionClassName:
-      'right-[7%] top-[4%] w-[5.2rem] sm:w-[7rem] lg:w-[9.8rem] xl:right-[8%] xl:top-[5%] xl:w-[12rem]',
+      'right-[3%] top-[5%] w-[6.2rem] sm:right-[6%] sm:w-[7.5rem] lg:right-[14%] lg:top-[12%] lg:w-[9.8rem] xl:right-[15%] xl:top-[8%] xl:w-[12rem]',
     frameClassName:
       'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[8deg]',
     outlineClassName:
@@ -112,31 +101,44 @@ const ABOUT_GALLERY_ITEMS: AboutGalleryItem[] = [
   {
     src: '/events/about-julito.webp',
     positionClassName:
-      'right-[11%] top-[22%] w-[5.8rem] sm:w-[7.5rem] lg:w-[11.2rem] xl:right-[13%] xl:top-[21%] xl:w-[13.4rem]',
+      'right-[4%] bottom-[3%] w-[6.2rem] sm:right-[7%] sm:w-[7.5rem] lg:right-[15%] lg:bottom-[6%] lg:w-[10.4rem] xl:right-[16%] xl:bottom-[4%] xl:w-[12.8rem]',
     frameClassName:
-      'aspect-[5/4] rounded-[63%_37%_47%_53%/42%_56%_44%_58%] rotate-[-7deg]',
+      'aspect-[4/5] rounded-[52%_48%_46%_54%/40%_44%_56%_60%] rotate-[-4deg]',
     outlineClassName:
-      'rounded-[58%_42%_44%_56%/47%_61%_39%_53%] rotate-[6deg]',
+      'rounded-[50%_50%_44%_56%/38%_42%_58%_62%] rotate-[8deg]',
     accentClassName:
-      '-right-3 -bottom-3 h-[40%] w-[35%] rounded-[42%_58%_58%_42%/35%_57%_43%_65%] bg-[#c5f0ff]/80',
-    objectPosition: 'center 26%',
-  },
-  {
-    src: '/events/about-artur.webp',
-    positionClassName:
-      'right-[8%] bottom-[7%] w-[5.5rem] sm:w-[7.2rem] lg:w-[10.4rem] xl:right-[10%] xl:bottom-[8%] xl:w-[12.8rem]',
-    frameClassName:
-      'aspect-[6/5] rotate-[4deg]',
-    outlineClassName:
-      'rotate-[-7deg]',
-    accentClassName:
-      '-left-3 bottom-[-0.5rem] h-[35%] w-[42%] rounded-[64%_36%_45%_55%/40%_63%_37%_60%] bg-[#d7f3d2]/85',
-    objectPosition: 'center 34%',
-    useSquiggleClip: true,
-    shapeClassName: 'rotate-90',
-    imageClassName: '-rotate-90',
+      '-right-2 bottom-[-0.6rem] h-[32%] w-[40%] rounded-[44%_56%_38%_62%/55%_36%_64%_45%] bg-[#ffd9df]/80',
+    objectPosition: 'center 38%',
   },
 ]
+
+const ABOUT_TOP_FLOW_ITEM: AboutGalleryItem = {
+  src: '/events/event-03.webp',
+  positionClassName: '',
+  frameClassName:
+    'aspect-[6/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[7deg]',
+  outlineClassName:
+    'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-5deg]',
+  accentClassName:
+    '-bottom-3 -left-3 h-[45%] w-[32%] rounded-[60%_40%_44%_56%/37%_47%_53%_63%] bg-[#d9d2ff]/80',
+  objectPosition: 'center 44%',
+  sizes:
+    '(min-width: 1280px) 15.5rem, (min-width: 1024px) 14.5rem, (min-width: 640px) 12.5rem, 10rem',
+}
+
+const ABOUT_BOTTOM_FLOW_ITEM: AboutGalleryItem = {
+    src: '/events/about-joaco-y-tici.webp',
+  positionClassName: '',
+  frameClassName:
+    'aspect-[5/4] rounded-[63%_37%_47%_53%/42%_56%_44%_58%] rotate-[-7deg]',
+  outlineClassName:
+    'rounded-[58%_42%_44%_56%/47%_61%_39%_53%] rotate-[6deg]',
+  accentClassName:
+    '-right-3 -bottom-3 h-[40%] w-[35%] rounded-[42%_58%_58%_42%/35%_57%_43%_65%] bg-[#c5f0ff]/80',
+  objectPosition: 'center 26%',
+  sizes:
+    '(min-width: 1280px) 15.5rem, (min-width: 1024px) 14.5rem, (min-width: 640px) 12.5rem, 10rem',
+}
 
 function clipPathStyle(id: string): CSSProperties {
   return {
@@ -198,81 +200,121 @@ function AboutAnimatedParagraph({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-10%' })
-  let wordIndex = 0
+  const renderedLines = ABOUT_COPY_LINES.reduce<{
+    lines: ReactNode[]
+    wordIndex: number
+  }>(
+    (lineAccumulator, line, lineIndex) => {
+      const segmentResult = line.reduce<{
+        segments: ReactNode[]
+        wordIndex: number
+      }>(
+        (segmentAccumulator, segment, segmentIndex) => {
+          const words = splitWords(segment.text)
+          const wordResult = words.reduce<{
+            renderedWords: ReactNode[]
+            highlightedWordIndexes: number[]
+            wordIndex: number
+          }>(
+            (wordAccumulator, word, innerIndex) => {
+              if (!word.trim()) {
+                return {
+                  ...wordAccumulator,
+                  renderedWords: [
+                    ...wordAccumulator.renderedWords,
+                    <span key={`space-${lineIndex}-${segmentIndex}-${innerIndex}`}>{word}</span>,
+                  ],
+                }
+              }
+
+              const currentIndex = wordAccumulator.wordIndex
+
+              return {
+                renderedWords: [
+                  ...wordAccumulator.renderedWords,
+                  <AboutAnimatedWord
+                    key={`word-${lineIndex}-${segmentIndex}-${innerIndex}-${currentIndex}`}
+                    index={currentIndex}
+                    isInView={isInView}
+                  >
+                    {word}
+                  </AboutAnimatedWord>,
+                ],
+                highlightedWordIndexes: segment.highlight
+                  ? [...wordAccumulator.highlightedWordIndexes, currentIndex]
+                  : wordAccumulator.highlightedWordIndexes,
+                wordIndex: currentIndex + 1,
+              }
+            },
+            {
+              renderedWords: [],
+              highlightedWordIndexes: [],
+              wordIndex: segmentAccumulator.wordIndex,
+            },
+          )
+
+          const segmentContent = !segment.highlight
+            ? wordResult.renderedWords
+            : (
+                <Highlighter
+                  className="pb-[0.08em] font-bold"
+                  action="underline"
+                  color={HERO_TOPIC_HIGHLIGHT}
+                  strokeWidth={3}
+                  animationDuration={850}
+                  iterations={1}
+                  padding={1}
+                  multiline
+                  isView
+                  annotationDelayMs={Math.round(
+                    520 +
+                      (wordResult.highlightedWordIndexes[wordResult.highlightedWordIndexes.length - 1] ??
+                        0) *
+                        45,
+                  )}
+                >
+                  {wordResult.renderedWords}
+                </Highlighter>
+              )
+
+          return {
+            segments: [
+              ...segmentAccumulator.segments,
+              <span
+                key={`segment-${lineIndex}-${segmentIndex}`}
+                className="inline"
+              >
+                {segmentContent}
+              </span>,
+            ],
+            wordIndex: wordResult.wordIndex,
+          }
+        },
+        { segments: [], wordIndex: lineAccumulator.wordIndex },
+      )
+
+      return {
+        lines: [
+          ...lineAccumulator.lines,
+          <span key={`line-${lineIndex}`} className="block">
+            {segmentResult.segments}
+          </span>,
+        ],
+        wordIndex: segmentResult.wordIndex,
+      }
+    },
+    { lines: [], wordIndex: 0 },
+  )
 
   return (
     <div
       ref={ref}
       className={cn(
-        'mx-auto mt-6 max-w-[18.5rem] text-center text-[1.34rem] font-medium leading-[1.28] tracking-[-0.03em] text-neutral-950 sm:mt-7 sm:max-w-[25rem] sm:text-[1.62rem] sm:leading-[1.26] lg:max-w-[39rem] lg:text-[1.9rem] xl:max-w-[42rem] xl:text-[2.05rem]',
+        'mx-auto mt-6 max-w-[18.5rem] text-center text-[1.34rem] font-normal leading-[1.28] tracking-[-0.03em] text-neutral-950 sm:mt-7 sm:max-w-[25rem] sm:text-[1.62rem] sm:leading-[1.26] lg:max-w-[39rem] lg:text-[1.9rem] xl:max-w-[42rem] xl:text-[2.05rem]',
         className,
       )}
     >
-      {ABOUT_COPY_LINES.map((line, lineIndex) => (
-        <span key={`line-${lineIndex}`} className="block">
-          {line.map((segment, segmentIndex) => {
-            const words = splitWords(segment.text)
-
-            return (
-              <span
-                key={`segment-${lineIndex}-${segmentIndex}`}
-                className="inline"
-              >
-                {(() => {
-                  const highlightedWordIndexes: number[] = []
-
-                  const renderedWords = words.map((word, innerIndex) => {
-                    if (!word.trim()) {
-                      return <span key={`space-${lineIndex}-${segmentIndex}-${innerIndex}`}>{word}</span>
-                    }
-
-                    const currentIndex = wordIndex
-                    wordIndex += 1
-
-                    if (segment.highlight) {
-                      highlightedWordIndexes.push(currentIndex)
-                    }
-
-                    return (
-                      <AboutAnimatedWord
-                        key={`word-${lineIndex}-${segmentIndex}-${innerIndex}-${currentIndex}`}
-                        index={currentIndex}
-                        isInView={isInView}
-                      >
-                        {word}
-                      </AboutAnimatedWord>
-                    )
-                  })
-
-                  if (!segment.highlight) {
-                    return renderedWords
-                  }
-
-                  const lastHighlightedWordIndex =
-                    highlightedWordIndexes[highlightedWordIndexes.length - 1] ?? 0
-
-                  return (
-                    <Highlighter
-                      className="pb-[0.08em]"
-                      action="underline"
-                      color={HERO_TOPIC_HIGHLIGHT}
-                      strokeWidth={3}
-                      animationDuration={850}
-                      iterations={1}
-                      padding={1}
-                      multiline
-                      isView
-                      annotationDelayMs={Math.round(520 + lastHighlightedWordIndex * 45)}
-                    >
-                      {renderedWords}
-                    </Highlighter>
-                  )
-                })()}
-              </span>
-            )
-          })}
-        </span>
-      ))}
+      {renderedLines.lines}
     </div>
   )
 }
@@ -363,7 +405,10 @@ function AboutImageCard({
           loading="lazy"
           decoding="async"
           className={cn('block size-full object-cover saturate-[0.94]', item.imageClassName)}
-          sizes="(min-width: 1280px) 15rem, (min-width: 1024px) 12rem, (min-width: 640px) 10rem, 5rem"
+          sizes={
+            item.sizes ??
+            '(min-width: 1280px) 15rem, (min-width: 1024px) 12rem, (min-width: 640px) 10rem, 5rem'
+          }
           style={
             item.objectPosition
               ? { objectPosition: item.objectPosition }
@@ -372,6 +417,45 @@ function AboutImageCard({
         />
       </figure>
     </div>
+  )
+}
+
+function AboutFlowImage({
+  item,
+  className,
+  squiggleClipId,
+  delay = 0,
+}: {
+  item: AboutGalleryItem
+  className: string
+  squiggleClipId?: string
+  delay?: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-10%' })
+
+  return (
+    <motion.div
+      ref={ref}
+      className="relative z-10"
+      initial={{ opacity: 0, y: 28, scale: 0.96 }}
+      animate={
+        isInView
+          ? { opacity: 1, y: 0, scale: 1 }
+          : { opacity: 0, y: 28, scale: 0.96 }
+      }
+      transition={{
+        duration: 0.72,
+        delay,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+    >
+      <AboutImageCard
+        item={item}
+        className={className}
+        squiggleClipId={squiggleClipId}
+      />
+    </motion.div>
   )
 }
 
@@ -503,11 +587,11 @@ export function AboutSection() {
       const animateCards = (scale: number) => {
         const stage = stageRef.current
         const text = textRef.current
-        const cards = cardRefs.current.filter(
+        const cards = cardRefs.current.slice(0, ABOUT_STAGE_GALLERY_ITEMS.length).filter(
           (card): card is HTMLDivElement => card !== null,
         )
 
-        if (!stage || !text || cards.length !== ABOUT_GALLERY_ITEMS.length) {
+        if (!stage || !text || cards.length !== ABOUT_STAGE_GALLERY_ITEMS.length) {
           return
         }
 
@@ -527,11 +611,9 @@ export function AboutSection() {
         })
 
         gsap.set(cards[0], { x: -76 * s, y: -56 * s, rotate: -18 })
-        gsap.set(cards[1], { x: -88 * s, y: -18 * s, rotate: 16 })
-        gsap.set(cards[2], { x: -70 * s, y: 64 * s, rotate: -14 })
-        gsap.set(cards[3], { x: 74 * s, y: -58 * s, rotate: 17 })
-        gsap.set(cards[4], { x: 92 * s, y: -8 * s, rotate: -14 })
-        gsap.set(cards[5], { x: 72 * s, y: 66 * s, rotate: 12 })
+        gsap.set(cards[1], { x: -70 * s, y: 64 * s, rotate: -14 })
+        gsap.set(cards[2], { x: 74 * s, y: -58 * s, rotate: 17 })
+        gsap.set(cards[3], { x: 72 * s, y: 66 * s, rotate: 12 })
 
         const intro = gsap.timeline({
           scrollTrigger: {
@@ -556,10 +638,8 @@ export function AboutSection() {
 
         const revealTargets = [
           { x: 8, y: 6, rotate: -6, settleRotate: -9 },
-          { x: 10, y: -6, rotate: 9, settleRotate: 7 },
           { x: 6, y: 8, rotate: -2, settleRotate: -4 },
           { x: -8, y: 6, rotate: 10, settleRotate: 8 },
-          { x: -10, y: -6, rotate: -9, settleRotate: -7 },
           { x: -6, y: 8, rotate: 6, settleRotate: 4 },
         ] as const
 
@@ -613,10 +693,8 @@ export function AboutSection() {
 
         const driftTargets = [
           { x: -8, y: -16, rotate: -11 },
-          { x: -10, y: -6, rotate: 9 },
           { x: -6, y: -12, rotate: -2 },
           { x: 8, y: -16, rotate: 10 },
-          { x: 12, y: -6, rotate: -9 },
           { x: 6, y: -12, rotate: 6 },
         ] as const
 
@@ -655,7 +733,7 @@ export function AboutSection() {
       <div className="mx-auto max-w-[92rem] px-4 sm:px-6">
         <div
           ref={stageRef}
-          className="relative isolate mx-auto flex min-h-[24rem] items-center justify-center sm:min-h-[30rem] lg:min-h-[42rem] xl:min-h-[48rem]"
+          className="relative isolate mx-auto flex min-h-[36rem] items-center justify-center py-6 sm:min-h-[42rem] sm:py-8 lg:min-h-[52rem] lg:py-12 xl:min-h-[58rem]"
         >
           <AboutClipPathDefs squiggleId={squiggleClipId} />
           <div
@@ -663,7 +741,7 @@ export function AboutSection() {
             aria-hidden="true"
           >
             <AboutStageDecorations />
-            {ABOUT_GALLERY_ITEMS.map((item, index) => (
+            {ABOUT_STAGE_GALLERY_ITEMS.map((item, index) => (
               <AboutImageCard
                 key={item.src}
                 item={item}
@@ -676,12 +754,28 @@ export function AboutSection() {
             ))}
           </div>
 
-          <AboutTextBlock
-            containerRef={textRef}
-            innerClassName="max-w-[20rem] sm:max-w-[28rem] lg:max-w-[46rem] xl:max-w-[50rem]"
-            headingClassName=""
-            copyClassName="max-w-[20rem] sm:max-w-[28rem] lg:max-w-[46rem] xl:max-w-[50rem]"
-          />
+          <div className="relative z-10 flex w-full flex-col items-center gap-7 sm:gap-8 lg:gap-10">
+            <AboutFlowImage
+              item={ABOUT_TOP_FLOW_ITEM}
+              className="mx-auto w-[10rem] sm:w-[12.5rem] lg:w-[14.5rem] xl:w-[15.5rem]"
+              squiggleClipId={squiggleClipId}
+              delay={0.08}
+            />
+
+            <AboutTextBlock
+              containerRef={textRef}
+              innerClassName="max-w-[20rem] sm:max-w-[28rem] lg:max-w-[46rem] xl:max-w-[50rem]"
+              headingClassName=""
+              copyClassName="max-w-[20rem] sm:max-w-[28rem] lg:max-w-[46rem] xl:max-w-[50rem]"
+            />
+
+            <AboutFlowImage
+              item={ABOUT_BOTTOM_FLOW_ITEM}
+              className="mx-auto mt-4 w-[10rem] sm:mt-6 sm:w-[12.5rem] lg:mt-8 lg:w-[14.5rem] xl:w-[15.5rem]"
+              squiggleClipId={squiggleClipId}
+              delay={0.18}
+            />
+          </div>
         </div>
       </div>
     </section>
