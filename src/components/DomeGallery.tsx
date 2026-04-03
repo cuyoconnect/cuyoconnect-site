@@ -4,7 +4,16 @@ import { openCommunityLink } from '@/lib/community-links';
 
 type ImageItem =
   | string
-  | { src: string; alt?: string; slug?: string; href?: string; date?: string };
+  | {
+      src: string;
+      alt?: string;
+      title?: string;
+      subtitle?: string;
+      slug?: string;
+      href?: string;
+      hrefLabel?: string;
+      date?: string;
+    };
 
 type DomeGalleryProps = {
   images?: ImageItem[];
@@ -37,8 +46,11 @@ type DomeGalleryProps = {
 type ItemDef = {
   src: string;
   alt: string;
+  title: string;
+  subtitle?: string;
   slug?: string;
   href?: string;
+  hrefLabel?: string;
   date?: string;
   x: number;
   y: number;
@@ -140,21 +152,36 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       ...c,
       src: '',
       alt: '',
+      title: '',
+      subtitle: undefined,
       slug: undefined,
       href: undefined,
+      hrefLabel: undefined,
       date: undefined,
     }));
   }
 
   const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return { src: image, alt: '', slug: undefined, href: undefined, date: undefined };
+      return {
+        src: image,
+        alt: '',
+        title: '',
+        subtitle: undefined,
+        slug: undefined,
+        href: undefined,
+        hrefLabel: undefined,
+        date: undefined,
+      };
     }
     return {
       src: image.src || '',
       alt: image.alt || '',
+      title: image.title || image.alt || '',
+      subtitle: image.subtitle || image.date,
       slug: image.slug,
       href: image.href,
+      hrefLabel: image.hrefLabel,
       date: image.date,
     };
   });
@@ -179,8 +206,11 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     ...c,
     src: usedImages[i].src,
     alt: usedImages[i].alt,
+    title: usedImages[i].title,
+    subtitle: usedImages[i].subtitle,
     slug: usedImages[i].slug,
     href: usedImages[i].href,
+    hrefLabel: usedImages[i].hrefLabel,
     date: usedImages[i].date,
   }));
 }
@@ -744,17 +774,19 @@ export default function DomeGallery({
     overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35); pointer-events: auto;`;
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
+    const rawTitle = parent.dataset.title || rawAlt;
+    const rawSubtitle = parent.dataset.subtitle || parent.dataset.date || '';
     const rawSlug = parent.dataset.slug || '';
     const rawHref = parent.dataset.href || '';
-    const rawDate = parent.dataset.date || '';
+    const rawHrefLabel = parent.dataset.hrefLabel || 'Abrir perfil en una pestaña nueva';
     const img = document.createElement('img');
     img.src = rawSrc;
-    img.alt = rawAlt;
+    img.alt = rawAlt || rawTitle;
     img.style.cssText =
       'width:100%; height:100%; object-fit:cover; position:relative; z-index:0;';
     overlay.appendChild(img);
 
-    // Header (Name + optional date + close button)
+    // Header (Title + optional subtitle + close button)
     const header = document.createElement('div');
     header.style.cssText = `
         position: absolute;
@@ -781,9 +813,8 @@ export default function DomeGallery({
     const headerLeft = document.createElement('div');
     headerLeft.style.cssText = `display:flex; flex-direction:column; gap:6px; min-width:0; flex:1;`;
 
-    const nameText = (rawAlt || '').split(' - ')[0];
     const title = document.createElement('h3');
-    title.textContent = nameText;
+    title.textContent = rawTitle;
     title.style.cssText = `
         font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
         color: white;
@@ -795,34 +826,17 @@ export default function DomeGallery({
     `;
     headerLeft.appendChild(title);
 
-    if (rawDate) {
-      const dateLine = document.createElement('div');
-      dateLine.style.cssText = `display:flex; align-items:center; gap:6px;`;
-      const calSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      calSvg.setAttribute('width', '14');
-      calSvg.setAttribute('height', '14');
-      calSvg.setAttribute('viewBox', '0 0 24 24');
-      calSvg.setAttribute('fill', 'none');
-      calSvg.setAttribute('stroke', 'rgba(255,255,255,0.7)');
-      calSvg.setAttribute('stroke-width', '2');
-      calSvg.setAttribute('stroke-linecap', 'round');
-      calSvg.setAttribute('stroke-linejoin', 'round');
-      calSvg.innerHTML =
-        '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>' +
-        '<line x1="16" y1="2" x2="16" y2="6"/>' +
-        '<line x1="8" y1="2" x2="8" y2="6"/>' +
-        '<line x1="3" y1="10" x2="21" y2="10"/>';
-      dateLine.appendChild(calSvg);
-      const dateSpan = document.createElement('span');
-      dateSpan.textContent = rawDate;
-      dateSpan.style.cssText = `
+    if (rawSubtitle) {
+      const subtitleLine = document.createElement('span');
+      subtitleLine.textContent = rawSubtitle;
+      subtitleLine.style.cssText = `
           font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
           color: rgba(255,255,255,0.7);
           font-size: 13px;
           font-weight: 400;
+          line-height: 1.35;
       `;
-      dateLine.appendChild(dateSpan);
-      headerLeft.appendChild(dateLine);
+      headerLeft.appendChild(subtitleLine);
     }
     header.appendChild(headerLeft);
 
@@ -878,6 +892,7 @@ export default function DomeGallery({
     `;
 
     const btn = document.createElement('button');
+    btn.setAttribute('aria-label', rawHrefLabel);
     btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`;
     btn.style.cssText = `
         width: 56px;
@@ -1100,8 +1115,11 @@ export default function DomeGallery({
                   className="sphere-item absolute m-auto"
                   data-src={it.src}
                   data-alt={it.alt}
+                  data-title={it.title || it.alt}
+                  data-subtitle={it.subtitle || ''}
                   data-slug={it.slug || ''}
                   data-href={it.href || ''}
+                  data-href-label={it.hrefLabel || ''}
                   data-date={it.date || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
@@ -1128,7 +1146,7 @@ export default function DomeGallery({
                       tileTapExternalHref
                         ? (tileTapAriaLabel ??
                           'Abrir enlace en una pestaña nueva')
-                        : (it.alt || 'Open image')
+                        : (it.title || it.alt || 'Abrir imagen')
                     }
                     onClick={e => {
                       if (draggingRef.current) return;
@@ -1160,7 +1178,7 @@ export default function DomeGallery({
                     <img
                       src={it.src}
                       draggable={false}
-                      alt={it.alt}
+                      alt={it.alt || it.title}
                       className="w-full h-full object-cover pointer-events-none"
                       style={{
                         backfaceVisibility: 'hidden'
@@ -1175,20 +1193,20 @@ export default function DomeGallery({
           <div
             className="absolute inset-0 m-auto z-[3] pointer-events-none"
             style={{
-              backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 65%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
+              backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 78%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
             }}
           />
 
           <div
-            className="absolute left-0 right-0 top-0 h-[120px] z-[5] pointer-events-none rotate-180"
+            className="absolute left-0 right-0 top-0 h-[64px] z-[5] pointer-events-none rotate-180 sm:h-[72px]"
             style={{
-              background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))`
+              background: `linear-gradient(to bottom, transparent 0%, transparent 28%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
             }}
           />
           <div
-            className="absolute left-0 right-0 bottom-0 h-[120px] z-[5] pointer-events-none"
+            className="absolute left-0 right-0 bottom-0 h-[64px] z-[5] pointer-events-none sm:h-[72px]"
             style={{
-              background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))`
+              background: `linear-gradient(to bottom, transparent 0%, transparent 28%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
             }}
           />
 

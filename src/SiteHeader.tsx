@@ -198,7 +198,7 @@ export function SiteHeader() {
             )}
             style={navItemStyle}
           >
-            Eventos
+            Comunidad
           </a>
 
           <button
