@@ -47,45 +47,23 @@ type EventCard = {
   image: string
   title: string
   date: string
-  description: string
 }
 
-function makeCards(
-  photos: string[],
-  title: string,
-  date: string,
-  description: string,
-): EventCard[] {
-  return photos.map((image) => ({ image, title, date, description }))
+function makeCards(photos: string[], title: string, date: string): EventCard[] {
+  return photos.map((image) => ({ image, title, date }))
 }
 
-const CURSOR_CARDS = makeCards(
-  CURSOR_PHOTOS,
-  'CURSOR',
-  '16 dic 2025',
-  'Encuentro de builders con Cursor AI',
-)
+const CURSOR_CARDS = makeCards(CURSOR_PHOTOS, 'CURSOR', '16 dic 2025')
 
-const ALEPH_CARDS = makeCards(
-  ALEPH_PHOTOS,
-  "Aleph's Hackathon",
-  '17 dic 2025',
-  'Hackathon de Aleph con la comunidad',
-)
+const ALEPH_CARDS = makeCards(ALEPH_PHOTOS, "Aleph's Hackathon", '17 dic 2025')
 
 const STELLAR_CARDS = makeCards(
   STELLAR_PHOTOS,
   'Stellar Summer Friday',
   '30 ene 2026',
-  'Tarde de networking y comunidad',
 )
 
-const LATINHACK_CARDS = makeCards(
-  LATINHACK_PHOTOS,
-  'Latin Hack',
-  '17 dic 2025',
-  'Hackaton latinoamericano de innovacion',
-)
+const LATINHACK_CARDS = makeCards(LATINHACK_PHOTOS, 'Latin Hack', '17 dic 2025')
 
 function interleave(...groups: EventCard[][]): EventCard[] {
   const result: EventCard[] = []
@@ -161,7 +139,6 @@ function EventCardItem({
   image,
   title,
   date,
-  description,
   cardIndex,
   hoveredIndex,
   isDragging,
@@ -191,7 +168,6 @@ function EventCardItem({
           boxShadow: isHoveredCard
             ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
             : '0 1px 4px rgba(0,0,0,0.06)',
-          transform: isHoveredCard ? 'scale(1.025)' : 'scale(1)',
         }
       : {
           filter: filterValue,
@@ -199,8 +175,7 @@ function EventCardItem({
           boxShadow: isHoveredCard
             ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
             : '0 1px 4px rgba(0,0,0,0.06)',
-          transform: isHoveredCard ? 'scale(1.025)' : 'scale(1)',
-          transitionProperty: 'filter, box-shadow, transform',
+          transitionProperty: 'filter, box-shadow',
           transitionDuration: effectiveHovered === null ? '420ms' : '280ms',
           transitionDelay: effectiveHovered === null ? '90ms' : '0ms',
           transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
@@ -264,16 +239,18 @@ function EventCardItem({
             )}
             aria-hidden
           />
-          <div className="relative z-10 px-4 pb-4 pt-5 sm:px-5">
-            <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-yellow-300 sm:gap-2 sm:text-xs">
-              <CalendarIcon className="size-3 shrink-0 sm:size-3.5" />
-              {date}
-            </p>
-            <h3 className="mt-0.5 text-balance text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-base">
+          <div className="relative z-10 px-4 pb-5 pt-5 sm:px-5 sm:pb-6">
+            <h3 className="text-balance text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-base">
               {title}
             </h3>
-            <p className="mt-0.5 text-xs leading-relaxed text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)] sm:text-sm">
-              {description}
+            <p
+              className={cn(
+                'mt-0.5 flex items-center gap-1.5 text-xs leading-relaxed text-white sm:mt-1 sm:gap-2 sm:text-sm lg:text-base',
+                '[text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+              )}
+            >
+              <CalendarIcon className="block size-3 shrink-0 text-current sm:size-3.5" />
+              <span className="leading-none">{date}</span>
             </p>
           </div>
         </div>
