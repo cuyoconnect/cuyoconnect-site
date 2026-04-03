@@ -8,29 +8,36 @@ import { PastEventsSliderSection } from './PastEventsSliderSection'
 import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 import { TeamSection } from './TeamSection'
+import { scheduleScrollFromLocation } from '@/lib/section-scroll'
 
 /**
- * After React mounts, the browser's native hash-scroll has already fired
- * (against a still-empty DOM). Re-trigger it so the target section receives
- * a smooth scroll once every element is painted.
+ * Tras montar React, vuelve a aplicar el scroll: el nativo por `#…` corre
+ * contra un DOM vacío; las rutas `/eventos` y `/miembros` necesitan el mismo
+ * reintento por frames (ver `scheduleScrollFromLocation`).
  */
-function useHashScrollOnMount() {
+function useSectionDeepLinkScroll() {
   useEffect(() => {
-    const hash = window.location.hash
-    if (!hash) return
+    scheduleScrollFromLocation()
 
-    requestAnimationFrame(() => {
-      const target = document.querySelector(hash)
-      if (!target) return
-      // Prefer the inner heading so we skip past decorative section padding.
-      const heading = target.querySelector('[id$="-heading"]')
-      ;(heading ?? target).scrollIntoView({ behavior: 'smooth' })
-    })
+    const onHashChange = () => {
+      scheduleScrollFromLocation()
+    }
+
+    const onPopState = () => {
+      scheduleScrollFromLocation()
+    }
+
+    window.addEventListener('hashchange', onHashChange)
+    window.addEventListener('popstate', onPopState)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      window.removeEventListener('popstate', onPopState)
+    }
   }, [])
 }
 
 function App() {
-  useHashScrollOnMount()
+  useSectionDeepLinkScroll()
 
   return (
     <>
