@@ -32,10 +32,14 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
 
   useEffect(() => {
     if (!open) return
-    const prev = document.body.style.overflow
+    const html = document.documentElement
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
+    html.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = prev
+      html.style.overflow = prevHtmlOverflow
+      document.body.style.overflow = prevBodyOverflow
     }
   }, [open])
 
