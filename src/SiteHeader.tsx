@@ -188,7 +188,7 @@ export function SiteHeader() {
           />
 
           <a
-            href="#nuestros-eventos"
+            href="#miembros"
             className={cn(
               'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
               'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',

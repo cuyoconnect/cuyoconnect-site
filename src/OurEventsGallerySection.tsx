@@ -16,11 +16,11 @@ import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/AuthProvider'
 
-const MEMBERS_GALLERY_HEADING = 'Personas de CuyoConnect'
+const MEMBERS_GALLERY_HEADING = 'Miembros de CuyoConnect'
 
 export function OurEventsGallerySection() {
   const { hasAuthConfigured } = useAuth()
-  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
+  const tailHighlight = useMemo(() => heroTopicTailHighlight(1), [])
   const [profiles, setProfiles] = useState<MemberProfile[]>([])
   const [isLoading, setIsLoading] = useState(hasAuthConfigured)
   const [errorMessage, setErrorMessage] = useState('')
@@ -75,9 +75,9 @@ export function OurEventsGallerySection() {
 
   return (
     <section
-      id="nuestros-eventos"
+      id="miembros"
       className="bg-white py-16 text-neutral-950 sm:py-20"
-      aria-labelledby="nuestros-eventos-heading"
+      aria-labelledby="miembros-heading"
     >
       <div className="w-full">
         <div
@@ -87,7 +87,7 @@ export function OurEventsGallerySection() {
           )}
         >
           <h2
-            id="nuestros-eventos-heading"
+            id="miembros-heading"
             className={cn(
               'w-full max-w-full text-balance text-2xl font-semibold tracking-tight text-neutral-950',
               'sm:text-3xl md:text-4xl',
