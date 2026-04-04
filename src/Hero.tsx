@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
 import { CommunityStripSection } from '@/CommunityStripSection'
 import { HeroEasterEggImage } from '@/components/hero/HeroEasterEggImage'
 import { BlurText } from '@/components/ui/blur-text'
@@ -9,10 +10,21 @@ import { cn } from '@/lib/utils'
 const HERO_HEADING =
   'Comunidad de builders en IA, tecnología y web3'
 
+const HERO_EASTER_CAPTION = '@cuyoconnect'
+
+/** Mismo gris para texto y subrayado; ligero corrimiento a la izquierda solo en QR. */
+const captionQrClass =
+  'text-neutral-500 underline decoration-current decoration-2 underline-offset-[0.18em] -translate-x-2 sm:-translate-x-3'
+
+const captionClass = cn(
+  'mb-6 w-full px-4 pb-3 pt-0 text-center text-2xl font-semibold tracking-tight text-neutral-950 sm:mb-8 sm:px-5 sm:pb-4 sm:text-3xl md:text-4xl',
+)
+
 /** Últimas cuatro palabras: "IA," "tecnología" "y" "web3" */
 const HERO_TOPIC_WORD_COUNT = 4
 
 export function Hero() {
+  const [captionSurface, setCaptionSurface] = useState<'hero' | 'qr'>('hero')
   const tailHighlight = useMemo(
     () => heroTopicTailHighlight(HERO_TOPIC_WORD_COUNT),
     [],
@@ -68,10 +80,24 @@ export function Hero() {
                 'max-sm:max-w-none max-sm:shrink-0 max-sm:w-[max(28rem,min(136vw,42rem))]',
               )}
             >
-              <HeroEasterEggImage />
-              <p className="mb-6 w-full px-4 pb-3 pt-0 text-center text-2xl font-semibold tracking-tight text-neutral-950 sm:mb-8 sm:px-5 sm:pb-4 sm:text-3xl md:text-4xl">
-                CuyoConnect
-              </p>
+              <HeroEasterEggImage onCaptionSurfaceChange={setCaptionSurface} />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p
+                  key={captionSurface}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.38, ease: 'easeInOut' }}
+                  className={cn(
+                    captionClass,
+                    captionSurface === 'qr' && captionQrClass,
+                  )}
+                >
+                  {captionSurface === 'hero'
+                    ? 'CuyoConnect'
+                    : HERO_EASTER_CAPTION}
+                </motion.p>
+              </AnimatePresence>
             </div>
           </div>
         </div>

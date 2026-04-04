@@ -26,6 +26,37 @@ const STAGGER = 0.022
 
 type Bounds = { width: number; height: number }
 
+type PixelMode = 'cover' | 'uncover'
+
+/** Igual que el peor `delay` de la rejilla (cover usa `custom[1]`). */
+function maxPixelDelaySteps(bounds: Bounds, mode: PixelMode): number {
+  const W = bounds.width
+  const H = bounds.height
+  const rowCount = PIXEL_ROWS
+  const blockH = H / rowCount
+  const nbCols = Math.max(4, Math.ceil(W / blockH))
+  let m = 0
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    for (let randomIndex = 0; randomIndex < nbCols; randomIndex++) {
+      const d1 = rowCount - rowIndex + randomIndex
+      const d0 = rowIndex + randomIndex
+      const d = mode === 'cover' ? d1 : d0
+      if (d > m) m = d
+    }
+  }
+  return m
+}
+
+function approxPixelWaveMs(bounds: Bounds, mode: PixelMode): number {
+  return Math.ceil(maxPixelDelaySteps(bounds, mode) * STAGGER * 1000 + 80)
+}
+
+/**
+ * Momento del fade del pie solo en la fase `cover` (blanco tapando).
+ * Mitad del cover ≈ en medio del primer tramo del pixelado, no al pasar al reveal.
+ */
+const CAPTION_FADE_MID_COVER_FRACTION = 0.5
+
 function shuffleIndices(n: number): number[] {
   const arr = Array.from({ length: n }, (_, i) => i)
   for (let i = arr.length - 1; i > 0; i--) {
@@ -34,8 +65,6 @@ function shuffleIndices(n: number): number[] {
   }
   return arr
 }
-
-type PixelMode = 'cover' | 'uncover'
 
 /**
  * Transición tipo Oliviér Larose: bloques opacos (blanco página), solo opacity + delays,
@@ -156,7 +185,10 @@ function PixelBlockGrid({
   )
 }
 
-type StablePhase = 'hero' | 'qr'
+export type HeroEasterEggSurface = 'hero' | 'qr'
+
+type StablePhase = HeroEasterEggSurface
+
 /** Secuencial: cubrir → revelar (nunca hero y QR animando a la vez). */
 type Phase =
   | StablePhase
@@ -170,19 +202,33 @@ type LoadGate = null | 'qr' | 'hero'
 export function HeroEasterEggImage({
   className,
   imgClassName,
+  onCaptionSurfaceChange,
 }: {
   className?: string
   imgClassName?: string
+  /**
+   * Durante la fase `cover` (~mitad de ese tramo): el pie hace fade mientras sigue el pixel,
+   * no al terminar el destape.
+   */
+  onCaptionSurfaceChange?: (surface: HeroEasterEggSurface) => void
 }) {
   const reduceMotion = useReducedMotion()
   const wrapRef = useRef<HTMLDivElement>(null)
   const [tapCount, setTapCount] = useState(0)
   const tapResetRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const captionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [phase, setPhase] = useState<Phase>('hero')
   const [loadGate, setLoadGate] = useState<LoadGate>(null)
   const loadGateRef = useRef<LoadGate>(null)
   const [frozenBounds, setFrozenBounds] = useState<Bounds | null>(null)
   const [gridKey, setGridKey] = useState(0)
+
+  const clearCaptionTimer = useCallback(() => {
+    if (captionTimerRef.current != null) {
+      clearTimeout(captionTimerRef.current)
+      captionTimerRef.current = null
+    }
+  }, [])
 
   const scheduleTapReset = useCallback(() => {
     if (tapResetRef.current) clearTimeout(tapResetRef.current)
@@ -195,13 +241,24 @@ export function HeroEasterEggImage({
     const rect = el.getBoundingClientRect()
     if (rect.width < 2 || rect.height < 2) return
     if (reduceMotion) {
+      onCaptionSurfaceChange?.('qr')
       setPhase('qr')
       return
     }
-    setFrozenBounds({ width: rect.width, height: rect.height })
+    clearCaptionTimer()
+    const b = { width: rect.width, height: rect.height }
+    const coverMs = approxPixelWaveMs(b, 'cover')
+    const captionMs = Math.round(
+      Math.max(100, coverMs * CAPTION_FADE_MID_COVER_FRACTION),
+    )
+    captionTimerRef.current = window.setTimeout(() => {
+      captionTimerRef.current = null
+      onCaptionSurfaceChange?.('qr')
+    }, captionMs)
+    setFrozenBounds(b)
     setGridKey((k) => k + 1)
     setPhase('h2q_cover')
-  }, [reduceMotion])
+  }, [clearCaptionTimer, reduceMotion, onCaptionSurfaceChange])
 
   const startQrToHero = useCallback(() => {
     const el = wrapRef.current
@@ -209,13 +266,24 @@ export function HeroEasterEggImage({
     const rect = el.getBoundingClientRect()
     if (rect.width < 2 || rect.height < 2) return
     if (reduceMotion) {
+      onCaptionSurfaceChange?.('hero')
       setPhase('hero')
       return
     }
-    setFrozenBounds({ width: rect.width, height: rect.height })
+    clearCaptionTimer()
+    const b = { width: rect.width, height: rect.height }
+    const coverMs = approxPixelWaveMs(b, 'cover')
+    const captionMs = Math.round(
+      Math.max(100, coverMs * CAPTION_FADE_MID_COVER_FRACTION),
+    )
+    captionTimerRef.current = window.setTimeout(() => {
+      captionTimerRef.current = null
+      onCaptionSurfaceChange?.('hero')
+    }, captionMs)
+    setFrozenBounds(b)
     setGridKey((k) => k + 1)
     setPhase('q2h_cover')
-  }, [reduceMotion])
+  }, [clearCaptionTimer, reduceMotion, onCaptionSurfaceChange])
 
   const onActivate = useCallback(() => {
     const stable = phase === 'hero' || phase === 'qr'
@@ -262,9 +330,10 @@ export function HeroEasterEggImage({
   }, [])
 
   const onH2qCoverDone = useCallback(() => {
+    clearCaptionTimer()
     setGridKey((k) => k + 1)
     setPhase('h2q_reveal')
-  }, [])
+  }, [clearCaptionTimer])
 
   const onH2qRevealDone = useCallback(() => {
     setPhase('qr')
@@ -272,9 +341,10 @@ export function HeroEasterEggImage({
   }, [])
 
   const onQ2hCoverDone = useCallback(() => {
+    clearCaptionTimer()
     setGridKey((k) => k + 1)
     setPhase('q2h_reveal')
-  }, [])
+  }, [clearCaptionTimer])
 
   const onQ2hRevealDone = useCallback(() => {
     setPhase('hero')
@@ -284,6 +354,10 @@ export function HeroEasterEggImage({
   useEffect(
     () => () => {
       if (tapResetRef.current) clearTimeout(tapResetRef.current)
+      if (captionTimerRef.current != null) {
+        clearTimeout(captionTimerRef.current)
+        captionTimerRef.current = null
+      }
     },
     [],
   )
@@ -324,11 +398,7 @@ export function HeroEasterEggImage({
     <div
       ref={wrapRef}
       onClick={tapEnabled ? onActivate : undefined}
-      className={cn(
-        'relative isolate w-full overflow-hidden',
-        tapEnabled && 'cursor-pointer',
-        className,
-      )}
+      className={cn('relative isolate w-full overflow-hidden', className)}
       style={{ aspectRatio: `${HERO_WIDTH} / ${HERO_HEIGHT}` }}
     >
       {showHeroImg ? (
