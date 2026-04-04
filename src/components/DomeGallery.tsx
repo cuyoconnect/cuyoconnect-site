@@ -136,6 +136,188 @@ const getGesturePointerType = (event: GestureDragEvent): 'mouse' | 'pen' | 'touc
   return 'mouse';
 };
 
+type NormalizedTile = {
+  src: string;
+  alt: string;
+  title: string;
+  subtitle?: string;
+  slug?: string;
+  href?: string;
+  hrefLabel?: string;
+  date?: string;
+};
+
+function domeTileMixSeed(totalSlots: number, poolLen: number): number {
+  let h = 0xc0da11 ^ poolLen * 0x9e3779b9;
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h ^= totalSlots * 1597334677;
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return h >>> 0;
+}
+
+function mulberry32(seed: number) {
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return (t >>> 0) / 4294967296;
+  };
+}
+
+function shuffleIndicesInPlace(indices: number[], rand: () => number) {
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+}
+
+const DOME_COL_ROWS = 5;
+
+/** Fuentes prohibidas para la fila k de la columna actual (prev = columna ya colocada). */
+function domeColumnForbiddenSrcs(prevCol: NormalizedTile[] | null, k: number): string[] {
+  if (!prevCol) return [];
+  const out = [prevCol[k]!.src];
+  if (k === 0) out.push(prevCol[DOME_COL_ROWS - 1]!.src);
+  return out;
+}
+
+function pickDistinctColumn(
+  uniqueTiles: NormalizedTile[],
+  prevCol: NormalizedTile[] | null,
+  rand: () => number,
+  quotaLeft: Map<string, number>,
+): NormalizedTile[] | null {
+  const used = new Set<string>();
+  const picked: NormalizedTile[] = [];
+
+  const dfs = (k: number): boolean => {
+    if (k === DOME_COL_ROWS) return true;
+    const forbidden = domeColumnForbiddenSrcs(prevCol, k);
+    const cand = uniqueTiles.filter(
+      t =>
+        !used.has(t.src) &&
+        !forbidden.includes(t.src) &&
+        (quotaLeft.get(t.src) ?? 0) > 0,
+    );
+    if (cand.length === 0) return false;
+
+    const order = cand.map((_, i) => i);
+    shuffleIndicesInPlace(order, rand);
+    order.sort(
+      (a, b) =>
+        (quotaLeft.get(cand[b]!.src) ?? 0) - (quotaLeft.get(cand[a]!.src) ?? 0) || rand() - 0.5,
+    );
+
+    for (const o of order) {
+      const t = cand[o]!;
+      used.add(t.src);
+      picked[k] = t;
+      quotaLeft.set(t.src, (quotaLeft.get(t.src) ?? 0) - 1);
+      if (dfs(k + 1)) return true;
+      quotaLeft.set(t.src, (quotaLeft.get(t.src) ?? 0) + 1);
+      used.delete(t.src);
+    }
+    return false;
+  };
+
+  return dfs(0) ? picked : null;
+}
+
+function fillColumnFallback(
+  uniqueTiles: NormalizedTile[],
+  prevCol: NormalizedTile[] | null,
+  rand: () => number,
+): NormalizedTile[] {
+  const used = new Set<string>();
+  const res: NormalizedTile[] = [];
+  for (let k = 0; k < DOME_COL_ROWS; k++) {
+    const forbidden = new Set(domeColumnForbiddenSrcs(prevCol, k));
+    const pick = uniqueTiles.filter(t => !used.has(t.src) && !forbidden.has(t.src));
+    const t =
+      pick.length > 0
+        ? pick[Math.floor(rand() * pick.length)]!
+        : (uniqueTiles.find(x => !used.has(x.src)) ?? uniqueTiles[0]!);
+    res.push(t);
+    used.add(t.src);
+  }
+  return res;
+}
+
+function buildColumnMajorBalancedGrid(
+  normalized: NormalizedTile[],
+  numCols: number,
+  seed: number,
+): NormalizedTile[] {
+  const bySrc = new Map<string, NormalizedTile>();
+  for (const t of normalized) {
+    if (t.src && !bySrc.has(t.src)) bySrc.set(t.src, t);
+  }
+  const uniqueTiles = [...bySrc.values()];
+  const u = uniqueTiles.length;
+  const totalSlots = numCols * DOME_COL_ROWS;
+  const out: NormalizedTile[] = new Array(totalSlots);
+
+  if (u < DOME_COL_ROWS) {
+    for (let i = 0; i < totalSlots; i++) {
+      out[i] = normalized[i % normalized.length]!;
+    }
+    return out;
+  }
+
+  const q = Math.floor(totalSlots / u);
+  const r = totalSlots % u;
+  const perm = Array.from({ length: u }, (_, i) => i);
+  shuffleIndicesInPlace(perm, mulberry32(seed ^ 0x51ee));
+  const extraOne = new Set<number>();
+  for (let x = 0; x < r; x++) {
+    extraOne.add(perm[x]!);
+  }
+  const initQuota = new Map<string, number>();
+  for (let i = 0; i < u; i++) {
+    const t = uniqueTiles[i]!;
+    initQuota.set(t.src, q + (extraOne.has(i) ? 1 : 0));
+  }
+
+  for (let c = 0; c < numCols; c++) {
+    const prevCol =
+      c === 0
+        ? null
+        : (Array.from({ length: DOME_COL_ROWS }, (_, k) => out[(c - 1) * DOME_COL_ROWS + k]) as NormalizedTile[]);
+
+    let col: NormalizedTile[] | null = null;
+    for (let attempt = 0; attempt < 48; attempt++) {
+      const quotaSnap = new Map(initQuota);
+      col = pickDistinctColumn(
+        uniqueTiles,
+        prevCol,
+        mulberry32(seed + c * 9973 + attempt * 131),
+        quotaSnap,
+      );
+      if (col) {
+        initQuota.clear();
+        for (const [src, n] of quotaSnap) initQuota.set(src, n);
+        break;
+      }
+    }
+
+    if (!col) {
+      col =
+        pickDistinctColumn(
+          uniqueTiles,
+          prevCol,
+          mulberry32(seed + c * 0xdead + 999),
+          new Map(uniqueTiles.map(t => [t.src, 1_000_000])),
+        ) ?? fillColumnFallback(uniqueTiles, prevCol, mulberry32(seed + c * 0xb0ba + 77));
+    }
+
+    for (let k = 0; k < DOME_COL_ROWS; k++) {
+      out[c * DOME_COL_ROWS + k] = col[k]!;
+    }
+  }
+
+  return out;
+}
+
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
   const evenYs = [-4, -2, 0, 2, 4];
@@ -161,7 +343,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     }));
   }
 
-  const normalizedImages = pool.map(image => {
+  const normalizedImages: NormalizedTile[] = pool.map(image => {
     if (typeof image === 'string') {
       return {
         src: image,
@@ -186,21 +368,8 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     };
   });
 
-  const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[i % normalizedImages.length]);
-
-  // Avoid identical adjacent images
-  for (let i = 1; i < usedImages.length; i++) {
-    if (usedImages[i].src === usedImages[i - 1].src) {
-      for (let j = i + 1; j < usedImages.length; j++) {
-        if (usedImages[j].src !== usedImages[i].src) {
-          const tmp = usedImages[i];
-          usedImages[i] = usedImages[j];
-          usedImages[j] = tmp;
-          break;
-        }
-      }
-    }
-  }
+  const mixSeed = domeTileMixSeed(totalSlots, normalizedImages.length);
+  const usedImages = buildColumnMajorBalancedGrid(normalizedImages, seg, mixSeed);
 
   return coords.map((c, i) => ({
     ...c,
