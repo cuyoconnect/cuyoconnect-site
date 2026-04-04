@@ -5,6 +5,11 @@ export const COMMUNITY_LINKS = [
     href: 'https://chat.whatsapp.com/IpH9WoZHXvFKGJ0wzj5dQp',
   },
   {
+    id: 'whatsapp-channel',
+    label: 'Canal de difusión',
+    href: 'https://whatsapp.com/channel/0029VbBN9NCAInPkxrmiSP0l',
+  },
+  {
     id: 'instagram',
     label: 'Instagram',
     href: 'https://www.instagram.com/cuyoconnect/',
