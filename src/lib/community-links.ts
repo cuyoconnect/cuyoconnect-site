@@ -6,7 +6,7 @@ export const COMMUNITY_LINKS = [
   },
   {
     id: 'whatsapp-channel',
-    label: 'Canal de difusión',
+    label: 'Canal de anuncios',
     href: 'https://whatsapp.com/channel/0029VbBN9NCAInPkxrmiSP0l',
   },
   {
