@@ -3,7 +3,7 @@
 ## Despliegue
 
 - El sitio está desplegado en **Vercel**.
-- Dominio de producción: **https://cuyoconnect.com**
+- Dominio de producción: **https://cuyoconnect.com** 
 
 ## Ancho de columna y hero
 
