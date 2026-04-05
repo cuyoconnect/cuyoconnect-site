@@ -1,0 +1,17 @@
+---
+import LandingPage from '@/components/LandingPage.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'CuyoConnect'
+const description =
+  'Somos la comunidad de builders en IA, tecnología y encuentros presenciales en el ecosistema Cuyo.'
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonical="/"
+  preloadHeroImage
+>
+  <LandingPage pathname="/" />
+</BaseLayout>

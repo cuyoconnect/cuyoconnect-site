@@ -9,6 +9,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 
 import {
+  configureSupabaseAuthEnv,
   getSupabaseBrowserClient,
   getSupabaseOAuthRedirectTo,
   hasSupabaseAuthEnv,
@@ -26,10 +27,24 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+  supabaseUrl,
+  supabaseAnonKey,
+}: {
+  children: ReactNode
+  supabaseUrl?: string
+  supabaseAnonKey?: string
+}) {
+  configureSupabaseAuthEnv({
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  })
+
+  const authConfigured = hasSupabaseAuthEnv()
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
-  const [isAuthReady, setIsAuthReady] = useState(!hasSupabaseAuthEnv)
+  const [isAuthReady, setIsAuthReady] = useState(!authConfigured)
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
@@ -77,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      hasAuthConfigured: hasSupabaseAuthEnv,
+      hasAuthConfigured: authConfigured,
       isAuthReady,
       isSigningIn,
       session,
@@ -111,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [isAuthReady, isSigningIn, session, user],
+    [authConfigured, isAuthReady, isSigningIn, session, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

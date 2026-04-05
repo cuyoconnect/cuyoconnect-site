@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# CuyoConnect
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sitio estático en Astro con islas React para conservar la interacción existente.
 
-Currently, two official plugins are available: 
-   
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-      
-## React Compiler    
- 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
 
-## Expanding the ESLint configuration
- 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `npm run dev`: inicia Astro en desarrollo.
+- `npm run build`: genera el sitio estático en `dist/`.
+- `npm run preview`: sirve el build localmente.
+- `npm run lint`: corre ESLint sobre `ts` y `tsx` del proyecto.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Rutas
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- `/`: landing principal.
+- `/recursos`: archivo de recursos y materiales.
+- `/eventos`: landing con scroll inicial a la sección de eventos.
+- `/miembros`: landing con scroll inicial a la sección de miembros.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Variables de entorno
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Variables públicas recomendadas:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `PUBLIC_SITE_URL`
+- `PUBLIC_SUPABASE_URL`
+- `PUBLIC_SUPABASE_ANON_KEY`
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Compatibilidad transicional mantenida:
+
+- `VITE_SITE_URL`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+
+## Notas de arquitectura
+
+- Astro se encarga del routing, metadata y salida estática.
+- React queda solo en las secciones que hoy necesitan estado cliente, animaciones, drag, modal o Supabase.
+- No se usan View Transitions en esta primera migración.

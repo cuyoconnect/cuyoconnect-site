@@ -43,6 +43,8 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
     }
   }, [open])
 
+  if (typeof document === 'undefined') return null
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -59,7 +61,10 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.32,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           />
           <motion.div
             role="dialog"
@@ -112,7 +117,11 @@ export function JoinCommunityModal({ open, onClose }: JoinCommunityModalProps) {
                   transition={
                     reduceMotion
                       ? { duration: 0 }
-                      : { duration: 0.38, delay: 0.12 + i * 0.055, ease: [0.22, 1, 0.36, 1] }
+                      : {
+                          duration: 0.38,
+                          delay: 0.12 + i * 0.055,
+                          ease: [0.22, 1, 0.36, 1],
+                        }
                   }
                 >
                   <button

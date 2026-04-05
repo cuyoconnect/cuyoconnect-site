@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
+import { ArchivePosterCard } from '@/components/ArchivePosterCard'
 import { BlurText } from '@/components/ui/blur-text'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
@@ -89,175 +90,6 @@ const INTERLEAVED = interleave(
   STELLAR_CARDS,
   LATINHACK_CARDS,
 )
-
-function ArrowUpRightIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M7 17 17 7M7 7h10v10" />
-    </svg>
-  )
-}
-
-function CalendarIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M8 2v4M16 2v4" />
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <path d="M3 10h18" />
-    </svg>
-  )
-}
-
-interface EventCardProps extends EventCard {
-  cardIndex: number
-  hoveredIndex: number | null
-  isDragging: boolean
-  reduceMotion: boolean | null
-  onMouseEnter: () => void
-  onMouseLeave: () => void
-}
-
-function EventCardItem({
-  image,
-  title,
-  date,
-  cardIndex,
-  hoveredIndex,
-  isDragging,
-  reduceMotion,
-  onMouseEnter,
-  onMouseLeave,
-}: EventCardProps) {
-  const effectiveHovered = isDragging ? null : hoveredIndex
-  const isHoveredCard = effectiveHovered === cardIndex
-  const isPeerDimmed =
-    effectiveHovered !== null && effectiveHovered !== cardIndex
-
-  const sat =
-    effectiveHovered === null
-      ? 0.85
-      : isHoveredCard
-        ? 1
-        : /* peer */ 0.48
-  const gray = isPeerDimmed ? 0.42 : 0
-  const filterValue = `saturate(${sat}) grayscale(${gray})`
-
-  const articleStyle =
-    reduceMotion === true
-      ? {
-          filter: filterValue,
-          WebkitFilter: filterValue,
-          boxShadow: isHoveredCard
-            ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
-            : '0 1px 4px rgba(0,0,0,0.06)',
-        }
-      : {
-          filter: filterValue,
-          WebkitFilter: filterValue,
-          boxShadow: isHoveredCard
-            ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
-            : '0 1px 4px rgba(0,0,0,0.06)',
-          transitionProperty: 'filter, box-shadow',
-          transitionDuration: effectiveHovered === null ? '420ms' : '280ms',
-          transitionDelay: effectiveHovered === null ? '90ms' : '0ms',
-          transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
-        }
-
-  return (
-    <article
-      className={cn(
-        'relative shrink-0 rounded-2xl border border-neutral-200 bg-white',
-        'w-52 select-none sm:w-60 md:w-68',
-      )}
-      style={articleStyle}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
-      <div
-        className={cn(
-          'pointer-events-none absolute right-3 top-3 z-20 sm:right-4 sm:top-4',
-          'flex size-8 items-center justify-center rounded-full bg-yellow-300 text-neutral-950',
-          'ring-1 ring-black/10 shadow-[0_1px_3px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]',
-          'sm:size-9',
-        )}
-        style={{
-          opacity: isHoveredCard ? 1 : 0,
-          transition: 'opacity 300ms cubic-bezier(0.33, 1, 0.68, 1)',
-        }}
-        aria-hidden
-      >
-        <ArrowUpRightIcon className="size-3.5 shrink-0 sm:size-4" />
-      </div>
-
-      <a
-        href={INSTAGRAM_HREF}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cn(
-          'absolute inset-0 z-30 rounded-2xl',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950',
-        )}
-        aria-label={`Ver ${title} en Instagram`}
-        draggable={false}
-      />
-
-      <div className="relative z-0 aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-200">
-        <img
-          src={image}
-          alt={title}
-          className="relative z-0 size-full object-cover object-center"
-          width={400}
-          height={500}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-        />
-        <div className="absolute inset-x-0 bottom-0 z-10">
-          <div
-            className={cn(
-              'absolute inset-0 -top-16 bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125 sm:-top-22',
-              '[mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
-              '[-webkit-mask-image:linear-gradient(to_top,rgb(0_0_0)_0%,rgb(0_0_0)_45%,rgba(0,0,0,0.3)_75%,transparent_100%)]',
-            )}
-            aria-hidden
-          />
-          <div className="relative z-10 px-4 pb-5 pt-5 sm:px-5 sm:pb-6">
-            <h3 className="text-balance text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-base">
-              {title}
-            </h3>
-            <p
-              className={cn(
-                'mt-0.5 flex items-center gap-1.5 text-xs leading-relaxed text-white sm:mt-1 sm:gap-2 sm:text-sm lg:text-base',
-                '[text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
-              )}
-            >
-              <CalendarIcon className="block size-3 shrink-0 text-current sm:size-3.5" />
-              <span className="leading-none">{date}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
 
 export function PastEventsSliderSection() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
@@ -419,9 +251,15 @@ export function PastEventsSliderSection() {
             style={{ gap: '14px', width: 'max-content' }}
           >
             {items.map((eventCard, index) => (
-              <EventCardItem
+              <ArchivePosterCard
                 key={index}
-                {...eventCard}
+                variant="slider"
+                imageSrc={eventCard.image}
+                title={eventCard.title}
+                dateLabel={eventCard.date}
+                href={INSTAGRAM_HREF}
+                ariaLabel={`Ver ${eventCard.title} en Instagram`}
+                external
                 cardIndex={index}
                 hoveredIndex={hoveredIndex}
                 isDragging={isDragging}

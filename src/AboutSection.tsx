@@ -18,7 +18,13 @@ import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { HERO_TOPIC_HIGHLIGHT } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
-gsap.registerPlugin(ScrollTrigger)
+let gsapRegistered = false
+
+function ensureGsapPluginsRegistered() {
+  if (gsapRegistered || typeof window === 'undefined') return
+  gsap.registerPlugin(ScrollTrigger)
+  gsapRegistered = true
+}
 
 const ABOUT_HEADING = 'QUIÉNES SOMOS'
 
@@ -561,6 +567,7 @@ export function AboutSection() {
 
   useLayoutEffect(() => {
     if (reduceMotion) return
+    ensureGsapPluginsRegistered()
 
     const section = sectionRef.current
 

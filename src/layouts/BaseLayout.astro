@@ -1,0 +1,85 @@
+---
+import '../index.css'
+
+interface Props {
+  title: string
+  description: string
+  canonical: string
+  ogImage?: string
+  preloadHeroImage?: boolean
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage = '/cuyo-connect-og.webp',
+  preloadHeroImage = false,
+} = Astro.props
+
+const siteUrl = (
+  import.meta.env.PUBLIC_SITE_URL ?? import.meta.env.VITE_SITE_URL ?? ''
+)
+  .trim()
+  .replace(/\/$/, '')
+
+function toAbsolute(url: string) {
+  if (/^https?:\/\//i.test(url) || !siteUrl) return url
+  return new URL(url, `${siteUrl}/`).toString()
+}
+
+const canonicalUrl = toAbsolute(canonical)
+const ogImageUrl = toAbsolute(ogImage)
+const ogUrl = canonicalUrl || toAbsolute(Astro.url.pathname)
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="882x882" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CuyoConnect" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="1080" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:url" content={ogUrl} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    {preloadHeroImage ? (
+      <link
+        rel="preload"
+        as="image"
+        href="/cuyo-connect-hero.webp"
+        fetchpriority="high"
+      />
+    ) : null}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

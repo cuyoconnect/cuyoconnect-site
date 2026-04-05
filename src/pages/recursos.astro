@@ -1,0 +1,18 @@
+---
+import { RecursosPage } from '@/RecursosPage'
+import { SiteHeader } from '@/SiteHeader'
+import SiteFooter from '@/SiteFooter.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Recursos — CuyoConnect'
+const description =
+  'Presentaciones, guías y materiales de capacitaciones de la comunidad CuyoConnect.'
+---
+
+<BaseLayout title={title} description={description} canonical="/recursos">
+  <SiteHeader client:load pathname="/recursos" />
+  <main>
+    <RecursosPage client:visible />
+  </main>
+  <SiteFooter />
+</BaseLayout>

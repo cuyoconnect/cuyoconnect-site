@@ -1,17 +1,8 @@
-import {
-  useEffect,
-  useState,
-  type AnchorHTMLAttributes,
-  type CSSProperties,
-} from 'react'
+import { useEffect, useState, type CSSProperties, type MouseEvent } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 import { JoinCommunityModal } from '@/JoinCommunityModal'
-import {
-  SECTION_PATH_TO_ID,
-  scheduleScrollToSectionId,
-  type SectionPathname,
-} from '@/lib/section-scroll'
+import { scrollToSectionElement } from '@/lib/section-scroll'
 import { cn } from '@/lib/utils'
 
 const SCROLL_PILL_THRESHOLD = 100
@@ -57,49 +48,39 @@ const navTextLinkClass = cn(
   'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
 )
 
-function SectionNavLink({
-  path,
-  className,
-  style,
-  children,
-  ...rest
-}: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
-  path: SectionPathname
-}) {
-  const sectionId = SECTION_PATH_TO_ID[path]
-  return (
-    <a
-      href={path}
-      className={className}
-      style={style}
-      {...rest}
-      onClick={(e) => {
-        rest.onClick?.(e)
-        if (e.defaultPrevented) return
-        if (
-          e.button !== 0 ||
-          e.metaKey ||
-          e.ctrlKey ||
-          e.shiftKey ||
-          e.altKey
-        ) {
-          return
-        }
-        e.preventDefault()
-        window.history.pushState(null, '', path)
-        scheduleScrollToSectionId(sectionId)
-      }}
-    >
-      {children}
-    </a>
+function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
+  return !(
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
   )
 }
 
-export function SiteHeader() {
+function tryScrollLandingSection(
+  event: MouseEvent<HTMLAnchorElement>,
+  _pathname: string,
+  id: string,
+  hash: string,
+) {
+  if (!isPlainLeftClick(event)) return
+
+  const didScroll = scrollToSectionElement(id)
+  if (!didScroll) return
+
+  event.preventDefault()
+  window.history.replaceState(null, '', hash)
+}
+
+export function SiteHeader({ pathname }: { pathname: string }) {
   const [joinOpen, setJoinOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const reduceMotion = useReducedMotion()
   const navTransitionTiming = `${navTransitionDuration} ${navShellEase}`
+  const isHome = pathname === '/'
+  const logoHref = isHome ? '#inicio' : '/'
+  const eventsHref = isHome ? '#eventos' : '/eventos'
 
   useEffect(() => {
     const onScroll = () => {
@@ -160,7 +141,9 @@ export function SiteHeader() {
     backgroundColor: scrolled
       ? 'rgba(255, 255, 255, 0.44)'
       : 'rgba(255, 255, 255, 0.58)',
-    backdropFilter: scrolled ? 'blur(14px) saturate(1.08)' : 'blur(22px) saturate(1.2)',
+    backdropFilter: scrolled
+      ? 'blur(14px) saturate(1.08)'
+      : 'blur(22px) saturate(1.2)',
     WebkitBackdropFilter: scrolled
       ? 'blur(14px) saturate(1.08)'
       : 'blur(22px) saturate(1.2)',
@@ -179,7 +162,10 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50" aria-label="Principal">
+      <header
+        className="pointer-events-none fixed inset-x-0 top-0 z-50"
+        aria-label="Principal"
+      >
         <div
           className={cn(
             'pointer-events-auto isolate overflow-hidden',
@@ -187,91 +173,115 @@ export function SiteHeader() {
           )}
           style={shellStyle}
         >
-        {/* Tinte suave: no tapar el vidrio */}
-        <div
-          className={cn(
-            'pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10',
-            scrolled
-              ? 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]'
-              : 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.35)_0%,rgb(255_255_255_/_.18)_45%,transparent_100%)]',
-          )}
-          aria-hidden
-        />
-
-        <div
-          className={cn(
-            'relative z-10 flex min-h-14 min-w-0 items-center sm:min-h-16',
-            scrolled
-              ? 'w-max max-w-full justify-start gap-3 px-2 py-2 sm:gap-4 sm:px-3'
-              : 'w-full min-w-0 justify-between gap-2 px-2 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-5 sm:px-6',
-          )}
-          style={navLayoutStyle}
-        >
-          <a
-            href="#inicio"
-            className={cn(
-              'flex min-w-0 shrink items-center gap-1.5 rounded-[10px] font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 sm:shrink-0 sm:gap-2 sm:whitespace-nowrap',
-              scrolled
-                ? 'px-2 py-1.5 text-sm text-[#1d1d1f] sm:gap-2 sm:px-3 sm:text-base'
-                : 'px-1 py-1 text-sm text-neutral-950 sm:gap-2.5 sm:px-0 sm:py-0 sm:text-base md:text-lg',
-            )}
-            aria-label="CuyoConnect — inicio"
-            style={navItemStyle}
-          >
-            <NavLogoMark className="h-7 shrink-0 sm:h-9" />
-            {!scrolled ? (
-              <span className="min-w-0 truncate sm:overflow-visible">
-                CuyoConnect
-              </span>
-            ) : (
-              <>
-                <span className="hidden min-[380px]:inline">CuyoConnect</span>
-                <span className="min-[380px]:hidden">Cuyo</span>
-              </>
-            )}
-          </a>
-
           <div
-            aria-hidden
             className={cn(
-              'basis-0 shrink',
-              scrolled ? 'min-w-0 opacity-0' : 'min-w-1 opacity-100 sm:min-w-2',
+              'pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10',
+              scrolled
+                ? 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]'
+                : 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.35)_0%,rgb(255_255_255_/_.18)_45%,transparent_100%)]',
             )}
-            style={navSpacerStyle}
+            aria-hidden
           />
 
-          <SectionNavLink
-            path="/eventos"
+          <div
             className={cn(
-              navTextLinkClass,
+              'relative z-10 flex min-h-14 min-w-0 items-center sm:min-h-16',
               scrolled
-                ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
-                : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
+                ? 'w-max max-w-full justify-start gap-3 px-2 py-2 sm:gap-4 sm:px-3'
+                : 'w-full min-w-0 justify-between gap-2 px-2 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-5 sm:px-6',
             )}
-            style={navItemStyle}
+            style={navLayoutStyle}
           >
-            Eventos
-          </SectionNavLink>
+            <a
+              href={logoHref}
+              className={cn(
+                'flex min-w-0 shrink items-center gap-1.5 rounded-[10px] font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 sm:shrink-0 sm:gap-2 sm:whitespace-nowrap',
+                scrolled
+                  ? 'px-2 py-1.5 text-sm text-[#1d1d1f] sm:gap-2 sm:px-3 sm:text-base'
+                  : 'px-1 py-1 text-sm text-neutral-950 sm:gap-2.5 sm:px-0 sm:py-0 sm:text-base md:text-lg',
+              )}
+              aria-label="CuyoConnect — inicio"
+              style={navItemStyle}
+              onClick={(event) => {
+                if (event.defaultPrevented) return
+                tryScrollLandingSection(event, pathname, 'inicio', '#inicio')
+              }}
+            >
+              <NavLogoMark className="h-7 shrink-0 sm:h-9" />
+              {!scrolled ? (
+                <span className="min-w-0 truncate sm:overflow-visible">
+                  CuyoConnect
+                </span>
+              ) : (
+                <>
+                  <span className="hidden min-[380px]:inline">CuyoConnect</span>
+                  <span className="min-[380px]:hidden">Cuyo</span>
+                </>
+              )}
+            </a>
 
-          <button
-            type="button"
-            className={cn(
-              'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
-              'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
-              scrolled
-                ? 'inline-flex gap-1 px-3 py-2 text-xs shadow-sm sm:gap-1.5 sm:px-5 sm:text-sm'
-                : 'ml-2 inline-flex h-9 gap-1 px-3 text-xs sm:ml-3 sm:gap-1.5 sm:px-4 sm:text-sm',
-            )}
-            onClick={() => setJoinOpen(true)}
-            style={navItemStyle}
-          >
-            Unite
-            <ArrowUpRightIcon
+            <div
               aria-hidden
-              className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
+              className={cn(
+                'basis-0 shrink',
+                scrolled
+                  ? 'min-w-0 opacity-0'
+                  : 'min-w-1 opacity-100 sm:min-w-2',
+              )}
+              style={navSpacerStyle}
             />
-          </button>
-        </div>
+
+            <a
+              href={eventsHref}
+              aria-current={pathname === '/eventos' ? 'page' : undefined}
+              className={cn(
+                navTextLinkClass,
+                scrolled
+                  ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
+                  : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
+              )}
+              style={navItemStyle}
+              onClick={(event) => {
+                if (event.defaultPrevented) return
+                tryScrollLandingSection(event, pathname, 'eventos', '#eventos')
+              }}
+            >
+              Eventos
+            </a>
+
+            <a
+              href="/recursos"
+              aria-current={pathname === '/recursos' ? 'page' : undefined}
+              className={cn(
+                navTextLinkClass,
+                scrolled
+                  ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
+                  : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
+              )}
+              style={navItemStyle}
+            >
+              Recursos
+            </a>
+
+            <button
+              type="button"
+              className={cn(
+                'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+                'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
+                scrolled
+                  ? 'inline-flex gap-1 px-3 py-2 text-xs shadow-sm sm:gap-1.5 sm:px-5 sm:text-sm'
+                  : 'ml-2 inline-flex h-9 gap-1 px-3 text-xs sm:ml-3 sm:gap-1.5 sm:px-4 sm:text-sm',
+              )}
+              onClick={() => setJoinOpen(true)}
+              style={navItemStyle}
+            >
+              Unite
+              <ArrowUpRightIcon
+                aria-hidden
+                className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
+              />
+            </button>
+          </div>
         </div>
       </header>
 

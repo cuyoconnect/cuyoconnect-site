@@ -1,0 +1,38 @@
+---
+import { AboutSection } from '@/AboutSection'
+import { EventsSection } from '@/EventsSection'
+import { Hero } from '@/Hero'
+import { PastEventsSliderSection } from '@/PastEventsSliderSection'
+import { SiteHeader } from '@/SiteHeader'
+import SiteFooter from '@/SiteFooter.astro'
+import { TeamSection } from '@/TeamSection'
+import OurEventsGalleryIsland from '@/components/OurEventsGalleryIsland'
+
+interface Props {
+  pathname: string
+}
+
+const { pathname } = Astro.props
+const supabaseUrl =
+  import.meta.env.PUBLIC_SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL ?? ''
+const supabaseAnonKey =
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+  ''
+---
+
+<SiteHeader client:load pathname={pathname} />
+<main>
+  <Hero client:load />
+  <AboutSection client:visible />
+  <OurEventsGalleryIsland
+    client:visible
+    supabaseUrl={supabaseUrl}
+    supabaseAnonKey={supabaseAnonKey}
+  />
+  <PastEventsSliderSection client:visible />
+  <EventsSection client:visible />
+  <TeamSection client:visible />
+</main>
+<SiteFooter />

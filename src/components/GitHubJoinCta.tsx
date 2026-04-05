@@ -44,8 +44,8 @@ export function GitHubJoinCta({ className }: GitHubJoinCtaProps) {
           className,
         )}
       >
-        Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` para habilitar
-        el acceso con GitHub.
+        Configura `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`, o usa el
+        bridge transicional desde `VITE_*`, para habilitar el acceso con GitHub.
       </div>
     )
   }
