@@ -13,7 +13,7 @@ export type MemberProfile = {
 const MEMBER_PROFILE_COLUMNS =
   'id, github_login, display_name, avatar_url, github_url, joined_at, is_visible'
 
-export async function fetchVisibleMemberProfiles() {
+async function fetchVisibleMemberProfilesFromSupabase() {
   const supabase = getSupabaseBrowserClient()
   if (!supabase) return []
 
@@ -28,6 +28,23 @@ export async function fetchVisibleMemberProfiles() {
   }
 
   return (data ?? []) as MemberProfile[]
+}
+
+export async function fetchVisibleMemberProfiles() {
+  if (import.meta.env.DEV) {
+    return fetchVisibleMemberProfilesFromSupabase()
+  }
+
+  const res = await fetch('/api/member-profiles', {
+    headers: { Accept: 'application/json' },
+  })
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(detail || `member_profiles HTTP ${res.status}`)
+  }
+
+  return (await res.json()) as MemberProfile[]
 }
 
 export function formatMemberJoinedAt(joinedAt: string) {
