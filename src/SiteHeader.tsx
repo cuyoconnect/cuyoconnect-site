@@ -249,20 +249,6 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               Eventos
             </a>
 
-            <a
-              href="/recursos"
-              aria-current={pathname === '/recursos' ? 'page' : undefined}
-              className={cn(
-                navTextLinkClass,
-                scrolled
-                  ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
-                  : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
-              )}
-              style={navItemStyle}
-            >
-              Recursos
-            </a>
-
             <button
               type="button"
               className={cn(

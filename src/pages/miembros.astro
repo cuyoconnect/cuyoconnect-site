@@ -12,20 +12,22 @@ const targetId = 'miembros'
   <LandingPage pathname="/miembros" />
   <script is:inline define:vars={{ targetId }}>
     (() => {
-      const scrollToTarget = () => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            document.getElementById(targetId)?.scrollIntoView({ behavior: 'auto' })
-          })
-        })
+      let attempts = 0
+      const maxAttempts = 90
+      const step = () => {
+        const section = document.getElementById(targetId)
+        if (section) {
+          const heading = section.querySelector('[id$="-heading"]')
+          ;(heading ?? section).scrollIntoView({ behavior: 'auto' })
+          return
+        }
+        if (++attempts < maxAttempts) requestAnimationFrame(step)
       }
 
-      if (document.readyState === 'complete') {
-        scrollToTarget()
-        return
-      }
+      const start = () => requestAnimationFrame(step)
 
-      window.addEventListener('load', scrollToTarget, { once: true })
+      if (document.readyState === 'complete') { start(); return }
+      window.addEventListener('load', start, { once: true })
     })()
   </script>
 </BaseLayout>
