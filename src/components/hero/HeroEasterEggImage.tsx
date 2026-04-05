@@ -216,7 +216,7 @@ export function HeroEasterEggImage({
   const wrapRef = useRef<HTMLDivElement>(null)
   const [tapCount, setTapCount] = useState(0)
   const tapResetRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const captionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const captionTimerRef = useRef<number | null>(null)
   const [phase, setPhase] = useState<Phase>('hero')
   const [loadGate, setLoadGate] = useState<LoadGate>(null)
   const loadGateRef = useRef<LoadGate>(null)

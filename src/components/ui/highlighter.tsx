@@ -54,7 +54,7 @@ export function Highlighter({
   useLayoutEffect(() => {
     let annotation: RoughAnnotation | null = null
     let resizeObserver: ResizeObserver | null = null
-    let showTimeoutId: ReturnType<typeof setTimeout> | null = null
+    let showTimeoutId: number | null = null
     let redrawFrameId: number | null = null
     let detachViewportListeners: (() => void) | null = null
 
