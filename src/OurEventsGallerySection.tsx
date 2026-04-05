@@ -102,8 +102,8 @@ export function OurEventsGallerySection() {
             />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-            Cada persona que se una con GitHub aparece en la galería con su
-            avatar y un acceso directo a su perfil público.
+            Sumate con GitHub para aparecer en la galería con tu avatar y un
+            enlace a tu perfil público.
           </p>
         </div>
 

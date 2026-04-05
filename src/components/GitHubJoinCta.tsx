@@ -81,10 +81,6 @@ export function GitHubJoinCta({ className }: GitHubJoinCtaProps) {
         </span>
       </button>
 
-      <p className="text-sm text-neutral-600">
-        Inicia sesión con GitHub y tu avatar aparecerá automáticamente.
-      </p>
-
       {errorMessage ? (
         <p className="text-sm text-rose-600">{errorMessage}</p>
       ) : null}
