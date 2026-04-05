@@ -130,8 +130,8 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   const shellStyle: CSSProperties = {
     width: scrolled ? 'max-content' : '100%',
     maxWidth: scrolled
-      ? 'min(calc(100vw - 1.5rem), 52rem)'
-      : 'min(calc(100vw - 2rem), 52rem)',
+      ? 'min(calc(100dvw - 1.5rem), 52rem)'
+      : 'min(calc(100dvw - 2rem), 52rem)',
     marginLeft: 'auto',
     marginRight: 'auto',
     marginTop: scrolled

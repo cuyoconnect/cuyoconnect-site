@@ -90,6 +90,33 @@ export function Highlighter({
         })
       }
 
+      let viewportRaf1: number | null = null
+      let viewportRaf2: number | null = null
+
+      const cancelViewportRedrawRafs = () => {
+        if (viewportRaf1 != null) {
+          window.cancelAnimationFrame(viewportRaf1)
+          viewportRaf1 = null
+        }
+        if (viewportRaf2 != null) {
+          window.cancelAnimationFrame(viewportRaf2)
+          viewportRaf2 = null
+        }
+      }
+
+      const scheduleViewportGeometrySync = () => {
+        if (annotation !== currentAnnotation) return
+        cancelViewportRedrawRafs()
+        viewportRaf1 = window.requestAnimationFrame(() => {
+          viewportRaf1 = null
+          viewportRaf2 = window.requestAnimationFrame(() => {
+            viewportRaf2 = null
+            if (annotation !== currentAnnotation) return
+            currentAnnotation.show()
+          })
+        })
+      }
+
       resizeObserver = new ResizeObserver(() => {
         redrawWithoutAnimation()
       })
@@ -99,13 +126,14 @@ export function Highlighter({
       // `visualViewport` cubre los cambios de barras del navegador móvil que
       // mueven el texto sin disparar un resize del propio span.
       const handleViewportShift = () => {
-        redrawWithoutAnimation()
+        scheduleViewportGeometrySync()
       }
       const vv = window.visualViewport
       window.addEventListener('resize', handleViewportShift)
       vv?.addEventListener('resize', handleViewportShift)
       vv?.addEventListener('scroll', handleViewportShift)
       detachViewportListeners = () => {
+        cancelViewportRedrawRafs()
         window.removeEventListener('resize', handleViewportShift)
         vv?.removeEventListener('resize', handleViewportShift)
         vv?.removeEventListener('scroll', handleViewportShift)

@@ -199,6 +199,39 @@ export function BlurText({
       })
     }
 
+    let viewportRaf1: number | null = null
+    let viewportRaf2: number | null = null
+
+    const cancelViewportRedrawRafs = () => {
+      if (viewportRaf1 != null) {
+        window.cancelAnimationFrame(viewportRaf1)
+        viewportRaf1 = null
+      }
+      if (viewportRaf2 != null) {
+        window.cancelAnimationFrame(viewportRaf2)
+        viewportRaf2 = null
+      }
+    }
+
+    /**
+     * iOS/Safari: la barra del navegador mueve el layout sin pasar siempre
+     * por el guard de `ann.show()` (que silencia repeticiones durante la
+     * animación inicial). Hay que usar `rawShow` tras dos rAF para medir
+     * después del reflow del motor.
+     */
+    const scheduleViewportGeometrySync = () => {
+      if (annotationRef.current !== ann) return
+      cancelViewportRedrawRafs()
+      viewportRaf1 = window.requestAnimationFrame(() => {
+        viewportRaf1 = null
+        viewportRaf2 = window.requestAnimationFrame(() => {
+          viewportRaf2 = null
+          if (annotationRef.current !== ann) return
+          rawShow()
+        })
+      })
+    }
+
     // Solo el span del tail: observar `document.body` disparaba hide/show al
     // interactuar con el DOME (layout/WebGL) y repetía la animación del marcador.
     const ro = new ResizeObserver(() => {
@@ -211,13 +244,14 @@ export function BlurText({
     // redimensionar el span. Escuchar `visualViewport` mantiene el marcador
     // alineado sin volver a animarlo.
     const handleViewportShift = () => {
-      redrawWithoutAnimation()
+      scheduleViewportGeometrySync()
     }
     const vv = window.visualViewport
     window.addEventListener('resize', handleViewportShift)
     vv?.addEventListener('resize', handleViewportShift)
     vv?.addEventListener('scroll', handleViewportShift)
     viewportListenersCleanupRef.current = () => {
+      cancelViewportRedrawRafs()
       window.removeEventListener('resize', handleViewportShift)
       vv?.removeEventListener('resize', handleViewportShift)
       vv?.removeEventListener('scroll', handleViewportShift)
