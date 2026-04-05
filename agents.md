@@ -1,5 +1,10 @@
 # Guía para agentes (CuyoConnect)
 
+## Despliegue
+
+- El sitio está desplegado en **Vercel**.
+- Dominio de producción: **https://cuyoconnect.com**
+
 ## Ancho de columna y hero
 
 - La columna de contenido del **hero** se define con `HERO_CONTENT_WIDTH_CLASS` en `src/lib/content-width.ts`. Replica el ancho del arte PNG del hero (topes en `sm` / `md` / `lg` y `calc(100vw - 3rem)` donde aplica).
