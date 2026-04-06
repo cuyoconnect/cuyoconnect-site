@@ -10,16 +10,16 @@ const SECTION_HEADING = 'Eventos anteriores'
 const SPEED = 22
 const INSTAGRAM_HREF = 'https://www.instagram.com/cuyoconnect/'
 
-const CURSOR_PHOTOS = [
-  '/events/event-01.webp',
-  '/events/event-02.webp',
-  '/events/event-03.webp',
-  '/events/event-04.webp',
-  '/events/event-05.webp',
-  '/events/event-06.webp',
-  '/events/event-07.webp',
-  '/events/event-08.webp',
-]
+// const CURSOR_PHOTOS = [
+//   '/events/event-01.webp',
+//   '/events/event-02.webp',
+//   '/events/event-03.webp',
+//   '/events/event-04.webp',
+//   '/events/event-05.webp',
+//   '/events/event-06.webp',
+//   '/events/event-07.webp',
+//   '/events/event-08.webp',
+// ]
 
 const ALEPH_PHOTOS = [
   '/events/event-09.webp',
@@ -54,7 +54,7 @@ function makeCards(photos: string[], title: string, date: string): EventCard[] {
   return photos.map((image) => ({ image, title, date }))
 }
 
-const CURSOR_CARDS = makeCards(CURSOR_PHOTOS, 'CURSOR', '19 feb 2026')
+// const CURSOR_CARDS = makeCards(CURSOR_PHOTOS, 'CURSOR', '19 feb 2026')
 
 const ALEPH_CARDS = makeCards(ALEPH_PHOTOS, "Aleph's Hackathon", '29 ago 2025')
 
@@ -85,7 +85,7 @@ function interleave(...groups: EventCard[][]): EventCard[] {
 }
 
 const INTERLEAVED = interleave(
-  CURSOR_CARDS,
+  // CURSOR_CARDS,
   ALEPH_CARDS,
   STELLAR_CARDS,
   LATINHACK_CARDS,
