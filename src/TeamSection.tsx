@@ -151,11 +151,11 @@ export function TeamSection() {
                         WebkitFilter: filterValue,
                         transitionProperty: 'filter',
                         transitionDuration:
-                          hoveredCardIndex === null ? '420ms' : '280ms',
+                          hoveredCardIndex === null ? '560ms' : '520ms',
                         transitionDelay:
-                          hoveredCardIndex === null ? '90ms' : '0ms',
+                          hoveredCardIndex === null ? '100ms' : '0ms',
                         transitionTimingFunction:
-                          'cubic-bezier(0.33, 1, 0.68, 1)',
+                          'cubic-bezier(0.25, 0.9, 0.35, 1)',
                       }
                 }
               >
@@ -166,10 +166,19 @@ export function TeamSection() {
                     'bg-yellow-300 text-neutral-950 ring-1 ring-black/10',
                     'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]',
                   )}
-                  style={{
-                    opacity: isHoveredCard ? 1 : 0,
-                    transition: 'opacity 300ms cubic-bezier(0.33, 1, 0.68, 1)',
-                  }}
+                  style={
+                    reduceMotion
+                      ? {
+                          opacity: isHoveredCard ? 1 : 0,
+                        }
+                      : {
+                          opacity: isHoveredCard ? 1 : 0,
+                          transform: isHoveredCard ? 'scale(1)' : 'scale(0.92)',
+                          transition: isHoveredCard
+                            ? 'opacity 520ms cubic-bezier(0.25, 0.9, 0.35, 1) 70ms, transform 520ms cubic-bezier(0.25, 0.9, 0.35, 1) 70ms'
+                            : 'opacity 360ms cubic-bezier(0.25, 0.9, 0.35, 1), transform 360ms cubic-bezier(0.25, 0.9, 0.35, 1)',
+                        }
+                  }
                   aria-hidden
                 >
                   <ArrowUpRightIcon className="size-3.5 shrink-0 sm:size-4" />

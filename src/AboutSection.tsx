@@ -60,6 +60,10 @@ type AboutGalleryItem = {
   frameClassName: string
   outlineClassName: string
   accentClassName: string
+  /** Rotación base del marco / foto (deg), en hover suma un delta suave. */
+  frameRotateDeg: number
+  /** Rotación base del outline (deg), en hover se mueve en sentido opuesto al marco. */
+  outlineRotateDeg: number
   sizes?: string
   objectPosition?: string
   useSquiggleClip?: boolean
@@ -73,9 +77,11 @@ const ABOUT_STAGE_GALLERY_ITEMS: AboutGalleryItem[] = [
     positionClassName:
       'left-[3%] top-[3%] w-[6.2rem] sm:left-[6%] sm:w-[7.5rem] lg:left-[15%] lg:top-[7%] lg:w-[9.8rem] xl:left-[16%] xl:top-[4%] xl:w-[12rem]',
     frameClassName:
-      'aspect-[4/5] rounded-[46%_54%_52%_48%/38%_42%_58%_62%] rotate-[-9deg]',
+      'aspect-[4/5] rounded-[46%_54%_52%_48%/38%_42%_58%_62%]',
     outlineClassName:
-      'rounded-[44%_56%_50%_50%/42%_35%_65%_58%] rotate-[6deg]',
+      'rounded-[44%_56%_50%_50%/42%_35%_65%_58%]',
+    frameRotateDeg: -9,
+    outlineRotateDeg: 6,
     accentClassName:
       '-right-3 -top-3 h-[34%] w-[42%] rounded-[56%_44%_60%_40%/45%_38%_62%_55%] bg-[#ffec6b]/75',
     objectPosition: 'center 28%',
@@ -85,9 +91,11 @@ const ABOUT_STAGE_GALLERY_ITEMS: AboutGalleryItem[] = [
     positionClassName:
       'left-[4%] bottom-[5%] w-[6.2rem] sm:left-[7%] sm:w-[7.5rem] lg:left-[13%] lg:bottom-[14%] lg:w-[10.4rem] xl:left-[14%] xl:bottom-[11%] xl:w-[12.8rem]',
     frameClassName:
-      'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[4deg]',
+      'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem]',
     outlineClassName:
-      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-7deg]',
+      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem]',
+    frameRotateDeg: 4,
+    outlineRotateDeg: -7,
     accentClassName:
       '-left-3 bottom-[-0.5rem] h-[35%] w-[42%] rounded-[64%_36%_45%_55%/40%_63%_37%_60%] bg-[#d7f3d2]/85',
     objectPosition: 'center 34%',
@@ -97,9 +105,11 @@ const ABOUT_STAGE_GALLERY_ITEMS: AboutGalleryItem[] = [
     positionClassName:
       'right-[3%] top-[5%] w-[6.2rem] sm:right-[6%] sm:w-[7.5rem] lg:right-[14%] lg:top-[12%] lg:w-[9.8rem] xl:right-[15%] xl:top-[8%] xl:w-[12rem]',
     frameClassName:
-      'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[8deg]',
+      'aspect-[4/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem]',
     outlineClassName:
-      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-5deg]',
+      'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem]',
+    frameRotateDeg: 8,
+    outlineRotateDeg: -5,
     accentClassName:
       '-left-2 -top-3 h-[34%] w-[38%] rounded-[54%_46%_62%_38%/48%_40%_60%_52%] bg-[#ffec6b]/65',
     objectPosition: 'center 30%',
@@ -109,9 +119,11 @@ const ABOUT_STAGE_GALLERY_ITEMS: AboutGalleryItem[] = [
     positionClassName:
       'right-[4%] bottom-[3%] w-[6.2rem] sm:right-[7%] sm:w-[7.5rem] lg:right-[15%] lg:bottom-[6%] lg:w-[10.4rem] xl:right-[16%] xl:bottom-[4%] xl:w-[12.8rem]',
     frameClassName:
-      'aspect-[4/5] rounded-[52%_48%_46%_54%/40%_44%_56%_60%] rotate-[-4deg]',
+      'aspect-[4/5] rounded-[52%_48%_46%_54%/40%_44%_56%_60%]',
     outlineClassName:
-      'rounded-[50%_50%_44%_56%/38%_42%_58%_62%] rotate-[8deg]',
+      'rounded-[50%_50%_44%_56%/38%_42%_58%_62%]',
+    frameRotateDeg: -4,
+    outlineRotateDeg: 8,
     accentClassName:
       '-right-2 bottom-[-0.6rem] h-[32%] w-[40%] rounded-[44%_56%_38%_62%/55%_36%_64%_45%] bg-[#ffd9df]/80',
     objectPosition: 'center 38%',
@@ -122,9 +134,11 @@ const ABOUT_TOP_FLOW_ITEM: AboutGalleryItem = {
   src: '/events/event-03.webp',
   positionClassName: '',
   frameClassName:
-    'aspect-[6/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem] rotate-[7deg]',
+    'aspect-[6/5] rounded-[1rem] sm:rounded-[1.2rem] lg:rounded-[1.4rem]',
   outlineClassName:
-    'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem] rotate-[-5deg]',
+    'rounded-[1.2rem] sm:rounded-[1.4rem] lg:rounded-[1.6rem]',
+  frameRotateDeg: 7,
+  outlineRotateDeg: -5,
   accentClassName:
     '-bottom-3 -left-3 h-[45%] w-[32%] rounded-[60%_40%_44%_56%/37%_47%_53%_63%] bg-[#d9d2ff]/80',
   objectPosition: 'center 44%',
@@ -136,15 +150,19 @@ const ABOUT_BOTTOM_FLOW_ITEM: AboutGalleryItem = {
     src: '/events/about-joaco-y-tici.webp',
   positionClassName: '',
   frameClassName:
-    'aspect-[5/4] rounded-[63%_37%_47%_53%/42%_56%_44%_58%] rotate-[-7deg]',
+    'aspect-[5/4] rounded-[63%_37%_47%_53%/42%_56%_44%_58%]',
   outlineClassName:
-    'rounded-[58%_42%_44%_56%/47%_61%_39%_53%] rotate-[6deg]',
+    'rounded-[58%_42%_44%_56%/47%_61%_39%_53%]',
+  frameRotateDeg: -7,
+  outlineRotateDeg: 6,
   accentClassName:
     '-right-3 -bottom-3 h-[40%] w-[35%] rounded-[42%_58%_58%_42%/35%_57%_43%_65%] bg-[#c5f0ff]/80',
   objectPosition: 'center 26%',
   sizes:
     '(min-width: 1280px) 15.5rem, (min-width: 1024px) 14.5rem, (min-width: 640px) 12.5rem, 10rem',
 }
+
+const ABOUT_CARD_HOVER_ROTATE_DELTA_DEG = 5.5
 
 function clipPathStyle(id: string): CSSProperties {
   return {
@@ -341,7 +359,11 @@ function AboutTextBlock({
   return (
     <div
       ref={containerRef}
-      className={cn(HERO_CONTENT_WIDTH_CLASS, 'relative z-10 mx-auto will-change-transform', className)}
+      className={cn(
+        HERO_CONTENT_WIDTH_CLASS,
+        'pointer-events-auto relative z-10 mx-auto will-change-transform',
+        className,
+      )}
     >
       <div className={cn('mx-auto text-center', innerClassName)}>
         <div
@@ -369,59 +391,94 @@ function AboutImageCard({
   className,
   squiggleClipId,
   containerRef,
+  reduceMotion,
+  galleryCardIndex,
 }: {
   item: AboutGalleryItem
   className: string
   squiggleClipId?: string
   containerRef?: Ref<HTMLDivElement>
+  reduceMotion?: boolean | null
+  /** Si se define, las decoraciones SVG emparejadas se acercan al hacer hover en esta tarjeta. */
+  galleryCardIndex?: 0 | 1 | 2 | 3
 }) {
   const clipStyle =
     item.useSquiggleClip && squiggleClipId
       ? clipPathStyle(squiggleClipId)
       : undefined
 
+  const delta =
+    reduceMotion ? 0 : ABOUT_CARD_HOVER_ROTATE_DELTA_DEG
+
+  const hoverRotateVars = {
+    '--about-frame-r': `${item.frameRotateDeg}deg`,
+    '--about-frame-r-hover': `${item.frameRotateDeg + delta}deg`,
+    '--about-outline-r': `${item.outlineRotateDeg}deg`,
+    '--about-outline-r-hover': `${item.outlineRotateDeg - delta}deg`,
+  } as CSSProperties
+
   return (
-    <div ref={containerRef} className={cn('relative will-change-transform', className)}>
-      <div className={cn('absolute -z-20 blur-[1px]', item.accentClassName)} />
+    <div
+      ref={containerRef}
+      className={cn(
+        'group relative pointer-events-auto will-change-transform',
+        className,
+      )}
+      style={hoverRotateVars}
+      {...(galleryCardIndex !== undefined
+        ? { 'data-about-gallery-card': String(galleryCardIndex) }
+        : {})}
+    >
       <div
         className={cn(
-          'absolute -inset-2 -z-10 border border-neutral-950/10',
+          'absolute -inset-2 -z-10 border border-neutral-950/10 transition-[transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
           item.shapeClassName,
           !item.useSquiggleClip &&
             'rounded-[inherit]',
           item.outlineClassName,
+          '[transform:rotate(var(--about-outline-r))]',
+          'group-hover:[transform:rotate(var(--about-outline-r-hover))]',
         )}
         style={clipStyle}
       />
-      <figure
+      <div
         className={cn(
-          'relative overflow-hidden border border-neutral-950/10 bg-neutral-100 shadow-[0_8px_20px_rgba(15,23,42,0.1)] sm:shadow-[0_12px_28px_rgba(15,23,42,0.11)] lg:shadow-[0_16px_36px_rgba(15,23,42,0.12)] xl:shadow-[0_22px_52px_rgba(15,23,42,0.14)]',
-          item.shapeClassName,
-          !item.useSquiggleClip &&
-            'rounded-[inherit]',
-          item.frameClassName,
+          'relative transition-[transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+          '[transform:rotate(var(--about-frame-r))]',
+          'group-hover:[transform:rotate(var(--about-frame-r-hover))]',
         )}
-        style={clipStyle}
       >
-        <img
-          src={item.src}
-          alt=""
-          width={900}
-          height={1080}
-          loading="lazy"
-          decoding="async"
-          className={cn('block size-full object-cover saturate-[0.94]', item.imageClassName)}
-          sizes={
-            item.sizes ??
-            '(min-width: 1280px) 15rem, (min-width: 1024px) 12rem, (min-width: 640px) 10rem, 5rem'
-          }
-          style={
-            item.objectPosition
-              ? { objectPosition: item.objectPosition }
-              : undefined
-          }
-        />
-      </figure>
+        <div className={cn('absolute -z-20 blur-[1px]', item.accentClassName)} />
+        <figure
+          className={cn(
+            'relative overflow-hidden border border-neutral-950/10 bg-neutral-100 shadow-[0_8px_20px_rgba(15,23,42,0.1)] sm:shadow-[0_12px_28px_rgba(15,23,42,0.11)] lg:shadow-[0_16px_36px_rgba(15,23,42,0.12)] xl:shadow-[0_22px_52px_rgba(15,23,42,0.14)]',
+            item.shapeClassName,
+            !item.useSquiggleClip &&
+              'rounded-[inherit]',
+            item.frameClassName,
+          )}
+          style={clipStyle}
+        >
+          <img
+            src={item.src}
+            alt=""
+            width={900}
+            height={1080}
+            loading="lazy"
+            decoding="async"
+            className={cn('block size-full object-cover saturate-[0.94]', item.imageClassName)}
+            sizes={
+              item.sizes ??
+              '(min-width: 1280px) 15rem, (min-width: 1024px) 12rem, (min-width: 640px) 10rem, 5rem'
+            }
+            style={
+              item.objectPosition
+                ? { objectPosition: item.objectPosition }
+                : undefined
+            }
+          />
+        </figure>
+      </div>
     </div>
   )
 }
@@ -431,18 +488,24 @@ function AboutFlowImage({
   className,
   squiggleClipId,
   containerRef,
+  reduceMotion,
 }: {
   item: AboutGalleryItem
   className: string
   squiggleClipId?: string
   containerRef?: Ref<HTMLDivElement>
+  reduceMotion?: boolean | null
 }) {
   return (
-    <div ref={containerRef} className="relative z-10 will-change-transform">
+    <div
+      ref={containerRef}
+      className="pointer-events-auto relative z-10 will-change-transform"
+    >
       <AboutImageCard
         item={item}
         className={className}
         squiggleClipId={squiggleClipId}
+        reduceMotion={reduceMotion}
       />
     </div>
   )
@@ -452,7 +515,7 @@ function OrbitStroke({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 320 220"
-      className={cn('absolute fill-none stroke-current', className)}
+      className={cn('block size-full fill-none stroke-current', className)}
       aria-hidden="true"
     >
       <path
@@ -469,7 +532,7 @@ function SparkBurst({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 64 64"
-      className={cn('absolute fill-none stroke-current', className)}
+      className={cn('block size-full fill-none stroke-current', className)}
       aria-hidden="true"
     >
       <path
@@ -485,7 +548,7 @@ function DotCluster({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 120 80"
-      className={cn('absolute fill-current', className)}
+      className={cn('block size-full fill-current', className)}
       aria-hidden="true"
     >
       <circle cx="16" cy="22" r="4.5" />
@@ -501,6 +564,11 @@ function DotCluster({ className }: { className?: string }) {
 type AboutDecoration = {
   kind: 'orbit' | 'dots' | 'spark'
   className: string
+  /** Índice de la foto de galería (0–3) cuyo hover acerca esta decoración al centro. */
+  pairCardIndex: 0 | 1 | 2 | 3
+  /** Desplazamiento hacia el centro del stage (hacia la foto emparejada), eje X. */
+  nudgeX: string
+  nudgeY: string
 }
 
 const ABOUT_STAGE_DECORATIONS: readonly AboutDecoration[] = [
@@ -508,48 +576,103 @@ const ABOUT_STAGE_DECORATIONS: readonly AboutDecoration[] = [
     kind: 'orbit',
     className:
       'left-[4%] top-[7%] h-10 w-16 text-neutral-950/10 sm:h-18 sm:w-28 lg:h-28 lg:w-44 xl:left-[5%] xl:top-[7%] xl:h-32 xl:w-52',
+    pairCardIndex: 0,
+    nudgeX: '0.16rem',
+    nudgeY: '0.1rem',
   },
   {
     kind: 'orbit',
     className:
       'bottom-[10%] right-[4%] h-8 w-14 rotate-180 text-neutral-950/10 sm:h-15 sm:w-[5.75rem] lg:h-24 lg:w-40 xl:bottom-[12%] xl:right-[6%] xl:h-28 xl:w-44',
+    pairCardIndex: 3,
+    nudgeX: '-0.16rem',
+    nudgeY: '-0.12rem',
   },
   {
     kind: 'dots',
     className:
       'left-[20%] top-[11%] h-7 w-12 text-[#ffec6b]/80 sm:h-10 sm:w-16 lg:h-12 lg:w-[4.5rem] xl:left-[19%] xl:top-[10%] xl:h-14 xl:w-20',
+    pairCardIndex: 0,
+    nudgeX: '0.1rem',
+    nudgeY: '0.07rem',
   },
   {
     kind: 'dots',
     className:
       'right-[18%] bottom-[16%] h-6 w-10 text-neutral-950/10 sm:h-9 sm:w-14 lg:h-12 lg:w-[4.5rem] xl:right-[19%] xl:h-14 xl:w-20',
+    pairCardIndex: 3,
+    nudgeX: '-0.1rem',
+    nudgeY: '-0.08rem',
   },
   {
     kind: 'spark',
     className:
       'right-[21%] top-[17%] h-5 w-5 text-[#ffec6b]/70 sm:h-8 sm:w-8 lg:h-10 lg:w-10 xl:right-[23%] xl:top-[15%] xl:h-11 xl:w-11',
+    pairCardIndex: 2,
+    nudgeX: '-0.12rem',
+    nudgeY: '0.08rem',
   },
   {
     kind: 'spark',
     className:
       'left-[17%] bottom-[24%] h-4 w-4 text-neutral-950/12 sm:h-7 sm:w-7 lg:h-9 lg:w-9 xl:left-[18%] xl:bottom-[20%] xl:h-10 xl:w-10',
+    pairCardIndex: 1,
+    nudgeX: '0.12rem',
+    nudgeY: '-0.08rem',
   },
 ] as const
+
+function AboutStageDecorationSlot({
+  pairCardIndex,
+  nudgeX,
+  nudgeY,
+  className,
+  children,
+}: {
+  pairCardIndex: 0 | 1 | 2 | 3
+  nudgeX: string
+  nudgeY: string
+  className: string
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={cn('pointer-events-none absolute', className)}
+      data-about-decoration-pair={pairCardIndex}
+      style={
+        {
+          '--about-dec-nudge-x': nudgeX,
+          '--about-dec-nudge-y': nudgeY,
+        } as CSSProperties
+      }
+    >
+      <div className="about-stage-decoration-nudge h-full w-full origin-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none">
+        {children}
+      </div>
+    </div>
+  )
+}
 
 function AboutStageDecorations() {
   return (
     <>
-      {ABOUT_STAGE_DECORATIONS.map((decoration, index) => {
-        if (decoration.kind === 'orbit') {
-          return <OrbitStroke key={`orbit-${index}`} className={decoration.className} />
-        }
-
-        if (decoration.kind === 'dots') {
-          return <DotCluster key={`dots-${index}`} className={decoration.className} />
-        }
-
-        return <SparkBurst key={`spark-${index}`} className={decoration.className} />
-      })}
+      {ABOUT_STAGE_DECORATIONS.map((decoration, index) => (
+        <AboutStageDecorationSlot
+          key={`dec-${decoration.kind}-${index}`}
+          pairCardIndex={decoration.pairCardIndex}
+          nudgeX={decoration.nudgeX}
+          nudgeY={decoration.nudgeY}
+          className={decoration.className}
+        >
+          {decoration.kind === 'orbit' ? (
+            <OrbitStroke />
+          ) : decoration.kind === 'dots' ? (
+            <DotCluster />
+          ) : (
+            <SparkBurst />
+          )}
+        </AboutStageDecorationSlot>
+      ))}
     </>
   )
 }
@@ -799,8 +922,29 @@ export function AboutSection() {
       <div className="mx-auto max-w-[92rem]">
         <div
           ref={stageRef}
-          className="relative isolate mx-auto flex min-h-[36rem] items-center justify-center py-6 sm:min-h-[42rem] sm:py-8 lg:min-h-[52rem] lg:py-12 xl:min-h-[58rem]"
+          className="about-stage-shell relative isolate mx-auto flex min-h-[36rem] items-center justify-center py-6 sm:min-h-[42rem] sm:py-8 lg:min-h-[52rem] lg:py-12 xl:min-h-[58rem]"
         >
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+.about-stage-shell .about-stage-decoration-nudge {
+  transform: translate(0, 0);
+}
+.about-stage-shell:has([data-about-gallery-card="0"]:hover) [data-about-decoration-pair="0"] .about-stage-decoration-nudge,
+.about-stage-shell:has([data-about-gallery-card="1"]:hover) [data-about-decoration-pair="1"] .about-stage-decoration-nudge,
+.about-stage-shell:has([data-about-gallery-card="2"]:hover) [data-about-decoration-pair="2"] .about-stage-decoration-nudge,
+.about-stage-shell:has([data-about-gallery-card="3"]:hover) [data-about-decoration-pair="3"] .about-stage-decoration-nudge {
+  transform: translate(var(--about-dec-nudge-x), var(--about-dec-nudge-y));
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-stage-shell .about-stage-decoration-nudge {
+    transform: translate(0, 0) !important;
+    transition: none !important;
+  }
+}
+`,
+            }}
+          />
           <AboutClipPathDefs squiggleId={squiggleClipId} />
           <div
             className="pointer-events-none absolute inset-0"
@@ -813,6 +957,8 @@ export function AboutSection() {
                 item={item}
                 className={cn('absolute', item.positionClassName)}
                 squiggleClipId={squiggleClipId}
+                reduceMotion={reduceMotion}
+                galleryCardIndex={index as 0 | 1 | 2 | 3}
                 containerRef={(element) => {
                   cardRefs.current[index] = element
                 }}
@@ -820,12 +966,13 @@ export function AboutSection() {
             ))}
           </div>
 
-          <div className="relative z-10 flex w-full flex-col items-center gap-7 sm:gap-8 lg:gap-10">
+          <div className="pointer-events-none relative z-10 flex w-full flex-col items-center gap-7 sm:gap-8 lg:gap-10">
             <AboutFlowImage
               item={ABOUT_TOP_FLOW_ITEM}
               className="mx-auto w-[10rem] sm:w-[12.5rem] lg:w-[14.5rem] xl:w-[15.5rem]"
               squiggleClipId={squiggleClipId}
               containerRef={topFlowRef}
+              reduceMotion={reduceMotion}
             />
 
             <AboutTextBlock
@@ -840,6 +987,7 @@ export function AboutSection() {
               className="mx-auto mt-4 w-[10rem] sm:mt-6 sm:w-[12.5rem] lg:mt-8 lg:w-[14.5rem] xl:w-[15.5rem]"
               squiggleClipId={squiggleClipId}
               containerRef={bottomFlowRef}
+              reduceMotion={reduceMotion}
             />
           </div>
         </div>
