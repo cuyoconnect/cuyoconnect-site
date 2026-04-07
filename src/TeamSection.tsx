@@ -188,8 +188,6 @@ export function TeamSection() {
                     src={member.imageSrc ?? FALLBACK_IMAGE}
                     alt=""
                     className="relative z-0 size-full object-cover object-center"
-                    width={800}
-                    height={1000}
                     loading="lazy"
                     decoding="async"
                   />
