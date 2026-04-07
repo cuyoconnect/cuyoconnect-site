@@ -11,7 +11,7 @@ node_modules
 .astro/
 dist
 dist-ssr
-*.local
+*.local 
 .env
 .env.*
 !.env.example
