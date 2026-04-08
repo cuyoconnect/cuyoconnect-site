@@ -18,8 +18,8 @@ const SCROLL_PILL_THRESHOLD = 160
 const NAV_LOGO = { w: 882, h: 882 } as const
 
 const navShellEase = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
-const navCollapseDuration = '0.68s'
-const navExpandDuration = '0.82s'
+/** Misma duración y curva en ambos sentidos (~12% más rápida que 0.68s). */
+const navShellTransitionDuration = '0.6s'
 
 function NavLogoMark({ className }: { className?: string }) {
   return (
@@ -52,7 +52,7 @@ function ArrowUpRightIcon({ className }: { className?: string }) {
 }
 
 const navTextLinkClass = cn(
-  'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+  'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[600ms] delay-0 ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:duration-[240ms] hover:delay-0',
   'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
 )
 
@@ -87,8 +87,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   const [scrolledShellWidth, setScrolledShellWidth] = useState<number | null>(null)
   const reduceMotion = useReducedMotion()
   const scrolledMeasureRef = useRef<HTMLDivElement>(null)
-  const navTransitionDuration = scrolled ? navCollapseDuration : navExpandDuration
-  const navTransitionTiming = `${navTransitionDuration} ${navShellEase}`
+  const navTransitionTiming = `${navShellTransitionDuration} ${navShellEase}`
   const isHome = pathname === '/'
   const logoHref = isHome ? '#inicio' : '/'
   const eventsHref = isHome ? '#eventos' : '/eventos'
@@ -203,12 +202,13 @@ export function SiteHeader({ pathname }: { pathname: string }) {
           style={shellStyle}
         >
           <div
-            className={cn(
-              'pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10',
-              scrolled
-                ? 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]'
-                : 'bg-transparent',
-            )}
+            className="pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10 bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]"
+            style={{
+              opacity: scrolled ? 1 : 0,
+              transition: reduceMotion
+                ? 'none'
+                : `opacity ${navTransitionTiming}`,
+            }}
             aria-hidden
           />
 
@@ -277,7 +277,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               <button
                 type="button"
                 className={cn(
-                  'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+                  'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[600ms] delay-0 ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:duration-[240ms] hover:delay-0',
                   'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
                   scrolled
                     ? 'inline-flex h-9 gap-1 px-3 text-xs shadow-sm sm:gap-1.5 sm:h-10 sm:px-5 sm:text-sm'
