@@ -284,11 +284,14 @@ function AboutAnimatedParagraph({
                   className="pb-[0.08em] font-bold"
                   action="underline"
                   color={HERO_TOPIC_HIGHLIGHT}
-                  strokeWidth={3}
-                  animationDuration={850}
+                  strokeWidth={4.1}
+                  wavyCycles={4}
+                  wavyAmplitudePx={3.6}
+                  animationDuration={1100}
                   iterations={1}
                   padding={1}
                   multiline
+                  wavy
                   isView
                   annotationDelayMs={Math.round(
                     520 +
