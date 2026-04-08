@@ -1,4 +1,11 @@
-import { useEffect, useState, type CSSProperties, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 import { JoinCommunityModal } from '@/JoinCommunityModal'
@@ -10,8 +17,9 @@ const SCROLL_PILL_THRESHOLD = 100
 /** Dimensiones intrínsecas de public/logo.png */
 const NAV_LOGO = { w: 882, h: 882 } as const
 
-const navShellEase = 'cubic-bezier(0.3, 0.7, 0.4, 1)'
-const navTransitionDuration = '0.62s'
+const navShellEase = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
+const navCollapseDuration = '0.68s'
+const navExpandDuration = '0.82s'
 
 function NavLogoMark({ className }: { className?: string }) {
   return (
@@ -76,7 +84,10 @@ function tryScrollLandingSection(
 export function SiteHeader({ pathname }: { pathname: string }) {
   const [joinOpen, setJoinOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [scrolledShellWidth, setScrolledShellWidth] = useState<number | null>(null)
   const reduceMotion = useReducedMotion()
+  const scrolledMeasureRef = useRef<HTMLDivElement>(null)
+  const navTransitionDuration = scrolled ? navCollapseDuration : navExpandDuration
   const navTransitionTiming = `${navTransitionDuration} ${navShellEase}`
   const isHome = pathname === '/'
   const logoHref = isHome ? '#inicio' : '/'
@@ -91,7 +102,31 @@ export function SiteHeader({ pathname }: { pathname: string }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /** Barra ancha al inicio; al hacer scroll, ancho al contenido (`max-content`), no un % del viewport. */
+  useLayoutEffect(() => {
+    const measureElement = scrolledMeasureRef.current
+    if (!measureElement) return undefined
+
+    const syncScrolledShellWidth = () => {
+      const nextWidth = Math.ceil(measureElement.getBoundingClientRect().width)
+      setScrolledShellWidth((currentWidth) =>
+        currentWidth === nextWidth ? currentWidth : nextWidth,
+      )
+    }
+
+    syncScrolledShellWidth()
+
+    const resizeObserver = new ResizeObserver(() => {
+      syncScrolledShellWidth()
+    })
+
+    resizeObserver.observe(measureElement)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  /** Barra ancha al inicio; al hacer scroll, anima hacia un ancho medido en px para evitar saltos de layout intrínseco. */
   const navLayoutStyle: CSSProperties = {
     transition: reduceMotion
       ? 'none'
@@ -116,19 +151,12 @@ export function SiteHeader({ pathname }: { pathname: string }) {
         ].join(', '),
   }
 
-  const navSpacerStyle: CSSProperties = {
-    flexGrow: scrolled ? 0 : 1,
-    transition: reduceMotion
-      ? 'none'
-      : [
-          `flex-grow ${navTransitionTiming}`,
-          `min-width ${navTransitionTiming}`,
-          `opacity ${navTransitionTiming}`,
-        ].join(', '),
+  const navActionsStyle: CSSProperties = {
+    transition: reduceMotion ? 'none' : `gap ${navTransitionTiming}`,
   }
 
   const shellStyle: CSSProperties = {
-    width: scrolled ? 'max-content' : '100%',
+    width: scrolled && scrolledShellWidth ? `${scrolledShellWidth}px` : '100%',
     maxWidth: scrolled
       ? 'min(calc(100dvw - 1.5rem), 52rem)'
       : 'min(calc(100dvw - 2rem), 52rem)',
@@ -140,17 +168,19 @@ export function SiteHeader({ pathname }: { pathname: string }) {
     borderRadius: scrolled ? 9999 : 18,
     backgroundColor: scrolled
       ? 'rgba(255, 255, 255, 0.44)'
-      : 'rgba(255, 255, 255, 0.58)',
+      : 'rgba(255, 255, 255, 0)',
     backdropFilter: scrolled
       ? 'blur(14px) saturate(1.08)'
-      : 'blur(22px) saturate(1.2)',
+      : 'blur(0px) saturate(1)',
     WebkitBackdropFilter: scrolled
       ? 'blur(14px) saturate(1.08)'
-      : 'blur(22px) saturate(1.2)',
+      : 'blur(0px) saturate(1)',
     boxShadow: 'none' as const,
     transition: reduceMotion
       ? 'none'
       : [
+          `width ${navTransitionTiming}`,
+          `max-width ${navTransitionTiming}`,
           `margin-top ${navTransitionTiming}`,
           `border-radius ${navTransitionTiming}`,
           `background-color ${navTransitionTiming}`,
@@ -168,7 +198,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
         <div
           className={cn(
             'pointer-events-auto isolate overflow-hidden',
-            !reduceMotion && 'motion-safe:will-change-[margin-top]',
+            !reduceMotion && 'motion-safe:will-change-[margin-top,width]',
           )}
           style={shellStyle}
         >
@@ -177,17 +207,17 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               'pointer-events-none absolute inset-x-0 bottom-0 top-0 -z-10',
               scrolled
                 ? 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.22)_0%,rgb(255_255_255_/_.08)_45%,transparent_100%)]'
-                : 'bg-[linear-gradient(180deg,rgb(255_255_255_/_.35)_0%,rgb(255_255_255_/_.18)_45%,transparent_100%)]',
+                : 'bg-transparent',
             )}
             aria-hidden
           />
 
           <div
             className={cn(
-              'relative z-10 flex min-h-14 min-w-0 items-center sm:min-h-16',
+              'relative z-10 flex min-h-14 min-w-0 w-full items-center justify-between sm:min-h-16',
               scrolled
-                ? 'w-max max-w-full justify-start gap-3 px-2 py-2 sm:gap-4 sm:px-3'
-                : 'w-full min-w-0 justify-between gap-2 px-2 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-5 sm:px-6',
+                ? 'gap-3 px-2 py-2 sm:gap-4 sm:px-3'
+                : 'gap-2 px-2 pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-5 sm:px-6',
             )}
             style={navLayoutStyle}
           >
@@ -220,52 +250,79 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             </a>
 
             <div
-              aria-hidden
               className={cn(
-                'basis-0 shrink',
-                scrolled
-                  ? 'min-w-0 opacity-0'
-                  : 'min-w-1 opacity-100 sm:min-w-2',
+                'flex shrink-0 items-center',
+                scrolled ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-3',
               )}
-              style={navSpacerStyle}
-            />
-
-            <a
-              href={eventsHref}
-              aria-current={pathname === '/eventos' ? 'page' : undefined}
-              className={cn(
-                navTextLinkClass,
-                scrolled
-                  ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
-                  : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
-              )}
-              style={navItemStyle}
-              onClick={(event) => {
-                if (event.defaultPrevented) return
-                tryScrollLandingSection(event, pathname, 'eventos', '#eventos')
-              }}
+              style={navActionsStyle}
             >
-              Eventos
-            </a>
+              <a
+                href={eventsHref}
+                aria-current={pathname === '/eventos' ? 'page' : undefined}
+                className={cn(
+                  navTextLinkClass,
+                  scrolled
+                    ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
+                    : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
+                )}
+                style={navItemStyle}
+                onClick={(event) => {
+                  if (event.defaultPrevented) return
+                  tryScrollLandingSection(event, pathname, 'eventos', '#eventos')
+                }}
+              >
+                Eventos
+              </a>
 
-            <button
-              type="button"
-              className={cn(
-                'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
-                'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
-                scrolled
-                  ? 'inline-flex gap-1 px-3 py-2 text-xs shadow-sm sm:gap-1.5 sm:px-5 sm:text-sm'
-                  : 'ml-2 inline-flex h-9 gap-1 px-3 text-xs sm:ml-3 sm:gap-1.5 sm:px-4 sm:text-sm',
-              )}
-              onClick={() => setJoinOpen(true)}
-              style={navItemStyle}
-            >
-              Unite
-              <ArrowUpRightIcon
-                aria-hidden
-                className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
-              />
-            </button>
+              <button
+                type="button"
+                className={cn(
+                  'cursor-pointer shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#1d1d1f] font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0',
+                  'hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
+                  scrolled
+                    ? 'inline-flex h-9 gap-1 px-3 text-xs shadow-sm sm:gap-1.5 sm:h-10 sm:px-5 sm:text-sm'
+                    : 'inline-flex h-9 gap-1 px-3 text-xs sm:gap-1.5 sm:h-10 sm:px-4 sm:text-sm',
+                )}
+                onClick={() => setJoinOpen(true)}
+                style={navItemStyle}
+              >
+                Unite
+                <ArrowUpRightIcon
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="pointer-events-none absolute left-0 top-0 -z-20 opacity-0"
+          aria-hidden
+        >
+          <div
+            ref={scrolledMeasureRef}
+            className="relative z-10 flex min-h-14 w-max min-w-0 items-center justify-between gap-3 px-2 py-2 sm:min-h-16 sm:gap-4 sm:px-3"
+          >
+            <span className="flex min-w-0 shrink items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-sm font-semibold tracking-tight text-[#1d1d1f] sm:shrink-0 sm:gap-2 sm:whitespace-nowrap sm:px-3 sm:text-base">
+              <NavLogoMark className="h-7 shrink-0 sm:h-9" />
+              <span className="hidden min-[380px]:inline">CuyoConnect</span>
+              <span className="min-[380px]:hidden">Cuyo</span>
+            </span>
+
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-[#6b6b6b] sm:px-4 sm:text-sm">
+                Eventos
+              </span>
+
+              <span className="inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-[#1d1d1f] px-3 text-xs font-medium text-white shadow-sm sm:gap-1.5 sm:h-10 sm:px-5 sm:text-sm">
+                Unite
+                <ArrowUpRightIcon
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
+                />
+              </span>
+            </div>
           </div>
         </div>
       </header>
