@@ -10,8 +10,8 @@ const SCROLL_PILL_THRESHOLD = 100
 /** Dimensiones intrínsecas de public/logo.png */
 const NAV_LOGO = { w: 882, h: 882 } as const
 
-const navShellEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
-const navTransitionDuration = '0.56s'
+const navShellEase = 'cubic-bezier(0.3, 0.7, 0.4, 1)'
+const navTransitionDuration = '0.62s'
 
 function NavLogoMark({ className }: { className?: string }) {
   return (
@@ -123,7 +123,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
       : [
           `flex-grow ${navTransitionTiming}`,
           `min-width ${navTransitionTiming}`,
-          `opacity 0.28s linear`,
+          `opacity ${navTransitionTiming}`,
         ].join(', '),
   }
 
@@ -148,7 +148,6 @@ export function SiteHeader({ pathname }: { pathname: string }) {
       ? 'blur(14px) saturate(1.08)'
       : 'blur(22px) saturate(1.2)',
     boxShadow: 'none' as const,
-    /* No animar width/max-width: 100% ↔ max-content interpola mal en varios engines. */
     transition: reduceMotion
       ? 'none'
       : [

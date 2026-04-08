@@ -23,6 +23,8 @@ const TAP_WINDOW_MS = 900
 const PIXEL_ROWS = 10
 /** delay ∝ índice Larose; igual espíritu que 0.02 del tutorial. */
 const STAGGER = 0.022
+/** Stagger más rápido para la animación de entrada al cargar el sitio. */
+const INTRO_STAGGER = 0.018
 
 type Bounds = { width: number; height: number }
 
@@ -75,11 +77,13 @@ function PixelBlockGrid({
   bounds,
   layoutKey,
   onComplete,
+  stagger = STAGGER,
 }: {
   mode: PixelMode
   bounds: Bounds
   layoutKey: string
   onComplete: () => void
+  stagger?: number
 }) {
   const { width: W, height: H } = bounds
   const rowCount = PIXEL_ROWS
@@ -121,7 +125,7 @@ function PixelBlockGrid({
   }, [cells, mode])
 
   useEffect(() => {
-    const ms = Math.ceil(maxDelaySteps * STAGGER * 1000 + 80)
+    const ms = Math.ceil(maxDelaySteps * stagger * 1000 + 80)
     const id = window.setTimeout(() => {
       if (!doneRef.current) {
         doneRef.current = true
@@ -129,7 +133,7 @@ function PixelBlockGrid({
       }
     }, ms)
     return () => clearTimeout(id)
-  }, [maxDelaySteps, onComplete])
+  }, [maxDelaySteps, stagger, onComplete])
 
   const variants = useMemo(
     () => ({
@@ -143,18 +147,18 @@ function PixelBlockGrid({
               opacity: 1,
               transition: {
                 duration: 0,
-                delay: STAGGER * delay[1],
+                delay: stagger * delay[1],
               },
             })
           : (delay: [number, number]) => ({
               opacity: 0,
               transition: {
                 duration: 0,
-                delay: STAGGER * delay[0],
+                delay: stagger * delay[0],
               },
             }),
     }),
-    [mode],
+    [mode, stagger],
   )
 
   return (
@@ -192,6 +196,7 @@ type StablePhase = HeroEasterEggSurface
 /** Secuencial: cubrir → revelar (nunca hero y QR animando a la vez). */
 type Phase =
   | StablePhase
+  | 'intro'
   | 'h2q_cover'
   | 'h2q_reveal'
   | 'q2h_cover'
@@ -217,7 +222,7 @@ export function HeroEasterEggImage({
   const [tapCount, setTapCount] = useState(0)
   const tapResetRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const captionTimerRef = useRef<number | null>(null)
-  const [phase, setPhase] = useState<Phase>('hero')
+  const [phase, setPhase] = useState<Phase>('intro')
   const [loadGate, setLoadGate] = useState<LoadGate>(null)
   const loadGateRef = useRef<LoadGate>(null)
   const [frozenBounds, setFrozenBounds] = useState<Bounds | null>(null)
@@ -362,6 +367,50 @@ export function HeroEasterEggImage({
     [],
   )
 
+  const onIntroDone = useCallback(() => {
+    setPhase('hero')
+    setFrozenBounds(null)
+  }, [])
+
+  useEffect(() => {
+    if (phase !== 'intro') return
+    if (reduceMotion) {
+      setPhase('hero')
+      return
+    }
+    const el = wrapRef.current
+    if (!el) {
+      setPhase('hero')
+      return
+    }
+    const img = el.querySelector('img') as HTMLImageElement | null
+    const start = () => {
+      requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect()
+        if (rect.width < 2 || rect.height < 2) {
+          setPhase('hero')
+          return
+        }
+        setFrozenBounds({ width: rect.width, height: rect.height })
+      })
+    }
+    if (img?.complete && img.naturalWidth > 0) {
+      start()
+      return
+    }
+    if (img) {
+      const onLoad = () => start()
+      const onError = () => setPhase('hero')
+      img.addEventListener('load', onLoad, { once: true })
+      img.addEventListener('error', onError, { once: true })
+      return () => {
+        img.removeEventListener('load', onLoad)
+        img.removeEventListener('error', onError)
+      }
+    }
+    setPhase('hero')
+  }, [phase, reduceMotion])
+
   const imgShared = cn(
     'pointer-events-none absolute inset-0 mx-0 mt-0 mb-0 block h-full w-full max-h-none min-h-0 min-w-0 max-w-full',
     'object-cover object-[center_center] select-none',
@@ -374,6 +423,7 @@ export function HeroEasterEggImage({
 
   const showHeroImg =
     phase === 'hero' ||
+    phase === 'intro' ||
     phase === 'h2q_cover' ||
     phase === 'q2h_cover' ||
     phase === 'q2h_reveal' ||
@@ -386,7 +436,7 @@ export function HeroEasterEggImage({
     easterPreload
 
   const heroImgOpacity =
-    heroPreload || phase === 'q2h_cover' ? 0 : phase === 'q2h_reveal' || phase === 'hero' || phase === 'h2q_cover' ? 1 : 0
+    heroPreload || phase === 'q2h_cover' ? 0 : phase === 'q2h_reveal' || phase === 'hero' || phase === 'intro' || phase === 'h2q_cover' ? 1 : 0
 
   const easterImgOpacity =
     easterPreload ? 0 : phase === 'qr' || phase === 'h2q_reveal' || phase === 'q2h_cover' ? 1 : 0
@@ -408,9 +458,9 @@ export function HeroEasterEggImage({
           width={HERO_WIDTH}
           height={HERO_HEIGHT}
           decoding="async"
-          fetchPriority={phase === 'hero' && !loadGate ? 'high' : 'low'}
+          fetchPriority={(phase === 'hero' || phase === 'intro') && !loadGate ? 'high' : 'low'}
           loading={
-            phase === 'hero' && !easterPreload ? 'eager' : heroPreload ? 'eager' : 'lazy'
+            (phase === 'hero' || phase === 'intro') && !easterPreload ? 'eager' : heroPreload ? 'eager' : 'lazy'
           }
           draggable={false}
           className={imgShared}
@@ -476,6 +526,23 @@ export function HeroEasterEggImage({
           bounds={frozenBounds}
           layoutKey={`q2h-u-${gridKey}`}
           onComplete={onQ2hRevealDone}
+        />
+      ) : null}
+
+      {phase === 'intro' && !frozenBounds && (
+        <div
+          className="pointer-events-none absolute inset-0 z-20 bg-white"
+          aria-hidden
+        />
+      )}
+
+      {phase === 'intro' && frozenBounds ? (
+        <PixelBlockGrid
+          mode="uncover"
+          bounds={frozenBounds}
+          layoutKey={`intro-${gridKey}`}
+          onComplete={onIntroDone}
+          stagger={INTRO_STAGGER}
         />
       ) : null}
     </div>
