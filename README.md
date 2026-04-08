@@ -10,7 +10,7 @@ Sitio estático en Astro con islas React para conservar la interacción existent
 - `npm run lint`: corre ESLint sobre `ts` y `tsx` del proyecto. 
  
 ## Rutas
-
+ 
 - `/`: landing principal.
 - `/recursos`: archivo de recursos y materiales.
 - `/eventos`: landing con scroll inicial a la sección de eventos.
