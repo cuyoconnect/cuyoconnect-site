@@ -2,13 +2,13 @@
 import LandingPage from '@/components/LandingPage.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
-const title = 'CuyoConnect'
+const title = 'Eventos — CuyoConnect'
 const description =
-  'Somos la comunidad de builders en IA, tecnología y encuentros presenciales en el ecosistema Cuyo.'
+  'Calendario de meetups, workshops y encuentros presenciales de la comunidad CuyoConnect.'
 const targetId = 'eventos'
 ---
 
-<BaseLayout title={title} description={description} canonical="/">
+<BaseLayout title={title} description={description} canonical="/eventos">
   <LandingPage pathname="/eventos" />
   <script is:inline define:vars={{ targetId }}>
     (() => {
