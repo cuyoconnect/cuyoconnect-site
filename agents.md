@@ -6,7 +6,7 @@
 - Dominio de producción: **https://cuyoconnect.com** 
 
 ## Ancho de columna y hero
-
+ 
 - La columna de contenido del **hero** se define con `HERO_CONTENT_WIDTH_CLASS` en `src/lib/content-width.ts`. Replica el ancho del arte PNG del hero (topes en `sm` / `md` / `lg` y `calc(100vw - 3rem)` donde aplica).
 - Las secciones que deben **alinearse visualmente con el hero** (misma columna máxima) deben usar **`HERO_CONTENT_WIDTH_CLASS`** en su contenedor interno, no `SECTION_CONTENT_WIDTH_CLASS`. 
 - **`SECTION_CONTENT_WIDTH_CLASS`** es ~15% más ancho; úsalo solo cuando la sección deba ser deliberadamente más ancha que el hero (p. ej. galería / cúpula según el código actual). 
