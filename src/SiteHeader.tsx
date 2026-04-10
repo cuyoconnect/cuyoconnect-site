@@ -9,6 +9,7 @@ import {
 import { useReducedMotion } from 'framer-motion'
 
 import { JoinCommunityModal } from '@/JoinCommunityModal'
+import { OPEN_JOIN_COMMUNITY_MODAL_EVENT } from '@/lib/join-community-modal-request'
 import { scrollToSectionElement } from '@/lib/section-scroll'
 import { cn } from '@/lib/utils'
 
@@ -99,6 +100,13 @@ export function SiteHeader({ pathname }: { pathname: string }) {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const onOpenJoin = () => setJoinOpen(true)
+    window.addEventListener(OPEN_JOIN_COMMUNITY_MODAL_EVENT, onOpenJoin)
+    return () =>
+      window.removeEventListener(OPEN_JOIN_COMMUNITY_MODAL_EVENT, onOpenJoin)
   }, [])
 
   useLayoutEffect(() => {

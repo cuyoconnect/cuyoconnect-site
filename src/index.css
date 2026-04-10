@@ -1,6 +1,9 @@
 @import '@fontsource/sora/400.css';
 @import '@fontsource/sora/500.css';
 @import '@fontsource/sora/600.css';
+/* Inter: pareja muy usada con Sora para bloques de UI / lectura (p. ej. FAQ). */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
 
 @import 'tailwindcss';
 
@@ -8,7 +11,19 @@
   --font-sans:
     'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol';
+  /* Acordeón FAQ: sans neutra y legible; contrasta con Sora del resto del sitio. */
+  --font-faq:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
   --animate-marquee: marquee var(--marquee-duration, 45s) linear infinite;
+
+  /* Tokens tipo shadcn (p. ej. acordeón FAQ en `components/ui`) */
+  --color-primary: #1d1d1f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f4f4f5;
+  --color-secondary-foreground: #18181b;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #737373;
 }
 
 @keyframes marquee {

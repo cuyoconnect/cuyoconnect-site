@@ -6,6 +6,7 @@ import { PastEventsSliderSection } from '@/PastEventsSliderSection'
 import { SiteHeader } from '@/SiteHeader'
 import SiteFooter from '@/SiteFooter.astro'
 import { TeamSection } from '@/TeamSection'
+import { FaqSection } from '@/FaqSection'
 import OurEventsGalleryIsland from '@/components/OurEventsGalleryIsland'
 
 interface Props {
@@ -34,5 +35,6 @@ const supabaseAnonKey =
   <PastEventsSliderSection client:visible />
   <EventsSection client:visible />
   <TeamSection client:visible />
+  <FaqSection client:visible />
 </main>
 <SiteFooter />
