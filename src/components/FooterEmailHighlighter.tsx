@@ -9,12 +9,16 @@ export default function FooterEmailHighlighter({
   return (
     <Highlighter
       className="min-w-0 break-words [&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950"
+      action="underline"
       color={HERO_TOPIC_HIGHLIGHT}
-      strokeWidth={2.15}
-      animationDuration={1500}
-      iterations={4}
-      padding={6}
+      strokeWidth={4.1}
+      wavyCycles={4}
+      wavyAmplitudePx={3.6}
+      animationDuration={1100}
+      iterations={1}
+      padding={1}
       multiline
+      wavy
       isView
     >
       {email}
