@@ -1,0 +1,29 @@
+---
+import SpeakersIsland from '@/components/SpeakersIsland'
+import { SiteHeader } from '@/SiteHeader'
+import SiteFooter from '@/SiteFooter.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Speakers — CuyoConnect'
+const description =
+  'Proponé una charla en CuyoConnect con GitHub: guardamos temas y duración en nuestra base de datos.'
+const supabaseUrl =
+  import.meta.env.PUBLIC_SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL ?? ''
+const supabaseAnonKey =
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+  ''
+---
+
+<BaseLayout title={title} description={description} canonical="/speakers">
+  <SiteHeader client:load pathname="/speakers" />
+  <main>
+    <SpeakersIsland
+      client:load
+      supabaseUrl={supabaseUrl}
+      supabaseAnonKey={supabaseAnonKey}
+    />
+  </main>
+  <SiteFooter />
+</BaseLayout>

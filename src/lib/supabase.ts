@@ -40,6 +40,14 @@ export function getSupabaseBrowserClient() {
   return browserClient
 }
 
+/**
+ * Tras GitHub OAuth, Supabase redirige a esta URL (o a la que pase `signInWithGitHub`).
+ * Tiene que estar listada en Supabase → Authentication → URL Configuration
+ * → Redirect URLs (p. ej. `http://localhost:4321/**` o `https://cuyoconnect.com/**`
+ * para incluir `/speakers` y `/speakers?thanks=miembros`).
+ * Si no coincide con ninguna URL permitida, Supabase usa el "Site URL"
+ * (suele ser producción, p. ej. https://cuyoconnect.com).
+ */
 export function getSupabaseOAuthRedirectTo() {
   if (typeof window === 'undefined') return undefined
   return `${window.location.origin}/`

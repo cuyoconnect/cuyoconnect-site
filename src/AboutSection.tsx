@@ -733,8 +733,11 @@ export function AboutSection() {
           { x: 6 * s, y: -12 * s, rotate: 6 },
         ]
 
+        // `autoAlpha` pone `visibility: hidden` y rompe `useInView` de BlurText y
+        // AboutAnimatedParagraph (IntersectionObserver). Solo opacidad en el padre.
         gsap.set(text, {
-          autoAlpha: 0,
+          opacity: 0,
+          visibility: 'visible',
           y: 60 * s,
           scale: 0.985,
           transformOrigin: '50% 50%',
@@ -815,7 +818,7 @@ export function AboutSection() {
         tl.to(
           text,
           {
-            autoAlpha: 1,
+            opacity: 1,
             y: 0,
             scale: 1,
             duration: 0.28,

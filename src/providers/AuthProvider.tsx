@@ -21,7 +21,7 @@ type AuthContextValue = {
   isSigningIn: boolean
   session: Session | null
   user: User | null
-  signInWithGitHub: () => Promise<void>
+  signInWithGitHub: (options?: { redirectTo?: string }) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -44,13 +44,13 @@ export function AuthProvider({
   const authConfigured = hasSupabaseAuthEnv()
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
-  const [isAuthReady, setIsAuthReady] = useState(!authConfigured)
+  /** No bloquear botones de OAuth hasta que termine `getSession` (puede colgarse o tardar mucho). */
+  const [isAuthReady, setIsAuthReady] = useState(true)
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
     if (!supabase) {
-      setIsAuthReady(true)
       return
     }
 
@@ -67,12 +67,10 @@ export function AuthProvider({
         const nextSession = data.session ?? null
         setSession(nextSession)
         setUser(nextSession?.user ?? null)
-        setIsAuthReady(true)
       })
       .catch((error) => {
         if (ignore) return
         console.error('Fallo inesperado restaurando la sesion.', error)
-        setIsAuthReady(true)
       })
 
     const {
@@ -97,16 +95,19 @@ export function AuthProvider({
       isSigningIn,
       session,
       user,
-      async signInWithGitHub() {
+      async signInWithGitHub(options?: { redirectTo?: string }) {
         const supabase = getSupabaseBrowserClient()
         if (!supabase) return
 
         setIsSigningIn(true)
 
+        const redirectTo =
+          options?.redirectTo?.trim() || getSupabaseOAuthRedirectTo()
+
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'github',
           options: {
-            redirectTo: getSupabaseOAuthRedirectTo(),
+            redirectTo,
             scopes: 'read:user user:email',
           },
         })

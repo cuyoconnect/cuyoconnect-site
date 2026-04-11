@@ -2,8 +2,8 @@ import type { FAQItem } from '@/components/ui/faq-chat-accordion'
 import { INLINE_LINK_UNDERLINE_CLASS } from '@/lib/inline-link'
 import { requestOpenJoinCommunityModal } from '@/lib/join-community-modal-request'
 
-const SPEAKER_MAILTO =
-  'mailto:cuyoconnect@gmail.com?subject=Quiero%20ser%20speaker%20-%20CuyoConnect'
+/** Página de propuestas de charla (producción). */
+const SPEAKERS_PAGE_URL = 'https://cuyoconnect.com/speakers'
 
 export const LANDING_FAQ_ITEMS: FAQItem[] = [
   {
@@ -41,11 +41,16 @@ export const LANDING_FAQ_ITEMS: FAQItem[] = [
     question: '¿Puedo proponer una charla o tema?',
     answer: (
       <>
-        Sí, nos encanta sumar nuevas voces. Escribinos a{' '}
-        <a href={SPEAKER_MAILTO} className={INLINE_LINK_UNDERLINE_CLASS}>
-          cuyoconnect@gmail.com
+        Sí, nos encanta sumar nuevas voces.{' '}
+        <a
+          href={SPEAKERS_PAGE_URL}
+          className={INLINE_LINK_UNDERLINE_CLASS}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Hacé clic aquí
         </a>{' '}
-        y coordinamos.
+        para enviar tu propuesta.
       </>
     ),
   },
