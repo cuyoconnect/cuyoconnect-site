@@ -328,6 +328,18 @@ export function Highlighter({
 
       resizeObserver.observe(el)
 
+      // Cuando el texto no cambia de tamaño pero el layout sí (p. ej. un
+      // acordeón arriba empuja el footer), el RO del span no dispara y
+      // rough-notation puede quedar desfasado: el SVG es absolute y solo
+      // repinta con resize del elemento o de la ventana.
+      let layoutResizeObserver: ResizeObserver | null = null
+      if (typeof document !== 'undefined' && document.body) {
+        layoutResizeObserver = new ResizeObserver(() => {
+          redrawWithoutAnimation()
+        })
+        layoutResizeObserver.observe(document.body)
+      }
+
       // `visualViewport` cubre los cambios de barras del navegador móvil que
       // mueven el texto sin disparar un resize del propio span.
       const handleViewportShift = () => {
@@ -342,6 +354,8 @@ export function Highlighter({
         window.removeEventListener('resize', handleViewportShift)
         vv?.removeEventListener('resize', handleViewportShift)
         vv?.removeEventListener('scroll', handleViewportShift)
+        layoutResizeObserver?.disconnect()
+        layoutResizeObserver = null
       }
     }
 

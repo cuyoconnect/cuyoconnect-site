@@ -18,6 +18,16 @@ import { cn } from '@/lib/utils'
 
 const HEADING = 'Recursos y materiales'
 
+/** Subtítulo cuando hay un solo ítem (página mínima). */
+const SINGLE_PAGE_LEAD =
+  'Presentaciones y materiales compartidos por la comunidad.'
+
+/**
+ * Derivado solo de `RECURSOS` (no del estado React) para que SSR y cliente
+ * coincidan y no haya mismatch de hidratación en la variante de tarjeta.
+ */
+const IS_SINGLE_RESOURCE_PAGE = RECURSOS.length === 1
+
 /** Misma curva que `TeamSection` para entradas al scroll. */
 const CARD_EASE = [0.33, 1, 0.68, 1] as const
 
@@ -133,8 +143,8 @@ function sortByDateNewestFirst(items: RecursoItem[]): RecursoItem[] {
 
 export function RecursosPage() {
   const reduceMotion = useReducedMotion()
-  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
   const itemsOrdered = useMemo(() => sortByDateNewestFirst(RECURSOS), [])
+  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
   const listVariants = useMemo(
     () => resourceListVariants(reduceMotion),
     [reduceMotion],
@@ -157,10 +167,6 @@ export function RecursosPage() {
     return map
   }, [])
 
-  const countLine = `${itemsOrdered.length} ${
-    itemsOrdered.length === 1 ? 'recurso' : 'recursos'
-  }, del más nuevo al más antiguo.`
-
   return (
     <div className="relative overflow-x-hidden bg-white text-neutral-950 [color-scheme:light]">
       <div
@@ -175,28 +181,58 @@ export function RecursosPage() {
         )}
         aria-labelledby="recursos-heading"
       >
-        <RecursosSectionGraphic reduceMotion={reduceMotion} />
+        {!IS_SINGLE_RESOURCE_PAGE ? (
+          <RecursosSectionGraphic reduceMotion={reduceMotion} />
+        ) : null}
 
         <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'relative z-10 min-w-0')}>
-          <h1
-            id="recursos-heading"
-            className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
-          >
-            <BlurText
-              text={HEADING}
-              className="text-inherit"
-              segmentDelay={0.14}
-              duration={0.95}
-              tailHighlight={tailHighlight}
-            />
-          </h1>
-          <p className="mt-3 max-w-2xl text-pretty text-neutral-600 sm:text-lg">
-            Presentaciones, guías y materiales de capacitaciones. {countLine}
-          </p>
+          {IS_SINGLE_RESOURCE_PAGE ? (
+            <>
+              <h1
+                id="recursos-heading"
+                className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
+              >
+                <BlurText
+                  text={HEADING}
+                  className="text-inherit"
+                  segmentDelay={0.14}
+                  duration={0.95}
+                  tailHighlight={tailHighlight}
+                />
+              </h1>
+              <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
+                {SINGLE_PAGE_LEAD}
+              </p>
+            </>
+          ) : (
+            <>
+              <h1
+                id="recursos-heading"
+                className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
+              >
+                <BlurText
+                  text={HEADING}
+                  className="text-inherit"
+                  segmentDelay={0.14}
+                  duration={0.95}
+                  tailHighlight={tailHighlight}
+                />
+              </h1>
+              <p className="mt-3 max-w-2xl text-pretty text-neutral-600 sm:text-lg">
+                Presentaciones, guías y materiales de capacitaciones.{' '}
+                {itemsOrdered.length}{' '}
+                {itemsOrdered.length === 1 ? 'recurso' : 'recursos'}, del más
+                nuevo al más antiguo.
+              </p>
+            </>
+          )}
 
           <motion.ul
             className={cn(
-              'mt-10 grid min-w-0 list-none grid-cols-2 gap-4 p-0 sm:mt-12 sm:gap-8 lg:grid-cols-3',
+              'min-w-0 list-none p-0',
+              IS_SINGLE_RESOURCE_PAGE
+                ? 'mt-10 flex flex-wrap justify-center gap-[14px]'
+                : 'mt-10 grid grid-cols-2 gap-4 sm:mt-12 sm:gap-8 lg:grid-cols-3',
             )}
             variants={listVariants}
             initial="hidden"
@@ -212,11 +248,13 @@ export function RecursosPage() {
               return (
                 <motion.li
                   key={item.id}
-                  className="min-w-0"
+                  className={cn(
+                    IS_SINGLE_RESOURCE_PAGE ? 'shrink-0' : 'min-w-0',
+                  )}
                   variants={itemVariants}
                 >
                   <ArchivePosterCard
-                    variant="grid"
+                    variant={IS_SINGLE_RESOURCE_PAGE ? 'slider' : 'grid'}
                     imageSrc={coverSrc}
                     title={item.title}
                     dateLabel={item.date}
@@ -226,6 +264,7 @@ export function RecursosPage() {
                     external={external}
                     cardIndex={index}
                     hoveredIndex={hoveredCardIndex}
+                    isDragging={false}
                     reduceMotion={reduceMotion}
                     onMouseEnter={() => setHoveredCardIndex(index)}
                     onMouseLeave={() => setHoveredCardIndex(null)}

@@ -13,7 +13,7 @@ import { OPEN_JOIN_COMMUNITY_MODAL_EVENT } from '@/lib/join-community-modal-requ
 import { scrollToSectionElement } from '@/lib/section-scroll'
 import { cn } from '@/lib/utils'
 
-const SCROLL_PILL_THRESHOLD = 160
+const SCROLL_PILL_THRESHOLD = 80
 
 /** Dimensiones intrínsecas de public/logo.png */
 const NAV_LOGO = { w: 882, h: 882 } as const

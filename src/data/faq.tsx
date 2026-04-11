@@ -1,8 +1,6 @@
 import type { FAQItem } from '@/components/ui/faq-chat-accordion'
+import { INLINE_LINK_UNDERLINE_CLASS } from '@/lib/inline-link'
 import { requestOpenJoinCommunityModal } from '@/lib/join-community-modal-request'
-
-const joinModalLinkClass =
-  'font-semibold underline underline-offset-2 decoration-neutral-400 hover:decoration-neutral-900 transition-colors focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400'
 
 const SPEAKER_MAILTO =
   'mailto:cuyoconnect@gmail.com?subject=Quiero%20ser%20speaker%20-%20CuyoConnect'
@@ -18,23 +16,23 @@ export const LANDING_FAQ_ITEMS: FAQItem[] = [
     id: 2,
     question: '¿Es gratis?',
     answer:
-      'No, participar de la comunidad es completamente gratis. Si alguna actividad tuviera costo, lo vamos a comunicar con anticipación.',
+      'Sí, participar de la comunidad es completamente gratis. Si alguna actividad tuviera costo, lo vamos a comunicar con anticipación.',
   },
   {
     id: 3,
-    question: '¿Dónde me entero de las novedades?',
+    question: '¿Cómo puedo unirme?',
     answer: (
       <>
-        Publicamos todo en nuestras redes y canales.{' '}
+        Reunimos los enlaces en un solo lugar.{' '}
         <button
           type="button"
-          className={joinModalLinkClass}
+          className={INLINE_LINK_UNDERLINE_CLASS}
           aria-label="Abrir enlaces y canales de la comunidad (Unite)"
           onClick={() => requestOpenJoinCommunityModal()}
         >
           Unite acá
         </button>{' '}
-        para no perderte nada.
+        para abrirlos y elegir por dónde querés participar.
       </>
     ),
   },
@@ -44,7 +42,7 @@ export const LANDING_FAQ_ITEMS: FAQItem[] = [
     answer: (
       <>
         Sí, nos encanta sumar nuevas voces. Escribinos a{' '}
-        <a href={SPEAKER_MAILTO} className={joinModalLinkClass}>
+        <a href={SPEAKER_MAILTO} className={INLINE_LINK_UNDERLINE_CLASS}>
           cuyoconnect@gmail.com
         </a>{' '}
         y coordinamos.
