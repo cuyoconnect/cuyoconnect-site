@@ -49,6 +49,17 @@ export const RECURSOS: RecursoItem[] = [
     dateSort: '2026-04-11',
     coverImage: '/recursos/stellar-workshop-slide.png',
   },
+  {
+    id: 'stellar-de0-a-primera-transaccion',
+    title: 'De 0 a tu primera transacción',
+    description: 'Presentación Canva (Stellar).',
+    category: 'presentaciones',
+    kind: 'presentacion',
+    href: 'https://canva.link/xle11aaw3hw715i',
+    date: '11 abr 2026',
+    dateSort: '2026-04-11',
+    coverImage: '/recursos/stellar-primera-transaccion-slide.png',
+  },
 ]
 
 export const RECURSO_CATEGORY_LABEL: Record<RecursoCategory, string> = {

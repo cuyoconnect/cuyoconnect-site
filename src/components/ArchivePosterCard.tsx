@@ -2,52 +2,6 @@ import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/** Marco SVG (esquina redondeada) que “dibujado” al hover; solo `variant="grid"`. */
-function PosterGridFrame({
-  active,
-  reduceMotion,
-}: {
-  active: boolean
-  reduceMotion: boolean | null
-}) {
-  const stroke = 'rgba(253, 224, 71, 0.92)' // yellow-300
-  const inactiveDash = reduceMotion === true ? 0 : 100
-
-  return (
-    <svg
-      className="pointer-events-none absolute inset-0 z-[5] size-full rounded-2xl"
-      viewBox="0 0 100 125"
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <rect
-        x="1.25"
-        y="1.25"
-        width="97.5"
-        height="122.5"
-        rx="3.35"
-        ry="3.35"
-        fill="none"
-        stroke={stroke}
-        strokeWidth={0.85}
-        vectorEffect="nonScalingStroke"
-        pathLength={100}
-        strokeDasharray={100}
-        strokeDashoffset={active ? 0 : inactiveDash}
-        strokeLinecap="round"
-        className={
-          reduceMotion === true
-            ? 'transition-opacity duration-300 ease-out'
-            : 'transition-[stroke-dashoffset] duration-[650ms] ease-[cubic-bezier(0.33,1,0.68,1)]'
-        }
-        style={
-          reduceMotion === true ? { opacity: active ? 0.45 : 0 } : undefined
-        }
-      />
-    </svg>
-  )
-}
-
 function ArrowUpRightIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -147,14 +101,14 @@ export function ArchivePosterCard({
           filter: filterValue,
           WebkitFilter: filterValue,
           boxShadow: isActiveCard
-            ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
+            ? 'none'
             : '0 1px 4px rgba(0,0,0,0.06)',
         }
       : {
           filter: filterValue,
           WebkitFilter: filterValue,
           boxShadow: isActiveCard
-            ? '0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08)'
+            ? 'none'
             : '0 1px 4px rgba(0,0,0,0.06)',
           transitionProperty: 'filter, box-shadow, transform',
           transitionDuration: effectiveHovered === null ? '420ms' : '280ms',
@@ -170,8 +124,8 @@ export function ArchivePosterCard({
   return (
     <article
       className={cn(
-        'relative rounded-2xl border border-neutral-200 bg-white select-none',
-        variant === 'grid' && 'group/poster',
+        'relative rounded-2xl border bg-white select-none',
+        isActiveCard ? 'border-transparent' : 'border-neutral-200',
         variant === 'slider' && 'shrink-0 w-52 sm:w-60 md:w-68',
         variant === 'grid' && 'h-full min-h-0 w-full min-w-0',
       )}
@@ -192,8 +146,8 @@ export function ArchivePosterCard({
             reduceMotion === true
               ? undefined
               : isActiveCard
-                ? 'scale(1.06) rotate(-6deg)'
-                : 'scale(0.92) rotate(0deg)',
+                ? 'rotate(-6deg)'
+                : 'rotate(0deg)',
           transition:
             'opacity 320ms cubic-bezier(0.33, 1, 0.68, 1), transform 420ms cubic-bezier(0.33, 1, 0.68, 1)',
         }}
@@ -221,29 +175,10 @@ export function ArchivePosterCard({
       />
 
       <div className="relative z-0 aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-200">
-        {variant === 'grid' ? (
-          <PosterGridFrame active={isActiveCard} reduceMotion={reduceMotion} />
-        ) : null}
         <img
           src={imageSrc}
           alt={title}
-          className={cn(
-            'relative z-0 size-full object-cover object-center will-change-transform',
-            variant === 'grid' &&
-              reduceMotion !== true &&
-              'transition-transform duration-[750ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover/poster:scale-[1.07] group-focus-within/poster:scale-[1.07]',
-            variant === 'grid' &&
-              reduceMotion === true &&
-              isActiveCard &&
-              'scale-[1.03]',
-          )}
-          style={
-            variant === 'grid' && reduceMotion === true
-              ? {
-                  transition: 'transform 400ms cubic-bezier(0.33, 1, 0.68, 1)',
-                }
-              : undefined
-          }
+          className="relative z-0 size-full object-cover object-center"
           width={400}
           height={500}
           loading="lazy"

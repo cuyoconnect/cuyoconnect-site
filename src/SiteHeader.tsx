@@ -13,13 +13,14 @@ import { OPEN_JOIN_COMMUNITY_MODAL_EVENT } from '@/lib/join-community-modal-requ
 import { scrollToSectionElement } from '@/lib/section-scroll'
 import { cn } from '@/lib/utils'
 
-const SCROLL_PILL_THRESHOLD = 80
+/** Pixels de scroll antes de pasar a modo píldora (menor = reacción más pronta). */
+const SCROLL_PILL_THRESHOLD = 48
 
 /** Dimensiones intrínsecas de public/logo.png */
 const NAV_LOGO = { w: 882, h: 882 } as const
 
-const navShellEase = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
-/** Misma duración y curva en ambos sentidos (~12% más rápida que 0.68s). */
+/** Curva simétrica: expandir y contraer se perciben con el mismo ritmo (misma duración en ambos sentidos). */
+const navShellEase = 'cubic-bezier(0.45, 0, 0.55, 1)'
 const navShellTransitionDuration = '0.6s'
 
 function NavLogoMark({ className }: { className?: string }) {
@@ -88,16 +89,20 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   const [scrolledShellWidth, setScrolledShellWidth] = useState<number | null>(null)
   const reduceMotion = useReducedMotion()
   const scrolledMeasureRef = useRef<HTMLDivElement>(null)
-  const navTransitionTiming = `${navShellTransitionDuration} ${navShellEase}`
+  /** `0s` evita cualquier delay heredado; duración + curva iguales en ambos sentidos. */
+  const navTransitionTiming = `${navShellTransitionDuration} ${navShellEase} 0s`
   const isHome = pathname === '/'
   const logoHref = isHome ? '#inicio' : '/'
   const eventsHref = isHome ? '#eventos' : '/eventos'
+
+  useLayoutEffect(() => {
+    setScrolled(window.scrollY >= SCROLL_PILL_THRESHOLD)
+  }, [])
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY >= SCROLL_PILL_THRESHOLD)
     }
-    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])

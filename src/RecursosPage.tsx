@@ -18,9 +18,8 @@ import { cn } from '@/lib/utils'
 
 const HEADING = 'Recursos y materiales'
 
-/** Subtítulo cuando hay un solo ítem (página mínima). */
-const SINGLE_PAGE_LEAD =
-  'Presentaciones y materiales compartidos por la comunidad.'
+/** Texto introductorio bajo el título (genérico; el listado añade cantidad u orden). */
+const PAGE_LEAD = 'Presentaciones y recursos de nuestra comunidad.'
 
 /**
  * Derivado solo de `RECURSOS` (no del estado React) para que SSR y cliente
@@ -68,72 +67,6 @@ function resourceItemVariants(reduceMotion: boolean | null): Variants {
   }
 }
 
-/** Líneas y puntos SVG de fondo (solo estética; trazo al entrar en vista). */
-function RecursosSectionGraphic({
-  reduceMotion,
-}: {
-  reduceMotion: boolean | null
-}) {
-  return (
-    <svg
-      className={cn(
-        'pointer-events-none absolute -right-8 top-0 z-0 h-[min(300px,38vh)] w-[min(92vw,480px)] sm:-right-12 sm:top-6',
-        'text-neutral-950',
-      )}
-      style={{ opacity: 0.07 }}
-      viewBox="0 0 400 260"
-      fill="none"
-      aria-hidden
-    >
-      <motion.path
-        d="M-10 200 C90 20 210 60 340 140 S 420 40 410 20"
-        stroke="currentColor"
-        strokeWidth="1.35"
-        strokeLinecap="round"
-        initial={
-          reduceMotion === true
-            ? { pathLength: 1, opacity: 1 }
-            : { pathLength: 0, opacity: 0.35 }
-        }
-        whileInView={{ pathLength: 1, opacity: 1 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={
-          reduceMotion === true
-            ? { duration: 0 }
-            : {
-                pathLength: {
-                  duration: 1.45,
-                  ease: CARD_EASE,
-                },
-                opacity: { duration: 0.55, ease: CARD_EASE },
-              }
-        }
-      />
-      <motion.path
-        d="M60 248 Q 200 180 360 222"
-        stroke="currentColor"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-        opacity={0.55}
-        initial={
-          reduceMotion === true ? { pathLength: 1 } : { pathLength: 0 }
-        }
-        whileInView={{ pathLength: 1 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={
-          reduceMotion === true
-            ? { duration: 0 }
-            : {
-                pathLength: { duration: 1.15, ease: CARD_EASE, delay: 0.12 },
-              }
-        }
-      />
-      <circle cx="332" cy="118" r="2.5" fill="currentColor" opacity="0.45" />
-      <circle cx="118" cy="228" r="2" fill="currentColor" opacity="0.35" />
-    </svg>
-  )
-}
-
 function sortByDateNewestFirst(items: RecursoItem[]): RecursoItem[] {
   return [...items].sort((a, b) => {
     if (a.dateSort === b.dateSort) return 0
@@ -144,7 +77,7 @@ function sortByDateNewestFirst(items: RecursoItem[]): RecursoItem[] {
 export function RecursosPage() {
   const reduceMotion = useReducedMotion()
   const itemsOrdered = useMemo(() => sortByDateNewestFirst(RECURSOS), [])
-  const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
+  const tailHighlight = useMemo(() => heroTopicTailHighlight(3), [])
   const listVariants = useMemo(
     () => resourceListVariants(reduceMotion),
     [reduceMotion],
@@ -181,10 +114,6 @@ export function RecursosPage() {
         )}
         aria-labelledby="recursos-heading"
       >
-        {!IS_SINGLE_RESOURCE_PAGE ? (
-          <RecursosSectionGraphic reduceMotion={reduceMotion} />
-        ) : null}
-
         <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'relative z-10 min-w-0')}>
           {IS_SINGLE_RESOURCE_PAGE ? (
             <>
@@ -201,7 +130,7 @@ export function RecursosPage() {
                 />
               </h1>
               <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-                {SINGLE_PAGE_LEAD}
+                {PAGE_LEAD}
               </p>
             </>
           ) : (
@@ -219,7 +148,7 @@ export function RecursosPage() {
                 />
               </h1>
               <p className="mt-3 max-w-2xl text-pretty text-neutral-600 sm:text-lg">
-                Presentaciones, guías y materiales de capacitaciones.{' '}
+                {PAGE_LEAD}{' '}
                 {itemsOrdered.length}{' '}
                 {itemsOrdered.length === 1 ? 'recurso' : 'recursos'}, del más
                 nuevo al más antiguo.
