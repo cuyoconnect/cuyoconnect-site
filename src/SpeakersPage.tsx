@@ -159,7 +159,7 @@ export function SpeakersPage() {
   const primaryLabel = (() => {
     if (isSigningIn) return 'Abriendo GitHub…'
     if (isSubmitting) return 'Guardando…'
-    if (!user) return 'Enviar con GitHub'
+    if (!user) return 'Enviar'
     return 'Enviar propuesta'
   })()
 
