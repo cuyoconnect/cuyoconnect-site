@@ -46,6 +46,16 @@ export interface BlurTextProps {
    * al terminar el blur se aplica la anotación en bloque.
    */
   tailHighlight?: BlurTextTailHighlight
+  /**
+   * Si es true, no espera al IntersectionObserver (títulos arriba del fold o islas
+   * `client:load` donde el ref puede no registrar a tiempo).
+   */
+  inViewInitial?: boolean
+  /**
+   * `rootMargin` del observer. Por defecto solo recorta abajo (no el borde superior),
+   * para que el primer pantallazo siga contando como visible.
+   */
+  inViewMargin?: string
 }
 
 function findTailStartSegmentIndex(
@@ -76,6 +86,8 @@ export function BlurText({
   blurAmount = 14,
   onComplete,
   tailHighlight,
+  inViewInitial = false,
+  inViewMargin,
 }: BlurTextProps) {
   const ref = useRef<HTMLSpanElement>(null)
   const tailRef = useRef<HTMLSpanElement>(null)
@@ -91,7 +103,11 @@ export function BlurText({
   onCompleteRef.current = onComplete
   tailHighlightRef.current = tailHighlight
 
-  const isInView = useInView(ref, { once: true, margin: '-8%' })
+  const isInView = useInView(ref, {
+    once: true,
+    margin: inViewMargin ?? '0px 0px -8% 0px',
+    initial: inViewInitial,
+  })
 
   const segments = useMemo(
     () =>

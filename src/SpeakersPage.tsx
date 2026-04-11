@@ -188,6 +188,7 @@ export function SpeakersPage() {
               segmentDelay={0.14}
               duration={0.95}
               tailHighlight={titleTailHighlight}
+              inViewInitial
             />
           </h1>
 
@@ -238,9 +239,9 @@ export function SpeakersPage() {
                 ) : null}
 
                 <div className="border-t border-neutral-200/90 pt-6">
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-                    <div className="flex min-w-0 flex-col gap-4 sm:gap-3">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+                      <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
                         <span className="text-xs font-medium uppercase tracking-[0.06em] text-neutral-400">
                           Duración
                         </span>
@@ -270,39 +271,39 @@ export function SpeakersPage() {
                         </select>
                       </div>
 
-                      {user ? (
-                        <div
-                          className="flex max-w-full items-center gap-2.5 text-sm text-neutral-600"
-                          role="status"
+                      <div className="flex shrink-0 sm:justify-end">
+                        <button
+                          type="submit"
+                          disabled={submitDisabled}
+                          className={cn(
+                            'inline-flex w-full cursor-pointer items-center justify-center rounded-full bg-[#1d1d1f] px-7 py-3 text-sm font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-black hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 sm:w-auto sm:min-w-[12rem]',
+                            'disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:hover:bg-neutral-300',
+                          )}
                         >
-                          {typeof avatarUrl === 'string' ? (
-                            <img
-                              src={avatarUrl}
-                              alt=""
-                              className="h-7 w-7 shrink-0 rounded-full border border-neutral-200/80 object-cover"
-                            />
-                          ) : null}
-                          <span className="truncate">
-                            {login
-                              ? `@${login}`
-                              : user.email ?? 'Sesión con GitHub'}
-                          </span>
-                        </div>
-                      ) : null}
+                          {primaryLabel}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex shrink-0 sm:justify-end">
-                      <button
-                        type="submit"
-                        disabled={submitDisabled}
-                        className={cn(
-                          'inline-flex w-full cursor-pointer items-center justify-center rounded-full bg-[#1d1d1f] px-7 py-3 text-sm font-medium text-white transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-black hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 sm:w-auto sm:min-w-[12rem]',
-                          'disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:hover:bg-neutral-300',
-                        )}
+                    {user ? (
+                      <div
+                        className="flex max-w-full items-center gap-2.5 text-sm text-neutral-600"
+                        role="status"
                       >
-                        {primaryLabel}
-                      </button>
-                    </div>
+                        {typeof avatarUrl === 'string' ? (
+                          <img
+                            src={avatarUrl}
+                            alt=""
+                            className="h-7 w-7 shrink-0 rounded-full border border-neutral-200/80 object-cover"
+                          />
+                        ) : null}
+                        <span className="truncate">
+                          {login
+                            ? `@${login}`
+                            : user.email ?? 'Sesión con GitHub'}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                   <p className="mt-4 max-w-md text-center text-xs leading-snug text-neutral-400 sm:mx-auto">
                     Para enviar la propuesta tenés que iniciar sesión con GitHub.
