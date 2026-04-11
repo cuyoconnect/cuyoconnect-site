@@ -8,7 +8,7 @@ Sitio estático en Astro con islas React para conservar la interacción existent
 - `npm run build`: genera el sitio estático en `dist/`. 
 - `npm run preview`: sirve el build localmente.
 - `npm run lint`: corre ESLint sobre `ts` y `tsx` del proyecto. 
-  
+   
 ## Rutas
  
 - `/`: landing principal.
