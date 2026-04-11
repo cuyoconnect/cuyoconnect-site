@@ -304,6 +304,9 @@ export function SpeakersPage() {
                       </button>
                     </div>
                   </div>
+                  <p className="mt-4 max-w-md text-center text-xs leading-snug text-neutral-400 sm:mx-auto">
+                    Para enviar la propuesta tenés que iniciar sesión con GitHub.
+                  </p>
                 </div>
               </div>
             </form>
