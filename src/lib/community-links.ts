@@ -44,7 +44,7 @@ export const COMMUNITY_LINKS = [
 export type CommunityLinkId = (typeof COMMUNITY_LINKS)[number]['id']
 
 export const LUMA_CALENDAR_EMBED_SRC =
-  'https://luma.com/embed/calendar/cal-GDIEkhScyp1dPKU/events?theme=light'
+  'https://luma.com/embed/calendar/cal-GDIEkhScyp1dPKU/events?lt=light'
 
 /** Abre el enlace en una pestaña nueva (comportamiento de navegador, no popup). */
 export function openCommunityLink(href: string) {
