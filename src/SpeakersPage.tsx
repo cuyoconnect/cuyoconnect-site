@@ -237,8 +237,8 @@ export function SpeakersPage() {
 
           <div
             className={cn(
-              "mt-10 overflow-hidden rounded-2xl border border-neutral-200/90 bg-white",
-              "shadow-[0_12px_40px_-28px_rgba(0,0,0,0.2)]",
+              "mt-10 overflow-hidden rounded-2xl bg-white",
+              "border-0 shadow-none sm:border sm:border-neutral-200/90 sm:shadow-[0_12px_40px_-28px_rgba(0,0,0,0.2)]",
               /* Rompe el px-4 del section solo en móvil: tarjeta a ancho de pantalla */
               "max-sm:-mx-4",
             )}
@@ -251,26 +251,26 @@ export function SpeakersPage() {
             >
               <aside
                 className={cn(
-                  "min-w-0 border-neutral-200/80 p-6 sm:p-7",
-                  "border-b bg-neutral-50/70 lg:border-b-0",
+                  "min-w-0 border-neutral-700/80 p-6 sm:p-7",
+                  "border-b bg-neutral-900 lg:border-b-0 lg:border-r",
                   "lg:flex lg:min-h-0 lg:flex-col lg:py-9 lg:pl-7 lg:pr-6 xl:pl-8",
                 )}
               >
-                <h2 className="text-base font-bold leading-snug text-neutral-950">
+                <h2 className="text-base font-semibold leading-snug text-neutral-200">
                   Qué tenés que incluir
                 </h2>
                 <ul className="mt-4 space-y-4">
                   {GUIDANCE_ITEMS.map((item, index) => (
                     <li key={item.title} className="flex gap-2.5">
                       <span
-                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffec6b]/90 text-xs font-bold tabular-nums text-neutral-950"
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffec6b]/85 text-xs font-bold tabular-nums text-neutral-950"
                         aria-hidden
                       >
                         {index + 1}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-sm leading-snug text-neutral-800">
-                          <span className="font-bold text-neutral-950">
+                        <p className="text-sm leading-relaxed text-neutral-400">
+                          <span className="font-medium text-neutral-300">
                             {item.title}:
                           </span>{" "}
                           {item.body}
@@ -300,13 +300,32 @@ export function SpeakersPage() {
                     onSubmit={(e) => void handleSubmit(e)}
                     noValidate
                   >
-                    <div>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
                       <h2
                         id={`${topicsId}-title`}
-                        className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl"
+                        className="min-w-0 text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl"
                       >
                         Tu charla
                       </h2>
+                      {user ? (
+                        <div
+                          className="flex max-w-[min(100%,12rem)] shrink-0 items-center justify-end gap-2 text-sm text-neutral-600 sm:max-w-[14rem]"
+                          role="status"
+                        >
+                          {typeof avatarUrl === "string" ? (
+                            <img
+                              src={avatarUrl}
+                              alt=""
+                              className="h-8 w-8 shrink-0 rounded-full border border-neutral-200/80 object-cover sm:h-9 sm:w-9"
+                            />
+                          ) : null}
+                          <span className="min-w-0 truncate text-right">
+                            {login
+                              ? `@${login}`
+                              : (user.email ?? "Sesión con GitHub")}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="mt-6 flex flex-col gap-6">
@@ -404,26 +423,6 @@ export function SpeakersPage() {
                               "flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-4",
                             )}
                           >
-                            {user ? (
-                              <div
-                                className="flex max-w-full items-center justify-end gap-2.5 text-sm text-neutral-600"
-                                role="status"
-                              >
-                                {typeof avatarUrl === "string" ? (
-                                  <img
-                                    src={avatarUrl}
-                                    alt=""
-                                    className="h-9 w-9 shrink-0 rounded-full border border-neutral-200/80 object-cover"
-                                  />
-                                ) : null}
-                                <span className="min-w-0 truncate">
-                                  {login
-                                    ? `@${login}`
-                                    : (user.email ?? "Sesión con GitHub")}
-                                </span>
-                              </div>
-                            ) : null}
-
                             <button
                               type="submit"
                               disabled={submitDisabled}
