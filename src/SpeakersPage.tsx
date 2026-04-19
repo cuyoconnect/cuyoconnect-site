@@ -25,19 +25,19 @@ const SPEAKERS_DRAFT_KEY = "cuyoconnect:speakers-draft-v1";
 const GUIDANCE_ITEMS = [
   {
     title: "Título o tema",
-    body: "Que se entienda en una línea de qué va la sesión.",
+    body: "Una línea que resuma de qué va la sesión.",
   },
   {
-    title: "Idea central",
-    body: "Qué vas a mostrar, contar o debatir.",
+    title: "De qué trata",
+    body: "Qué vas a mostrar, contar o debatir y a quién apunta.",
   },
   {
     title: "Formato",
     body: "Charla, workshop, debate, mesa u otro.",
   },
   {
-    title: "Audiencia",
-    body: "Para quién es y qué deberían saber antes.",
+    title: "Sobre vos",
+    body: "Quién sos y por qué creés que es interesante este tema.",
   },
 ] as const;
 
@@ -229,16 +229,18 @@ export function SpeakersPage() {
           </h1>
 
           <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-600 sm:text-[1.05rem]">
-            CuyoConnect es un espacio para compartir experiencias sobre
-            producto, tecnología y equipos. Si tenés una charla en mente,
-            envianos una propuesta en texto libre: lo usamos para armar la
-            agenda y coordinarnos con vos.
+            En CuyoConnect compartimos lo que estamos construyendo en IA,
+            tecnología y web3. Si querés contar un proyecto, una experiencia o
+            algo que aprendiste, mandanos tu propuesta y la sumamos a la
+            próxima agenda.
           </p>
 
           <div
             className={cn(
               "mt-10 overflow-hidden rounded-2xl border border-neutral-200/90 bg-white",
               "shadow-[0_12px_40px_-28px_rgba(0,0,0,0.2)]",
+              /* Rompe el px-4 del section solo en móvil: tarjeta a ancho de pantalla */
+              "max-sm:-mx-4",
             )}
           >
             <div
@@ -255,14 +257,9 @@ export function SpeakersPage() {
                 )}
               >
                 <h2 className="text-base font-bold leading-snug text-neutral-950">
-                  Qué conviene incluir
+                  Qué tenés que incluir
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-                  No hace falta un formato rígido: podés escribir en párrafos.
-                  Con estos puntos cubrís lo que el equipo necesita para evaluar
-                  la idea.
-                </p>
-                <ul className="mt-5 space-y-4">
+                <ul className="mt-4 space-y-4">
                   {GUIDANCE_ITEMS.map((item, index) => (
                     <li key={item.title} className="flex gap-2.5">
                       <span
@@ -274,7 +271,7 @@ export function SpeakersPage() {
                       <div className="min-w-0">
                         <p className="text-sm leading-snug text-neutral-800">
                           <span className="font-bold text-neutral-950">
-                            {item.title}.
+                            {item.title}:
                           </span>{" "}
                           {item.body}
                         </p>
@@ -320,11 +317,11 @@ export function SpeakersPage() {
                           rows={9}
                           value={topics}
                           onChange={(e) => setTopics(e.target.value)}
-                          placeholder={`- Título o tema: una línea de qué va la sesión.
+                          placeholder={`- Título o tema: una línea que resuma la sesión.
 
-- Idea central: qué vas a mostrar, contar o debatir.
+- De qué trata: qué vas a mostrar, contar o debatir y a quién apunta.
 
-- Audiencia: para quién es y qué deberían saber antes.`}
+- Sobre vos: quién sos y por qué creés que es interesante este tema.`}
                           aria-labelledby={`${topicsId}-title`}
                           className={cn(
                             "min-h-[13rem] w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/40 px-4 py-3.5 text-[0.9375rem] leading-relaxed text-neutral-950 sm:min-h-[14rem]",
