@@ -19,6 +19,12 @@ export interface FaqAccordionProps {
   timestamp?: string
   questionClassName?: string
   answerClassName?: string
+  /** Estilos del wrapper externo del ícono +/× (sirve para hacerlo circular, con bg, etc.). El wrapper no rota. */
+  triggerIconWrapperClassName?: string
+  /** Estilos del ícono Plus (color, tamaño). El ícono es el que rota 45° cuando se abre. */
+  triggerIconClassName?: string
+  /** Notifica cuál ítem queda abierto (o `null` si todos colapsados). Útil para reaccionar desde afuera (p. ej. ocultar elementos vecinos). */
+  onOpenChange?: (openId: string | null) => void
 }
 
 export function FaqAccordion({
@@ -26,6 +32,9 @@ export function FaqAccordion({
   className,
   questionClassName,
   answerClassName,
+  triggerIconWrapperClassName,
+  triggerIconClassName,
+  onOpenChange,
 }: FaqAccordionProps) {
   const [openItem, setOpenItem] = React.useState<string | null>(null)
 
@@ -34,7 +43,11 @@ export function FaqAccordion({
       type="single"
       collapsible
       value={openItem ?? ''}
-      onValueChange={(value) => setOpenItem(value || null)}
+      onValueChange={(value) => {
+        const next = value || null
+        setOpenItem(next)
+        onOpenChange?.(next)
+      }}
       className={cn('divide-y divide-neutral-200', className)}
     >
       {data.map((item) => {
@@ -54,13 +67,23 @@ export function FaqAccordion({
                 )}
               >
                 <span className="min-w-0">{item.question}</span>
-                <motion.span
-                  className="shrink-0 text-neutral-400"
-                  animate={{ rotate: isOpen ? 45 : 0 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                <span
+                  className={cn(
+                    'inline-flex shrink-0 items-center justify-center',
+                    triggerIconWrapperClassName ?? 'text-neutral-400',
+                  )}
                 >
-                  <Plus className="h-5 w-5" strokeWidth={1.5} />
-                </motion.span>
+                  <motion.span
+                    className="inline-flex"
+                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  >
+                    <Plus
+                      className={cn('h-5 w-5', triggerIconClassName)}
+                      strokeWidth={1.5}
+                    />
+                  </motion.span>
+                </span>
               </Accordion.Trigger>
             </Accordion.Header>
             <Accordion.Content asChild forceMount>

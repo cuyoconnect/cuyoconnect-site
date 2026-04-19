@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { BlurText } from "@/components/ui/blur-text";
+import { FaqAccordion, type FAQItem } from "@/components/ui/faq-chat-accordion";
 import { GitHubJoinCta } from "@/components/GitHubJoinCta";
 import { SpeakerThanksOverlay } from "@/components/SpeakerThanksOverlay";
 import { HERO_CONTENT_WIDTH_CLASS } from "@/lib/content-width";
@@ -22,24 +23,32 @@ const DURATION_OPTIONS = [
 
 const SPEAKERS_DRAFT_KEY = "cuyoconnect:speakers-draft-v1";
 
-const GUIDANCE_ITEMS = [
+const SPEAKER_FAQ_ITEMS: FAQItem[] = [
   {
-    title: "Título o tema",
-    body: "Una línea que resuma de qué va la sesión.",
+    id: 1,
+    question: "¿Tengo que ser experto/a en el tema?",
+    answer:
+      "Para nada. Las mejores charlas suelen venir de gente que está aprendiendo y comparte el camino. Si lo entendés lo suficiente como para explicárselo a un amigo, podés contarlo acá.",
   },
   {
-    title: "De qué trata",
-    body: "Qué vas a mostrar, contar o debatir y a quién apunta.",
+    id: 2,
+    question: "¿Hace falta tener slides o se puede improvisar?",
+    answer:
+      "Como prefieras. Hay charlas con slides, otras tipo demo en vivo y otras de pizarra. Mientras tengas claro lo que querés transmitir, el formato es libre.",
   },
   {
-    title: "Formato",
-    body: "Charla, workshop, debate, mesa u otro.",
+    id: 3,
+    question: "¿Puedo dar la charla en pareja o con alguien más?",
+    answer:
+      "Sí, las charlas en dúo funcionan muy bien, sobre todo cuando son experiencias compartidas. Aclaranos en la propuesta quiénes serían los speakers.",
   },
   {
-    title: "Sobre vos",
-    body: "Quién sos y por qué creés que es interesante este tema.",
+    id: 4,
+    question: "Nunca hablé en público, ¿igual puedo proponerme?",
+    answer:
+      "Sí, y es uno de los mejores lugares para arrancar. El público es chico, va con buena onda y te acompañamos en el ensayo si querés. Mucha gente que hoy da charlas debutó acá.",
   },
-] as const;
+];
 
 function parseDraft(raw: string | null): {
   talkMain: string;
@@ -136,6 +145,7 @@ export function SpeakersPage() {
     "proposal",
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [faqOpenId, setFaqOpenId] = useState<string | null>(null);
 
   const titleTailHighlight = useMemo(() => heroTopicTailHighlight(2), []);
 
@@ -261,52 +271,77 @@ export function SpeakersPage() {
   })();
 
   return (
-    <div className="relative overflow-x-hidden bg-white text-neutral-950 [color-scheme:light]">
+    <div className="relative isolate flex min-h-0 flex-1 flex-col overflow-x-hidden bg-white text-neutral-950 [color-scheme:light] lg:justify-center">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_90%_55%_at_50%_-15%,rgba(255,236,107,0.14),transparent_58%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_40%_at_100%_20%,rgba(0,0,0,0.03),transparent_55%)]"
+        aria-hidden
+      />
+      {/* Patrón de circuitos+uvita a los costados (solo desktop): rellena el aire fuera de la
+          columna de contenido (misma máx. 52rem que el navbar y el hero). La imagen se escala
+          a la altura completa del contenedor (sin recortes) y queda anclada al borde externo. */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-y-0 left-0 -z-10 select-none",
+          "hidden lg:block",
+          "w-[calc(50vw_-_26rem)]",
+          "bg-[url('/banner/cuyoconnect-circuit-vertical.png')] bg-no-repeat bg-[size:auto_100%] bg-left",
+          "opacity-[0.12]",
+          "[mask-image:linear-gradient(to_right,black_25%,transparent_100%)]",
+          "[-webkit-mask-image:linear-gradient(to_right,black_25%,transparent_100%)]",
+        )}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_40%_at_100%_20%,rgba(0,0,0,0.03),transparent_55%)]"
+        className={cn(
+          "pointer-events-none absolute inset-y-0 right-0 -z-10 select-none",
+          "hidden lg:block",
+          "w-[calc(50vw_-_26rem)]",
+          "bg-[url('/banner/cuyoconnect-circuit-vertical.png')] bg-no-repeat bg-[size:auto_100%] bg-right",
+          "opacity-[0.12]",
+          "[mask-image:linear-gradient(to_left,black_25%,transparent_100%)]",
+          "[-webkit-mask-image:linear-gradient(to_left,black_25%,transparent_100%)]",
+        )}
         aria-hidden
       />
 
       <section
         className={cn(
           "relative isolate",
-          "px-4 pb-20 pt-20 sm:px-6 sm:pb-24 sm:pt-20",
-          "lg:py-12",
+          "px-4 pb-20 pt-16 sm:px-6 sm:pb-24 sm:pt-20",
+          "lg:py-10",
         )}
         aria-labelledby="speakers-heading"
       >
         <div className={cn(HERO_CONTENT_WIDTH_CLASS, "relative z-10 min-w-0")}>
-          <h1
-            id="speakers-heading"
-            className={cn(
-              "text-balance text-3xl font-semibold tracking-tight text-neutral-950",
-              "sm:text-4xl md:text-[2.65rem] md:leading-[1.12]",
-            )}
-          >
-            <BlurText
-              text={PAGE_HEADING}
-              className="text-inherit"
-              segmentDelay={0.12}
-              duration={0.9}
-              tailHighlight={titleTailHighlight}
-              inViewInitial
-            />
-          </h1>
-
-          <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-600 sm:text-[1.05rem]">
-            En CuyoConnect compartimos lo que estamos aprendiendo y
-            construyendo en tecnología. Si querés contar un proyecto, una
-            experiencia o algo que aprendiste, mandanos tu propuesta y la
-            sumamos a la próxima agenda.
-          </p>
+          {/* Cabecera de sección al estilo del resto de la landing (FaqSection / TeamSection). */}
+          <header className="mb-8 flex flex-col gap-3 sm:mb-10">
+            <h1
+              id="speakers-heading"
+              className={cn(
+                "text-balance text-2xl font-semibold tracking-tight text-neutral-950",
+                "sm:text-3xl md:text-4xl",
+              )}
+            >
+              <BlurText
+                text={PAGE_HEADING}
+                className="text-inherit"
+                segmentDelay={0.14}
+                duration={0.95}
+                tailHighlight={titleTailHighlight}
+                inViewInitial
+              />
+            </h1>
+            <p className="max-w-2xl text-pretty text-neutral-600 sm:text-lg">
+              En CuyoConnect compartimos lo que estamos aprendiendo y
+              construyendo en tecnología. Si querés contar un proyecto, una
+              experiencia o algo que aprendiste, mandanos tu propuesta y la
+              sumamos a la próxima agenda.
+            </p>
+          </header>
 
           <div
             className={cn(
-              "mt-10 overflow-hidden rounded-2xl bg-white",
+              "overflow-hidden rounded-2xl bg-white",
               "border-0 shadow-none sm:border sm:border-neutral-200/90 sm:shadow-[0_12px_40px_-28px_rgba(0,0,0,0.2)]",
               /* Rompe el px-4 del section solo en móvil: tarjeta a ancho de pantalla */
               "max-sm:-mx-4",
@@ -315,42 +350,65 @@ export function SpeakersPage() {
             <div
               className={cn(
                 "grid items-stretch",
-                "lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,18.5rem)_minmax(0,1fr)]",
+                "lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]",
               )}
             >
               <aside
                 className={cn(
-                  "min-w-0 border-neutral-700/80 p-6 sm:p-7",
-                  "border-b bg-neutral-900 lg:border-b-0 lg:border-r",
-                  "lg:flex lg:min-h-0 lg:flex-col lg:py-9 lg:pl-7 lg:pr-6 xl:pl-8",
+                  "relative order-2 min-w-0 overflow-hidden border-neutral-700/80 p-6 sm:p-8",
+                  "border-t bg-neutral-900 lg:order-1 lg:border-t-0 lg:border-r",
+                  "lg:flex lg:min-h-0 lg:flex-col lg:py-10 lg:pl-8 lg:pr-7 xl:pl-10 xl:pr-8",
                 )}
+                aria-labelledby="speakers-faq-heading"
               >
-                <h2 className="text-sm font-medium leading-snug text-neutral-200">
-                  Qué tenés que incluir
-                </h2>
-                <ul className="mt-4 space-y-4">
-                  {GUIDANCE_ITEMS.map((item, index) => (
-                    <li key={item.title} className="flex gap-2.5">
-                      <span
-                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffec6b]/85 text-xs font-bold tabular-nums text-neutral-950"
-                        aria-hidden
-                      >
-                        {index + 1}
+                <div className="relative">
+                  {user ? (
+                    <div
+                      className={cn(
+                        "mb-4 flex items-center gap-2 text-sm text-neutral-300",
+                        "transition-opacity duration-300 ease-out motion-reduce:transition-none",
+                        faqOpenId
+                          ? "pointer-events-none opacity-0"
+                          : "opacity-100",
+                      )}
+                      role="status"
+                      aria-hidden={faqOpenId ? true : undefined}
+                    >
+                      {typeof avatarUrl === "string" ? (
+                        <img
+                          src={avatarUrl}
+                          alt=""
+                          className="h-7 w-7 shrink-0 rounded-full border border-neutral-700/60 object-cover"
+                        />
+                      ) : null}
+                      <span className="min-w-0 truncate">
+                        {login
+                          ? `@${login}`
+                          : (user.email ?? "Sesión con GitHub")}
                       </span>
-                      <div className="min-w-0">
-                        <p className="text-sm leading-relaxed text-neutral-400">
-                          <span className="font-medium text-neutral-300">
-                            {item.title}:
-                          </span>{" "}
-                          {item.body}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                  ) : null}
+
+                  <h2
+                    id="speakers-faq-heading"
+                    className="text-base font-semibold tracking-tight text-neutral-200 sm:text-lg"
+                  >
+                    Preguntas frecuentes
+                  </h2>
+
+                  <div className="mt-4 min-w-0">
+                    <FaqAccordion
+                      data={SPEAKER_FAQ_ITEMS}
+                      className="border-t border-neutral-700/60 divide-neutral-700/60"
+                      questionClassName="py-3.5 text-sm text-neutral-300 hover:text-neutral-100 sm:text-sm"
+                      answerClassName="pb-4 pr-6 text-[0.8125rem] leading-relaxed text-neutral-500 sm:text-[0.875rem]"
+                      onOpenChange={setFaqOpenId}
+                    />
+                  </div>
+                </div>
               </aside>
 
-              <div className="min-w-0 px-6 pt-6 pb-8 sm:px-8 sm:pt-7 sm:pb-9 lg:pl-9 lg:pr-8 lg:pt-9 xl:pl-11 xl:pr-10">
+              <div className="order-1 min-w-0 px-6 pt-6 pb-8 sm:px-8 sm:pt-7 sm:pb-9 lg:order-2 lg:pl-9 lg:pr-8 lg:pt-9 xl:pl-11 xl:pr-10">
                 {!hasAuthConfigured ? (
                   <div>
                     <h2 className="text-lg font-semibold tracking-tight text-neutral-900">
@@ -369,29 +427,7 @@ export function SpeakersPage() {
                     onSubmit={(e) => void handleSubmit(e)}
                     noValidate
                   >
-                    {user ? (
-                      <div className="flex min-w-0 justify-end">
-                        <div
-                          className="flex max-w-[min(100%,12rem)] shrink-0 items-center justify-end gap-2 text-sm text-neutral-600 sm:max-w-[14rem]"
-                          role="status"
-                        >
-                          {typeof avatarUrl === "string" ? (
-                            <img
-                              src={avatarUrl}
-                              alt=""
-                              className="h-8 w-8 shrink-0 rounded-full border border-neutral-200/80 object-cover sm:h-9 sm:w-9"
-                            />
-                          ) : null}
-                          <span className="min-w-0 truncate text-right">
-                            {login
-                              ? `@${login}`
-                              : (user.email ?? "Sesión con GitHub")}
-                          </span>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className={cn("flex flex-col gap-6", user && "mt-6")}>
+                    <div className="flex flex-col gap-6">
                       <div className="flex flex-col gap-5">
                         <div className="flex flex-col gap-2">
                           <label
