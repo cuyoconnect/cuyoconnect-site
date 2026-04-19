@@ -1,0 +1,16 @@
+---
+import { NotFoundPage } from '@/NotFoundPage'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Página no encontrada — CuyoConnect'
+const description =
+  'No encontramos la página que buscás. Volvé al inicio o explorá eventos y recursos de la comunidad CuyoConnect.'
+---
+
+<BaseLayout title={title} description={description} canonical="/">
+  <SiteHeader client:load pathname="/404" />
+  <main>
+    <NotFoundPage client:load />
+  </main>
+</BaseLayout>

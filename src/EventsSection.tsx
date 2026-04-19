@@ -44,7 +44,7 @@ export function EventsSection() {
           <iframe
             title="Calendario de eventos CuyoConnect en Luma"
             src={LUMA_CALENDAR_EMBED_SRC}
-            className="block -mt-6 h-[min(42dvh,375px)] w-[calc(100%+20px)] min-h-[250px] border-0 [color-scheme:light] sm:min-h-[305px]"
+            className="block h-[min(42dvh,375px)] w-full min-h-[280px] border-0 [color-scheme:light] sm:min-h-[335px]"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             allow="clipboard-write"
