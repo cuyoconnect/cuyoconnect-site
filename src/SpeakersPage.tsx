@@ -319,7 +319,7 @@ export function SpeakersPage() {
             <div
               className={cn(
                 "grid items-stretch",
-                "lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]",
+                "lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]",
               )}
             >
               <aside
