@@ -1,7 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
 
-import { Check } from "lucide-react";
-
 import { BlurText } from "@/components/ui/blur-text";
 import { GitHubJoinCta } from "@/components/GitHubJoinCta";
 import { SpeakerThanksOverlay } from "@/components/SpeakerThanksOverlay";
@@ -32,6 +30,10 @@ const GUIDANCE_ITEMS = [
   {
     title: "Idea central",
     body: "Qué vas a mostrar, contar o debatir.",
+  },
+  {
+    title: "Formato",
+    body: "Charla, workshop, debate, mesa u otro.",
   },
   {
     title: "Audiencia",
@@ -261,13 +263,13 @@ export function SpeakersPage() {
                   la idea.
                 </p>
                 <ul className="mt-5 space-y-4">
-                  {GUIDANCE_ITEMS.map((item) => (
+                  {GUIDANCE_ITEMS.map((item, index) => (
                     <li key={item.title} className="flex gap-2.5">
                       <span
-                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffec6b]/90 text-neutral-950"
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffec6b]/90 text-xs font-bold tabular-nums text-neutral-950"
                         aria-hidden
                       >
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                        {index + 1}
                       </span>
                       <div className="min-w-0">
                         <p className="text-sm leading-snug text-neutral-800">
