@@ -6,6 +6,7 @@ import {
 } from 'motion/react'
 
 import { ArchivePosterCard } from '@/components/ArchivePosterCard'
+import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import { BlurText } from '@/components/ui/blur-text'
 import {
   RECURSO_COVER_FALLBACKS,
@@ -101,11 +102,8 @@ export function RecursosPage() {
   }, [])
 
   return (
-    <div className="relative overflow-x-hidden bg-white text-neutral-950 [color-scheme:light]">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(0,0,0,0.04),transparent_70%)]"
-        aria-hidden
-      />
+    <div className="relative isolate overflow-x-hidden bg-white text-neutral-950 [color-scheme:light]">
+      <SideCircuitDecor />
 
       <section
         className={cn(

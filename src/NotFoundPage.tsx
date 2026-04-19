@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 
+import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { cn } from '@/lib/utils'
 
@@ -49,10 +50,7 @@ export function NotFoundPage() {
       )}
       aria-labelledby="not-found-heading"
     >
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(0,0,0,0.04),transparent_70%)]"
-        aria-hidden
-      />
+      <SideCircuitDecor />
 
       <div
         className={cn(

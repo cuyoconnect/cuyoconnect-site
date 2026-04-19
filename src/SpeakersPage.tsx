@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { BlurText } from "@/components/ui/blur-text";
 import { FaqAccordion, type FAQItem } from "@/components/ui/faq-chat-accordion";
 import { GitHubJoinCta } from "@/components/GitHubJoinCta";
+import { SideCircuitDecor } from "@/components/SideCircuitDecor";
 import { SpeakerThanksOverlay } from "@/components/SpeakerThanksOverlay";
 import { HERO_CONTENT_WIDTH_CLASS } from "@/lib/content-width";
 import { heroTopicTailHighlight } from "@/lib/hero-topic-highlight";
@@ -145,8 +146,6 @@ export function SpeakersPage() {
     "proposal",
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [faqOpenId, setFaqOpenId] = useState<string | null>(null);
-
   const titleTailHighlight = useMemo(() => heroTopicTailHighlight(2), []);
 
   const durationSegmentIndex = useMemo(
@@ -272,37 +271,7 @@ export function SpeakersPage() {
 
   return (
     <div className="relative isolate flex min-h-0 flex-1 flex-col overflow-x-hidden bg-white text-neutral-950 [color-scheme:light] lg:justify-center">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_40%_at_100%_20%,rgba(0,0,0,0.03),transparent_55%)]"
-        aria-hidden
-      />
-      {/* Patrón de circuitos+uvita a los costados (solo desktop): rellena el aire fuera de la
-          columna de contenido (misma máx. 52rem que el navbar y el hero). La imagen se escala
-          a la altura completa del contenedor (sin recortes) y queda anclada al borde externo. */}
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-y-0 left-0 -z-10 select-none",
-          "hidden lg:block",
-          "w-[calc(50vw_-_26rem)]",
-          "bg-[url('/banner/cuyoconnect-circuit-vertical.png')] bg-no-repeat bg-[size:auto_100%] bg-left",
-          "opacity-[0.12]",
-          "[mask-image:linear-gradient(to_right,black_25%,transparent_100%)]",
-          "[-webkit-mask-image:linear-gradient(to_right,black_25%,transparent_100%)]",
-        )}
-        aria-hidden
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 -z-10 select-none",
-          "hidden lg:block",
-          "w-[calc(50vw_-_26rem)]",
-          "bg-[url('/banner/cuyoconnect-circuit-vertical.png')] bg-no-repeat bg-[size:auto_100%] bg-right",
-          "opacity-[0.12]",
-          "[mask-image:linear-gradient(to_left,black_25%,transparent_100%)]",
-          "[-webkit-mask-image:linear-gradient(to_left,black_25%,transparent_100%)]",
-        )}
-        aria-hidden
-      />
+      <SideCircuitDecor />
 
       <section
         className={cn(
@@ -362,17 +331,26 @@ export function SpeakersPage() {
                 aria-labelledby="speakers-faq-heading"
               >
                 <div className="relative">
+                  <h2
+                    id="speakers-faq-heading"
+                    className="text-base font-semibold tracking-tight text-neutral-200 sm:text-lg"
+                  >
+                    Preguntas frecuentes
+                  </h2>
+
+                  <div className="mt-4 min-w-0">
+                    <FaqAccordion
+                      data={SPEAKER_FAQ_ITEMS}
+                      className="border-t border-neutral-700/60 divide-neutral-700/60"
+                      questionClassName="py-3.5 text-sm text-neutral-300 hover:text-neutral-100 sm:text-sm"
+                      answerClassName="pb-4 pr-6 text-[0.8125rem] leading-relaxed text-neutral-500 sm:text-[0.875rem]"
+                    />
+                  </div>
+
                   {user ? (
                     <div
-                      className={cn(
-                        "mb-4 flex items-center gap-2 text-sm text-neutral-300",
-                        "transition-opacity duration-300 ease-out motion-reduce:transition-none",
-                        faqOpenId
-                          ? "pointer-events-none opacity-0"
-                          : "opacity-100",
-                      )}
+                      className="mt-6 flex items-center gap-2 border-t border-neutral-700/60 pt-6 text-sm text-neutral-300"
                       role="status"
-                      aria-hidden={faqOpenId ? true : undefined}
                     >
                       {typeof avatarUrl === "string" ? (
                         <img
@@ -388,23 +366,6 @@ export function SpeakersPage() {
                       </span>
                     </div>
                   ) : null}
-
-                  <h2
-                    id="speakers-faq-heading"
-                    className="text-base font-semibold tracking-tight text-neutral-200 sm:text-lg"
-                  >
-                    Preguntas frecuentes
-                  </h2>
-
-                  <div className="mt-4 min-w-0">
-                    <FaqAccordion
-                      data={SPEAKER_FAQ_ITEMS}
-                      className="border-t border-neutral-700/60 divide-neutral-700/60"
-                      questionClassName="py-3.5 text-sm text-neutral-300 hover:text-neutral-100 sm:text-sm"
-                      answerClassName="pb-4 pr-6 text-[0.8125rem] leading-relaxed text-neutral-500 sm:text-[0.875rem]"
-                      onOpenChange={setFaqOpenId}
-                    />
-                  </div>
                 </div>
               </aside>
 
