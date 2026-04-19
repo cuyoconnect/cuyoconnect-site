@@ -31,11 +31,11 @@ const GUIDANCE_ITEMS = [
   },
   {
     title: "Idea central",
-    body: "Qué vas a mostrar, contar o debatir; qué problema o oportunidad aborda.",
+    body: "Qué vas a mostrar, contar o debatir.",
   },
   {
     title: "Audiencia",
-    body: "Para quién es (nivel, rol o contexto) y qué deberían saber antes.",
+    body: "Para quién es y qué deberían saber antes.",
   },
 ] as const;
 
@@ -203,7 +203,7 @@ export function SpeakersPage() {
       <section
         className={cn(
           "relative isolate",
-          "px-4 pb-20 pt-14 sm:px-6 sm:pb-24 sm:pt-16",
+          "px-4 pb-20 pt-20 sm:px-6 sm:pb-24 sm:pt-20",
           "lg:py-12",
         )}
         aria-labelledby="speakers-heading"
@@ -252,7 +252,7 @@ export function SpeakersPage() {
                   "lg:flex lg:min-h-0 lg:flex-col lg:py-9 lg:pl-7 lg:pr-6 xl:pl-8",
                 )}
               >
-                <h2 className="text-sm font-medium text-neutral-800">
+                <h2 className="text-base font-bold leading-snug text-neutral-950">
                   Qué conviene incluir
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">
@@ -318,7 +318,11 @@ export function SpeakersPage() {
                           rows={9}
                           value={topics}
                           onChange={(e) => setTopics(e.target.value)}
-                          placeholder={`Ej.: «Tu título» · de qué va · para quién (rol o nivel).`}
+                          placeholder={`- Título o tema: una línea de qué va la sesión.
+
+- Idea central: qué vas a mostrar, contar o debatir.
+
+- Audiencia: para quién es y qué deberían saber antes.`}
                           aria-labelledby={`${topicsId}-title`}
                           className={cn(
                             "min-h-[13rem] w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/40 px-4 py-3.5 text-[0.9375rem] leading-relaxed text-neutral-950 sm:min-h-[14rem]",
