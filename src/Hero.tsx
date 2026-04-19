@@ -4,11 +4,10 @@ import { CommunityStripSection } from '@/CommunityStripSection'
 import { HeroEasterEggImage } from '@/components/hero/HeroEasterEggImage'
 import { BlurText } from '@/components/ui/blur-text'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
-import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
+import { heroTopicHighlightWord } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
-const HERO_HEADING =
-  'Comunidad de builders en IA, tecnología y web3'
+const HERO_HEADING = 'Aprendé, Conectá, Construí'
 
 const HERO_EASTER_CAPTION = '@cuyoconnect'
 
@@ -20,13 +19,13 @@ const captionClass = cn(
   'mb-6 w-full px-4 pb-3 pt-0 text-center text-2xl font-semibold tracking-tight text-neutral-950 sm:mb-8 sm:px-5 sm:pb-4 sm:text-3xl md:text-4xl',
 )
 
-/** Últimas cuatro palabras: "IA," "tecnología" "y" "web3" */
-const HERO_TOPIC_WORD_COUNT = 4
+/** Índice de la palabra resaltada: "Conectá," (0 = Aprendé, 1 = Conectá, 2 = Construí). */
+const HERO_HIGHLIGHT_WORD_INDEX = 1
 
 export function Hero() {
   const [captionSurface, setCaptionSurface] = useState<'hero' | 'qr'>('hero')
   const tailHighlight = useMemo(
-    () => heroTopicTailHighlight(HERO_TOPIC_WORD_COUNT),
+    () => heroTopicHighlightWord(HERO_HIGHLIGHT_WORD_INDEX),
     [],
   )
 
@@ -60,8 +59,8 @@ export function Hero() {
           <h1
             id="hero-heading"
             className={cn(
-              'w-full max-w-full text-balance text-center font-semibold tracking-tight text-neutral-950',
-              'text-2xl sm:text-3xl md:text-4xl',
+              'w-full max-w-full text-balance text-center font-bebas font-normal uppercase tracking-tight text-neutral-950',
+              'text-4xl leading-none sm:text-5xl md:text-6xl lg:text-7xl',
             )}
           >
             <BlurText

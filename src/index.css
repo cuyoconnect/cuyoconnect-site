@@ -4,6 +4,7 @@
 /* Inter: pareja muy usada con Sora para bloques de UI / lectura (p. ej. FAQ). */
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
+@import '@fontsource/bebas-neue/400.css';
 
 @import 'tailwindcss';
 
@@ -11,6 +12,8 @@
   --font-sans:
     'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol';
+  --font-bebas:
+    'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
   /* Acordeón FAQ: sans neutra y legible; contrasta con Sora del resto del sitio. */
   --font-faq:
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',

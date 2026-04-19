@@ -13,7 +13,15 @@ function isSkippableWhitespaceSegment(segment: string): boolean {
 
 /** Resaltado tipo marcador (rough-notation) sobre las últimas N palabras, tras el blur. */
 export interface BlurTextTailHighlight {
+  /**
+   * Últimas N palabras (fin del texto). Ignorado si `highlightWordIndex` está definido.
+   */
   lastWordCount: number
+  /**
+   * Solo esta palabra (0 = primera) recibe el marcador; el resto queda fuera del span.
+   * Tiene prioridad sobre `lastWordCount`.
+   */
+  highlightWordIndex?: number
   color: string
   strokeWidth?: number
   animationDuration?: number
@@ -72,6 +80,23 @@ function findTailStartSegmentIndex(
   return segments.length
 }
 
+/** Rango de segmentos (`split` por palabras) para una sola palabra por índice animado. */
+function findSingleWordHighlightBounds(
+  segments: string[],
+  wordIndex: number,
+): { highlightStart: number; highlightEnd: number } | null {
+  let w = 0
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]
+    if (isSkippableWhitespaceSegment(seg)) continue
+    if (w === wordIndex) {
+      return { highlightStart: i, highlightEnd: i + 1 }
+    }
+    w += 1
+  }
+  return null
+}
+
 /**
  * Texto que pasa de blur a foco, al estilo de los text animations de shadcn.io.
  * Usa Motion y se activa al entrar en viewport.
@@ -125,25 +150,76 @@ export function BlurText({
   const lastGlobalAnimIndex =
     animatedSegmentCount > 0 ? animatedSegmentCount - 1 : -1
 
-  const tailStartAnimIndex =
-    animateBy === 'word' &&
-    tailHighlight &&
-    tailHighlight.lastWordCount > 0 &&
-    animatedSegmentCount > 0
-      ? Math.max(
-          0,
-          animatedSegmentCount -
-            Math.min(tailHighlight.lastWordCount, animatedSegmentCount),
-        )
-      : animatedSegmentCount
+  const {
+    beforeSegments,
+    tailSegments,
+    afterSegments,
+    tailStartAnimIndex,
+    afterStartAnimIndex,
+  } = useMemo(() => {
+    if (animateBy !== 'word' || !tailHighlight) {
+      return {
+        beforeSegments: segments,
+        tailSegments: [] as string[],
+        afterSegments: [] as string[],
+        tailStartAnimIndex: 0,
+        afterStartAnimIndex: 0,
+      }
+    }
 
-  const cutSegmentIndex =
-    animateBy === 'word' && tailHighlight && tailHighlight.lastWordCount > 0
-      ? findTailStartSegmentIndex(segments, tailStartAnimIndex)
-      : segments.length
+    const th = tailHighlight
+    if (
+      th.highlightWordIndex !== undefined &&
+      th.highlightWordIndex >= 0 &&
+      animatedSegmentCount > 0
+    ) {
+      const bounds = findSingleWordHighlightBounds(
+        segments,
+        th.highlightWordIndex,
+      )
+      if (!bounds) {
+        return {
+          beforeSegments: segments,
+          tailSegments: [] as string[],
+          afterSegments: [] as string[],
+          tailStartAnimIndex: 0,
+          afterStartAnimIndex: 0,
+        }
+      }
+      const { highlightStart, highlightEnd } = bounds
+      return {
+        beforeSegments: segments.slice(0, highlightStart),
+        tailSegments: segments.slice(highlightStart, highlightEnd),
+        afterSegments: segments.slice(highlightEnd),
+        tailStartAnimIndex: th.highlightWordIndex,
+        afterStartAnimIndex: th.highlightWordIndex + 1,
+      }
+    }
 
-  const beforeSegments = segments.slice(0, cutSegmentIndex)
-  const tailSegments = segments.slice(cutSegmentIndex)
+    if (th.lastWordCount > 0 && animatedSegmentCount > 0) {
+      const tsi = Math.max(
+        0,
+        animatedSegmentCount -
+          Math.min(th.lastWordCount, animatedSegmentCount),
+      )
+      const cut = findTailStartSegmentIndex(segments, tsi)
+      return {
+        beforeSegments: segments.slice(0, cut),
+        tailSegments: segments.slice(cut),
+        afterSegments: [] as string[],
+        tailStartAnimIndex: tsi,
+        afterStartAnimIndex: animatedSegmentCount,
+      }
+    }
+
+    return {
+      beforeSegments: segments,
+      tailSegments: [] as string[],
+      afterSegments: [] as string[],
+      tailStartAnimIndex: 0,
+      afterStartAnimIndex: 0,
+    }
+  }, [animateBy, tailHighlight, segments, animatedSegmentCount])
 
   const totalBlurMs = useMemo(() => {
     if (animatedSegmentCount === 0) return 0
@@ -444,7 +520,12 @@ export function BlurText({
   }
 
   const showTailWrap =
-    Boolean(tailHighlight?.lastWordCount) && tailSegments.length > 0
+    Boolean(
+      tailHighlight &&
+        (tailHighlight.lastWordCount > 0 ||
+          (tailHighlight.highlightWordIndex !== undefined &&
+            tailHighlight.highlightWordIndex >= 0)),
+    ) && tailSegments.length > 0
 
   return (
     <span ref={ref} className={cn('inline', className)}>
@@ -463,9 +544,12 @@ export function BlurText({
             'w',
           )}
         </span>
-      ) : tailSegments.length > 0 ? (
+      ) : tailSegments.length > 0 && afterSegments.length === 0 ? (
         renderWordMotionSpans(tailSegments, tailStartAnimIndex, 'w')
       ) : null}
+      {afterSegments.length > 0
+        ? renderWordMotionSpans(afterSegments, afterStartAnimIndex, 'a')
+        : null}
     </span>
   )
 }

@@ -19,3 +19,21 @@ export function heroTopicTailHighlight(
       '[&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950',
   }
 }
+
+/** Una sola palabra del texto (0 = primera) con el mismo estilo de marcador. */
+export function heroTopicHighlightWord(
+  wordIndex: number,
+): BlurTextTailHighlight {
+  return {
+    lastWordCount: 0,
+    highlightWordIndex: wordIndex,
+    color: HERO_TOPIC_HIGHLIGHT,
+    strokeWidth: 2.15,
+    padding: 5,
+    multiline: true,
+    animationDuration: 1500,
+    iterations: 4,
+    className:
+      '[&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950',
+  }
+}

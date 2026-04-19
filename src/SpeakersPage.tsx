@@ -42,28 +42,91 @@ const GUIDANCE_ITEMS = [
 ] as const;
 
 function parseDraft(raw: string | null): {
-  topics: string;
+  talkMain: string;
+  talkSpeaker: string;
   duration: (typeof DURATION_OPTIONS)[number]["value"];
 } | null {
   if (!raw) return null;
   try {
-    const data = JSON.parse(raw) as { topics?: unknown; duration?: unknown };
-    const topics = typeof data.topics === "string" ? data.topics : "";
+    const data = JSON.parse(raw) as {
+      topics?: unknown;
+      talkMain?: unknown;
+      talkTitle?: unknown;
+      talkAbout?: unknown;
+      talkSpeaker?: unknown;
+      duration?: unknown;
+    };
     const d = data.duration;
     const duration =
       d === "30" || d === "45" || d === "60" ? d : DURATION_OPTIONS[0]!.value;
-    return { topics, duration };
+
+    const talkSpeaker =
+      typeof data.talkSpeaker === "string" ? data.talkSpeaker : "";
+
+    if (typeof data.talkMain === "string") {
+      return { talkMain: data.talkMain, talkSpeaker, duration };
+    }
+
+    const talkTitle =
+      typeof data.talkTitle === "string" ? data.talkTitle : "";
+    const talkAbout =
+      typeof data.talkAbout === "string" ? data.talkAbout : "";
+    if (talkTitle.trim() || talkAbout.trim() || talkSpeaker.trim()) {
+      const talkMain = [talkTitle, talkAbout]
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join("\n\n");
+      return { talkMain, talkSpeaker, duration };
+    }
+
+    const legacyTopics = typeof data.topics === "string" ? data.topics : "";
+    return {
+      talkMain: legacyTopics,
+      talkSpeaker: "",
+      duration,
+    };
   } catch {
     return null;
   }
 }
 
+function buildTopicsField(talkMain: string, talkSpeaker: string): string {
+  const m = talkMain.trim();
+  const s = talkSpeaker.trim();
+  const parts: string[] = [];
+  if (m) {
+    parts.push(`De qué trata la charla:\n${m}`);
+  }
+  if (s) {
+    parts.push(`Sobre vos: ${s}`);
+  }
+  return parts.join("\n\n");
+}
+
+const fieldInputClass = cn(
+  "w-full rounded-xl border border-neutral-200 bg-neutral-50/40 px-4 py-3.5 text-[0.9375rem] leading-relaxed text-neutral-950",
+  "placeholder:text-neutral-400",
+  "focus-visible:border-neutral-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/70",
+);
+
+const textareaFieldClass = cn(
+  fieldInputClass,
+  "min-h-[3.75rem] resize-y sm:min-h-[4.25rem]",
+);
+
+const talkMainTextareaClass = cn(
+  fieldInputClass,
+  "min-h-[7rem] resize-y sm:min-h-[7.5rem]",
+);
+
 export function SpeakersPage() {
-  const topicsId = useId();
+  const talkMainId = useId();
+  const talkSpeakerId = useId();
   const durationGroupId = useId();
   const { user, hasAuthConfigured, signInWithGitHub, isSigningIn } = useAuth();
 
-  const [topics, setTopics] = useState("");
+  const [talkMain, setTalkMain] = useState("");
+  const [talkSpeaker, setTalkSpeaker] = useState("");
   const [duration, setDuration] =
     useState<(typeof DURATION_OPTIONS)[number]["value"]>("30");
   const [draftHydrated, setDraftHydrated] = useState(false);
@@ -92,7 +155,8 @@ export function SpeakersPage() {
     if (typeof window === "undefined") return;
     const parsed = parseDraft(sessionStorage.getItem(SPEAKERS_DRAFT_KEY));
     if (parsed) {
-      setTopics(parsed.topics);
+      setTalkMain(parsed.talkMain);
+      setTalkSpeaker(parsed.talkSpeaker);
       setDuration(parsed.duration);
     }
     setDraftHydrated(true);
@@ -102,9 +166,13 @@ export function SpeakersPage() {
     if (!draftHydrated || typeof window === "undefined") return;
     sessionStorage.setItem(
       SPEAKERS_DRAFT_KEY,
-      JSON.stringify({ topics, duration }),
+      JSON.stringify({
+        talkMain,
+        talkSpeaker,
+        duration,
+      }),
     );
-  }, [topics, duration, draftHydrated]);
+  }, [talkMain, talkSpeaker, duration, draftHydrated]);
 
   /** Tras OAuth desde la galería (landing), Supabase redirige a /speakers?thanks=miembros */
   useEffect(() => {
@@ -135,8 +203,8 @@ export function SpeakersPage() {
       return;
     }
 
-    const trimmed = topics.trim();
-    if (!trimmed) {
+    const combined = buildTopicsField(talkMain, talkSpeaker);
+    if (!combined) {
       setErrorMessage("Contanos sobre qué te gustaría hablar.");
       return;
     }
@@ -159,13 +227,14 @@ export function SpeakersPage() {
     setIsSubmitting(true);
     try {
       await submitSpeakerProposal({
-        topics: trimmed,
+        topics: combined,
         durationMinutes,
         user,
       });
       setThanksVariant("proposal");
       setThanksOpen(true);
-      setTopics("");
+      setTalkMain("");
+      setTalkSpeaker("");
       setDuration(DURATION_OPTIONS[0]!.value);
       try {
         sessionStorage.removeItem(SPEAKERS_DRAFT_KEY);
@@ -229,10 +298,10 @@ export function SpeakersPage() {
           </h1>
 
           <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-600 sm:text-[1.05rem]">
-            En CuyoConnect compartimos lo que estamos construyendo en IA,
-            tecnología y web3. Si querés contar un proyecto, una experiencia o
-            algo que aprendiste, mandanos tu propuesta y la sumamos a la
-            próxima agenda.
+            En CuyoConnect compartimos lo que estamos aprendiendo y
+            construyendo en tecnología. Si querés contar un proyecto, una
+            experiencia o algo que aprendiste, mandanos tu propuesta y la
+            sumamos a la próxima agenda.
           </p>
 
           <div
@@ -256,7 +325,7 @@ export function SpeakersPage() {
                   "lg:flex lg:min-h-0 lg:flex-col lg:py-9 lg:pl-7 lg:pr-6 xl:pl-8",
                 )}
               >
-                <h2 className="text-base font-semibold leading-snug text-neutral-200">
+                <h2 className="text-sm font-medium leading-snug text-neutral-200">
                   Qué tenés que incluir
                 </h2>
                 <ul className="mt-4 space-y-4">
@@ -281,7 +350,7 @@ export function SpeakersPage() {
                 </ul>
               </aside>
 
-              <div className="min-w-0 px-6 py-8 sm:px-8 sm:py-9 lg:pl-9 lg:pr-8 xl:pl-11 xl:pr-10">
+              <div className="min-w-0 px-6 pt-6 pb-8 sm:px-8 sm:pt-7 sm:pb-9 lg:pl-9 lg:pr-8 lg:pt-9 xl:pl-11 xl:pr-10">
                 {!hasAuthConfigured ? (
                   <div>
                     <h2 className="text-lg font-semibold tracking-tight text-neutral-900">
@@ -300,14 +369,8 @@ export function SpeakersPage() {
                     onSubmit={(e) => void handleSubmit(e)}
                     noValidate
                   >
-                    <div className="flex min-w-0 items-center justify-between gap-3">
-                      <h2
-                        id={`${topicsId}-title`}
-                        className="min-w-0 text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl"
-                      >
-                        Tu charla
-                      </h2>
-                      {user ? (
+                    {user ? (
+                      <div className="flex min-w-0 justify-end">
                         <div
                           className="flex max-w-[min(100%,12rem)] shrink-0 items-center justify-end gap-2 text-sm text-neutral-600 sm:max-w-[14rem]"
                           role="status"
@@ -325,30 +388,47 @@ export function SpeakersPage() {
                               : (user.email ?? "Sesión con GitHub")}
                           </span>
                         </div>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
 
-                    <div className="mt-6 flex flex-col gap-6">
-                      <div>
-                        <textarea
-                          id={topicsId}
-                          name="topics"
-                          rows={9}
-                          value={topics}
-                          onChange={(e) => setTopics(e.target.value)}
-                          placeholder={`- Título o tema: una línea que resuma la sesión.
-
-- De qué trata: qué vas a mostrar, contar o debatir y a quién apunta.
-
-- Sobre vos: quién sos y por qué creés que es interesante este tema.`}
-                          aria-labelledby={`${topicsId}-title`}
-                          className={cn(
-                            "min-h-[13rem] w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/40 px-4 py-3.5 text-[0.9375rem] leading-relaxed text-neutral-950 sm:min-h-[14rem]",
-                            "placeholder:text-neutral-400 placeholder:whitespace-pre-wrap",
-                            "focus-visible:border-neutral-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/70",
-                          )}
-                          autoComplete="off"
-                        />
+                    <div className={cn("flex flex-col gap-6", user && "mt-6")}>
+                      <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-2">
+                          <label
+                            htmlFor={talkMainId}
+                            className="text-sm font-medium text-neutral-800"
+                          >
+                            ¿De qué trata la charla?
+                          </label>
+                          <textarea
+                            id={talkMainId}
+                            name="talkMain"
+                            rows={4}
+                            value={talkMain}
+                            onChange={(e) => setTalkMain(e.target.value)}
+                            placeholder="Qué vas a mostrar, contar o debatir y a quién apunta."
+                            className={talkMainTextareaClass}
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label
+                            htmlFor={talkSpeakerId}
+                            className="text-sm font-medium text-neutral-800"
+                          >
+                            Sobre vos
+                          </label>
+                          <textarea
+                            id={talkSpeakerId}
+                            name="talkSpeaker"
+                            rows={2}
+                            value={talkSpeaker}
+                            onChange={(e) => setTalkSpeaker(e.target.value)}
+                            placeholder="Quién sos y por qué creés que es interesante este tema"
+                            className={textareaFieldClass}
+                            autoComplete="off"
+                          />
+                        </div>
                       </div>
 
                       {errorMessage ? (
