@@ -39,6 +39,17 @@ export const RECURSO_COVER_FALLBACKS: readonly string[] = [
  */
 export const RECURSOS: RecursoItem[] = [
   {
+    id: 'stellar-sprint-incuba-web3',
+    title: 'Stellar Sprint - Incuba web 3',
+    description: 'Presentación Google Slides (Stellar Sprint / Incuba web3).',
+    category: 'presentaciones',
+    kind: 'presentacion',
+    href: 'https://docs.google.com/presentation/d/1zf_2M0YMVdgSE0cV5mmQse1gLt4XE28y/edit?usp=sharing&ouid=100104594060398177510&rtpof=true&sd=true',
+    date: '25 abr 2026',
+    dateSort: '2026-04-25',
+    coverImage: '/recursos/stellar-sprint-incuba-web3.webp',
+  },
+  {
     id: 'stellar-workshop-ia-web3',
     title: 'Workshop en IA en Web3',
     description: 'Presentación Stellar.',
