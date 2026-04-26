@@ -24,6 +24,16 @@ alter table public.member_profiles
   add column if not exists is_public boolean not null default true,
   add column if not exists updated_at timestamptz not null default now();
 
+alter table public.member_profiles
+  alter column id set default gen_random_uuid(),
+  alter column display_name set default '',
+  alter column avatar_url set default '',
+  alter column github_url set default '',
+  alter column joined_at set default now(),
+  alter column is_visible set default true,
+  alter column is_public set default true,
+  alter column updated_at set default now();
+
 update public.member_profiles
 set slug = lower(
   regexp_replace(
@@ -107,6 +117,9 @@ create trigger member_profiles_set_updated_at
   execute function public.member_profiles_set_updated_at();
 
 alter table public.member_profiles enable row level security;
+
+grant select on public.member_profiles to anon, authenticated;
+grant insert, update on public.member_profiles to authenticated;
 
 drop policy if exists "member_profiles_select_public" on public.member_profiles;
 create policy "member_profiles_select_public"

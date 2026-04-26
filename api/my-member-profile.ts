@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const MEMBER_PROFILE_COLUMNS =
@@ -200,6 +202,7 @@ function buildDefaultProfileInsert(user: AuthUser) {
         : ''
 
   return {
+    id: randomUUID(),
     user_id: user.id,
     github_login: githubLogin,
     display_name: displayName,

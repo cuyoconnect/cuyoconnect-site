@@ -239,6 +239,7 @@ function buildDefaultProfileInsert(user: User) {
         : ''
 
   return {
+    id: crypto.randomUUID(),
     user_id: user.id,
     github_login: githubLogin,
     display_name: displayName,
