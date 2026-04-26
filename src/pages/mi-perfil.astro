@@ -1,0 +1,27 @@
+---
+import MemberProfileEditorIsland from '@/components/MemberProfileEditorIsland'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Mi perfil — CuyoConnect'
+const description =
+  'Editá tu perfil publico de CuyoConnect: slash, bio, redes predefinidas y QR para compartir.'
+const supabaseUrl =
+  import.meta.env.PUBLIC_SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL ?? ''
+const supabaseAnonKey =
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+  ''
+---
+
+<BaseLayout title={title} description={description} canonical="/mi-perfil">
+  <SiteHeader client:load pathname="/mi-perfil" />
+  <main>
+    <MemberProfileEditorIsland
+      client:load
+      supabaseUrl={supabaseUrl}
+      supabaseAnonKey={supabaseAnonKey}
+    />
+  </main>
+</BaseLayout>

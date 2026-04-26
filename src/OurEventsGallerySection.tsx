@@ -5,6 +5,7 @@ import { BlurText } from '@/components/ui/blur-text'
 import {
   fetchVisibleMemberProfiles,
   getMemberDisplayName,
+  getMemberProfileHref,
   getMemberSubtitle,
   type MemberProfile,
 } from '@/lib/member-profiles'
@@ -28,32 +29,33 @@ export function OurEventsGallerySection() {
   useEffect(() => {
     let cancelled = false
 
-    if (!hasAuthConfigured) {
-      setProfiles([])
+    void (async () => {
+      if (!hasAuthConfigured) {
+        setProfiles([])
+        setErrorMessage('')
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
       setErrorMessage('')
-      setIsLoading(false)
-      return
-    }
 
-    setIsLoading(true)
-    setErrorMessage('')
-
-    void fetchVisibleMemberProfiles()
-      .then((nextProfiles) => {
+      try {
+        const nextProfiles = await fetchVisibleMemberProfiles()
         if (cancelled) return
         setProfiles(nextProfiles)
-      })
-      .catch((error) => {
+      } catch (error) {
         if (cancelled) return
         console.error('No se pudieron cargar los perfiles publicos.', error)
         setErrorMessage(
           'Todavia no pudimos cargar los perfiles de GitHub. Revisa la tabla `member_profiles` en Supabase.',
         )
-      })
-      .finally(() => {
-        if (cancelled) return
-        setIsLoading(false)
-      })
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    })()
 
     return () => {
       cancelled = true
@@ -61,12 +63,13 @@ export function OurEventsGallerySection() {
   }, [hasAuthConfigured])
 
   const images = profiles.map((profile) => ({
+    id: profile.id,
     src: profile.avatar_url,
     alt: getMemberDisplayName(profile),
     title: getMemberDisplayName(profile),
     subtitle: getMemberSubtitle(profile),
-    href: profile.github_url,
-    hrefLabel: `Abrir GitHub de ${getMemberDisplayName(profile)}`,
+    href: getMemberProfileHref(profile),
+    hrefLabel: `Abrir perfil de ${getMemberDisplayName(profile)}`,
   }))
 
   const emptyStateMessage = hasAuthConfigured
@@ -102,8 +105,8 @@ export function OurEventsGallerySection() {
             />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-            Sumate con GitHub para aparecer en la galería con tu avatar y un
-            enlace a tu perfil público.
+            Sumate con GitHub para aparecer en la galería, crear tu slash y
+            compartir tu link CuyoConnect con QR propio.
           </p>
         </div>
 
@@ -146,7 +149,10 @@ export function OurEventsGallerySection() {
           </div>
         </div>
 
-        <GitHubJoinCta className="mt-12 text-center sm:mt-14" />
+        <GitHubJoinCta
+          intent="profile"
+          className="mt-12 text-center sm:mt-14"
+        />
       </div>
     </section>
   )

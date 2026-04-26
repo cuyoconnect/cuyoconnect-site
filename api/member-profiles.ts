@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // Keep in sync with src/lib/member-profiles.ts
 const MEMBER_PROFILE_COLUMNS =
-  'id, github_login, display_name, avatar_url, github_url, joined_at, is_visible'
+  'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
 
 function getSupabaseConfig() {
   const url = (process.env.SUPABASE_URL ?? '').trim()
@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const base = supabaseUrl.replace(/\/+$/, '')
-  const restUrl = `${base}/rest/v1/member_profiles?select=${encodeURIComponent(MEMBER_PROFILE_COLUMNS)}&is_visible=eq.true&order=joined_at.desc`
+  const restUrl = `${base}/rest/v1/member_profiles?select=${encodeURIComponent(MEMBER_PROFILE_COLUMNS)}&is_visible=eq.true&is_public=eq.true&order=joined_at.desc`
 
   const upstream = await fetch(restUrl, {
     headers: {
@@ -46,9 +46,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const data: unknown = await upstream.json()
 
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
   res.setHeader(
-    'Cache-Control',
-    'public, s-maxage=300, stale-while-revalidate=86400',
+    'Vercel-CDN-Cache-Control',
+    'public, s-maxage=60, stale-while-revalidate=300',
   )
   res.status(200).json(data)
 }

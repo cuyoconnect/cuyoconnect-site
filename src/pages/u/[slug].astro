@@ -1,0 +1,19 @@
+---
+export const prerender = false
+
+import { MemberProfilePage } from '@/MemberProfilePage'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const slug = Astro.params.slug ?? ''
+const title = `${slug ? `@${slug} — ` : ''}CuyoConnect`
+const description =
+  'Perfil publico de un miembro de CuyoConnect con links, redes y QR para compartir.'
+---
+
+<BaseLayout title={title} description={description} canonical={`/u/${slug}`}>
+  <SiteHeader client:load pathname={`/u/${slug}`} />
+  <main>
+    <MemberProfilePage client:load slug={slug} />
+  </main>
+</BaseLayout>
