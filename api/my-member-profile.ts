@@ -66,6 +66,35 @@ function getBearerToken(req: VercelRequest) {
   return match?.[1]?.trim() ?? ''
 }
 
+function decodeJwtPayload(token: string) {
+  const payload = token.split('.')[1]
+  if (!payload) return null
+
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      '=',
+    )
+    return JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as {
+      role?: unknown
+    }
+  } catch {
+    return null
+  }
+}
+
+function hasServiceRoleKey(config: SupabaseConfig) {
+  if (!config.serviceRoleKey || config.serviceRoleKey === config.anonKey) return false
+
+  const payload = decodeJwtPayload(config.serviceRoleKey)
+  if (!payload) {
+    return !config.serviceRoleKey.startsWith('sb_publishable_')
+  }
+
+  return payload.role === 'service_role'
+}
+
 function normalizeSlug(value: string) {
   return value
     .trim()
@@ -186,15 +215,18 @@ async function supabaseRest(input: {
   config: SupabaseConfig
   accessToken: string
   path: string
+  useServiceRole?: boolean
   init?: RequestInit
 }) {
   const base = input.config.url.replace(/\/+$/, '')
-  const bearer = input.config.serviceRoleKey || input.accessToken
+  const useServiceRole = input.useServiceRole && hasServiceRoleKey(input.config)
+  const bearer = useServiceRole ? input.config.serviceRoleKey : input.accessToken
+  const apiKey = useServiceRole ? input.config.serviceRoleKey : input.config.anonKey
   return fetch(`${base}/rest/v1/${input.path}`, {
     ...input.init,
     headers: {
       Accept: 'application/json',
-      apikey: input.config.anonKey,
+      apikey: apiKey,
       Authorization: `Bearer ${bearer}`,
       'Content-Type': 'application/json',
       'accept-profile': 'public',
@@ -231,11 +263,12 @@ async function findOrCreateProfile(input: {
 
   if (ownRows[0]) return ownRows[0]
 
-  if (input.config.serviceRoleKey && defaultInsert.github_login) {
+  if (hasServiceRoleKey(input.config) && defaultInsert.github_login) {
     const byGithub = await supabaseRest({
       config: input.config,
       accessToken: input.accessToken,
       path: `member_profiles?select=${select}&github_login=eq.${encodeURIComponent(defaultInsert.github_login)}&limit=1`,
+      useServiceRole: true,
     })
     const githubRows = await readRows<MemberProfileRow>(byGithub)
     const claimable = githubRows[0]
@@ -245,6 +278,7 @@ async function findOrCreateProfile(input: {
         config: input.config,
         accessToken: input.accessToken,
         path: `member_profiles?id=eq.${claimable.id}&select=${select}`,
+        useServiceRole: true,
         init: {
           method: 'PATCH',
           body: JSON.stringify({ user_id: input.user.id }),
@@ -269,9 +303,32 @@ async function findOrCreateProfile(input: {
   return createdRows[0]
 }
 
+function parseSupabaseError(error: unknown) {
+  const fallback = error instanceof Error ? error.message : String(error)
+
+  try {
+    const parsed = JSON.parse(fallback) as {
+      code?: unknown
+      message?: unknown
+      detail?: unknown
+    }
+
+    return {
+      code: typeof parsed.code === 'string' ? parsed.code : '',
+      message:
+        typeof parsed.message === 'string'
+          ? parsed.message
+          : typeof parsed.detail === 'string'
+            ? parsed.detail
+            : fallback,
+    }
+  } catch {
+    return { code: '', message: fallback }
+  }
+}
+
 function sendSupabaseError(res: VercelResponse, error: unknown) {
-  const message = error instanceof Error ? error.message : String(error)
-  const code = typeof error === 'object' && error && 'code' in error ? error.code : ''
+  const { code, message } = parseSupabaseError(error)
 
   if (code === '23505' || /duplicate key|unique/i.test(message)) {
     res.status(409).json({

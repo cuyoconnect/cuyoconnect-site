@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ExternalLink, MapPin } from 'lucide-react'
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { ExternalLink, MapPin, QrCode } from 'lucide-react'
 
 import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import {
@@ -77,6 +79,123 @@ export function CuyoQrCode({ value }: { value: string }) {
   )
 }
 
+const springPanel = {
+  type: 'spring' as const,
+  damping: 28,
+  stiffness: 360,
+  mass: 0.8,
+}
+
+function ProfileShareQrModal({
+  open,
+  onClose,
+  publicUrl,
+}: {
+  open: boolean
+  onClose: () => void
+  publicUrl: string
+}) {
+  const titleId = useId()
+  const reduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (!open) return
+    const html = document.documentElement
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
+    html.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prevHtmlOverflow
+      document.body.style.overflow = prevBodyOverflow
+    }
+  }, [open])
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          role="presentation"
+          initial={false}
+        >
+          <motion.button
+            type="button"
+            className="absolute inset-0 bg-black/35 backdrop-blur-sm"
+            aria-label="Cerrar"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.32,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-lg"
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 6 }}
+            transition={reduceMotion ? { duration: 0 } : { ...springPanel, delay: 0.08 }}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+              <h2
+                id={titleId}
+                className="text-base font-semibold tracking-tight text-neutral-950"
+              >
+                Compartir tu perfil
+              </h2>
+              <button
+                type="button"
+                className="shrink-0 rounded-[10px] p-2 text-neutral-500 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:duration-[240ms] hover:delay-0 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+                aria-label="Cerrar"
+                onClick={onClose}
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-5 pb-6 pt-2 text-center">
+              <CuyoQrCode value={publicUrl} />
+              <p className="mt-4 text-sm font-medium text-neutral-950">
+                Escaneame para compartir
+              </p>
+              <p className="mt-1 break-all text-xs leading-relaxed text-neutral-500">
+                {publicUrl}
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  )
+}
+
 function ProfileShell({ children }: { children: ReactNode }) {
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden bg-white px-4 pb-16 pt-24 text-neutral-950 sm:px-6 sm:pb-20 sm:pt-28">
@@ -126,6 +245,7 @@ export function MemberProfilePage({ slug }: MemberProfilePageProps) {
     profile: null,
     error: '',
   })
+  const [shareQrOpen, setShareQrOpen] = useState(false)
   const [origin] = useState(() =>
     typeof window !== 'undefined' ? window.location.origin : FALLBACK_SITE_URL,
   )
@@ -210,7 +330,7 @@ export function MemberProfilePage({ slug }: MemberProfilePageProps) {
 
   return (
     <ProfileShell>
-      <article className="mx-auto grid w-full max-w-4xl gap-5 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
+      <article className="mx-auto w-full max-w-4xl">
         <div className="rounded-[2rem] border border-neutral-200/90 bg-white p-6 shadow-[0_18px_60px_-38px_rgba(0,0,0,0.35)] sm:p-8">
           <header className="flex flex-col items-center text-center">
             <img
@@ -260,18 +380,27 @@ export function MemberProfilePage({ slug }: MemberProfilePageProps) {
               </p>
             )}
           </div>
-        </div>
 
-        <aside className="rounded-[2rem] border border-neutral-200/90 bg-neutral-50/80 p-5 text-center lg:sticky lg:top-28">
-          <CuyoQrCode value={publicUrl} />
-          <p className="mt-4 text-sm font-medium text-neutral-950">
-            Escaneame para compartir
-          </p>
-          <p className="mt-1 break-all text-xs leading-relaxed text-neutral-500">
-            {publicUrl}
-          </p>
-        </aside>
+          <div className="mt-8 flex flex-col items-center border-t border-neutral-100 pt-6">
+            <button
+              type="button"
+              onClick={() => setShareQrOpen(true)}
+              className="group inline-flex items-center gap-2 rounded-full border border-transparent py-1.5 text-sm text-neutral-500 transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
+            >
+              <QrCode
+                className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-neutral-700"
+                aria-hidden
+              />
+              <span>Compartir con QR</span>
+            </button>
+          </div>
+        </div>
       </article>
+      <ProfileShareQrModal
+        open={shareQrOpen}
+        onClose={() => setShareQrOpen(false)}
+        publicUrl={publicUrl}
+      />
     </ProfileShell>
   )
 }
