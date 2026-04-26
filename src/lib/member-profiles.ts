@@ -24,6 +24,8 @@ export type MemberProfile = {
 
 const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
+const LEGACY_MEMBER_PROFILE_COLUMNS =
+  'id, github_login, display_name, avatar_url, github_url, joined_at, is_visible'
 
 export const MEMBER_PROFILE_SOCIAL_LINKS = [
   {
@@ -83,6 +85,38 @@ const URL_FIELDS: MemberProfileSocialField[] = [
   'x_url',
 ]
 
+type MemberProfileRow = Partial<MemberProfile> &
+  Pick<
+    MemberProfile,
+    'id' | 'github_login' | 'display_name' | 'avatar_url' | 'joined_at' | 'is_visible'
+  >
+
+function isMissingMemberProfileColumn(error: { code?: string; message?: string }) {
+  return error.code === '42703' || /column .*member_profiles.* does not exist/i.test(error.message ?? '')
+}
+
+function normalizeMemberProfile(row: MemberProfileRow): MemberProfile {
+  return {
+    id: row.id,
+    user_id: row.user_id ?? null,
+    github_login: row.github_login,
+    display_name: row.display_name,
+    avatar_url: row.avatar_url,
+    github_url: row.github_url ?? null,
+    joined_at: row.joined_at,
+    is_visible: row.is_visible,
+    slug: row.slug ?? null,
+    bio: row.bio ?? null,
+    location: row.location ?? null,
+    website_url: row.website_url ?? null,
+    linkedin_url: row.linkedin_url ?? null,
+    instagram_url: row.instagram_url ?? null,
+    x_url: row.x_url ?? null,
+    is_public: row.is_public ?? true,
+    updated_at: row.updated_at ?? null,
+  }
+}
+
 async function fetchVisibleMemberProfilesFromSupabase() {
   const supabase = getSupabaseBrowserClient()
   if (!supabase) return []
@@ -95,10 +129,24 @@ async function fetchVisibleMemberProfilesFromSupabase() {
     .order('joined_at', { ascending: false })
 
   if (error) {
+    if (isMissingMemberProfileColumn(error)) {
+      const fallback = await supabase
+        .from('member_profiles')
+        .select(LEGACY_MEMBER_PROFILE_COLUMNS)
+        .eq('is_visible', true)
+        .order('joined_at', { ascending: false })
+
+      if (fallback.error) {
+        throw fallback.error
+      }
+
+      return ((fallback.data ?? []) as MemberProfileRow[]).map(normalizeMemberProfile)
+    }
+
     throw error
   }
 
-  return (data ?? []) as MemberProfile[]
+  return ((data ?? []) as MemberProfileRow[]).map(normalizeMemberProfile)
 }
 
 async function fetchMemberProfileBySlugFromSupabase(slug: string) {
@@ -114,10 +162,11 @@ async function fetchMemberProfileBySlugFromSupabase(slug: string) {
     .maybeSingle()
 
   if (error) {
+    if (isMissingMemberProfileColumn(error)) return null
     throw error
   }
 
-  return (data ?? null) as MemberProfile | null
+  return data ? normalizeMemberProfile(data as MemberProfileRow) : null
 }
 
 export async function fetchVisibleMemberProfiles() {
@@ -134,7 +183,7 @@ export async function fetchVisibleMemberProfiles() {
     throw new Error(detail || `member_profiles HTTP ${res.status}`)
   }
 
-  return (await res.json()) as MemberProfile[]
+  return ((await res.json()) as MemberProfileRow[]).map(normalizeMemberProfile)
 }
 
 export async function fetchMemberProfileBySlug(slugInput: string) {
@@ -156,7 +205,7 @@ export async function fetchMemberProfileBySlug(slugInput: string) {
     throw new Error(detail || `member_profile HTTP ${res.status}`)
   }
 
-  return (await res.json()) as MemberProfile
+  return normalizeMemberProfile((await res.json()) as MemberProfileRow)
 }
 
 function getAuthHeaders(session: Session) {

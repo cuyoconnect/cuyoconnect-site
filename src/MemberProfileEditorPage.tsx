@@ -39,8 +39,19 @@ const fieldInputClass = cn(
 function parseErrorMessage(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error)
   try {
-    const parsed = JSON.parse(raw) as { detail?: string; error?: string }
-    return parsed.detail ?? parsed.error ?? raw
+    const parsed = JSON.parse(raw) as {
+      detail?: unknown
+      error?: unknown
+      message?: unknown
+    }
+    const message = parsed.detail ?? parsed.message ?? parsed.error
+    if (typeof message === 'string') return message
+    if (message && typeof message === 'object') {
+      const nestedMessage =
+        'message' in message ? (message as { message?: unknown }).message : null
+      if (typeof nestedMessage === 'string') return nestedMessage
+    }
+    return raw
   } catch {
     return raw
   }
