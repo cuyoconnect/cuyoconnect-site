@@ -6,13 +6,7 @@ const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$/
-const URL_FIELDS = [
-  'website_url',
-  'github_url',
-  'linkedin_url',
-  'instagram_url',
-  'x_url',
-] as const
+const URL_FIELDS = ['linkedin_url', 'instagram_url', 'x_url'] as const
 
 type AuthUser = {
   id: string
@@ -21,16 +15,10 @@ type AuthUser = {
 }
 
 type EditableMemberProfileInput = {
-  display_name?: unknown
-  slug?: unknown
   bio?: unknown
-  location?: unknown
-  website_url?: unknown
-  github_url?: unknown
   linkedin_url?: unknown
   instagram_url?: unknown
   x_url?: unknown
-  is_public?: unknown
 }
 
 type MemberProfileRow = {
@@ -127,20 +115,10 @@ function validateUrl(value: string) {
 }
 
 function sanitizeEditableProfile(input: EditableMemberProfileInput) {
-  const slug = normalizeSlug(String(input.slug ?? ''))
-  const displayName = String(input.display_name ?? '').trim()
   const bio = String(input.bio ?? '').trim()
-  const location = String(input.location ?? '').trim()
   const errors: Record<string, string> = {}
 
-  if (!displayName) errors.display_name = 'Escribi tu nombre visible.'
-  if (!isValidSlug(slug)) {
-    errors.slug = 'Usa 3 a 32 caracteres: letras, numeros y guiones.'
-  }
   if (bio.length > 280) errors.bio = 'La bio puede tener hasta 280 caracteres.'
-  if (location.length > 80) {
-    errors.location = 'La ubicacion puede tener hasta 80 caracteres.'
-  }
 
   const urls = Object.fromEntries(
     URL_FIELDS.map((field) => {
@@ -158,16 +136,10 @@ function sanitizeEditableProfile(input: EditableMemberProfileInput) {
 
   return {
     data: {
-      display_name: displayName,
-      slug,
       bio: bio || null,
-      location: location || null,
-      website_url: urls.website_url,
-      github_url: urls.github_url,
       linkedin_url: urls.linkedin_url,
       instagram_url: urls.instagram_url,
       x_url: urls.x_url,
-      is_public: Boolean(input.is_public),
     },
     errors: null,
   }
@@ -190,6 +162,18 @@ async function getAuthenticatedUser(input: SupabaseConfig & { accessToken: strin
 }
 
 function buildDefaultProfileInsert(user: AuthUser) {
+  const identity = buildGithubIdentity(user)
+
+  return {
+    id: randomUUID(),
+    user_id: user.id,
+    ...identity,
+    is_visible: true,
+    is_public: true,
+  }
+}
+
+function buildGithubIdentity(user: AuthUser) {
   const meta = user.user_metadata ?? {}
   const githubLogin =
     meta.user_name ?? meta.preferred_username ?? user.email?.split('@')[0] ?? ''
@@ -202,15 +186,11 @@ function buildDefaultProfileInsert(user: AuthUser) {
         : ''
 
   return {
-    id: randomUUID(),
-    user_id: user.id,
     github_login: githubLogin,
     display_name: displayName,
     avatar_url: meta.avatar_url ?? '',
     github_url: githubUrl,
     slug: normalizeSlug(githubLogin || `miembro-${user.id.slice(0, 8)}`),
-    is_visible: true,
-    is_public: true,
   }
 }
 
@@ -256,25 +236,27 @@ async function findOrCreateProfile(input: {
 }) {
   const defaultInsert = buildDefaultProfileInsert(input.user)
   const select = encodeURIComponent(MEMBER_PROFILE_COLUMNS)
+  const canUseServiceRole = hasServiceRoleKey(input.config)
 
   const byUser = await supabaseRest({
     config: input.config,
     accessToken: input.accessToken,
     path: `member_profiles?select=${select}&user_id=eq.${input.user.id}&limit=1`,
+    useServiceRole: canUseServiceRole,
   })
   const ownRows = await readRows<MemberProfileRow>(byUser)
 
   if (ownRows[0]) return ownRows[0]
 
-  if (hasServiceRoleKey(input.config) && defaultInsert.github_login) {
-    const byGithub = await supabaseRest({
+  if (canUseServiceRole && defaultInsert.slug) {
+    const bySlug = await supabaseRest({
       config: input.config,
       accessToken: input.accessToken,
-      path: `member_profiles?select=${select}&github_login=eq.${encodeURIComponent(defaultInsert.github_login)}&limit=1`,
+      path: `member_profiles?select=${select}&slug=eq.${encodeURIComponent(defaultInsert.slug)}&limit=1`,
       useServiceRole: true,
     })
-    const githubRows = await readRows<MemberProfileRow>(byGithub)
-    const claimable = githubRows[0]
+    const slugRows = await readRows<MemberProfileRow>(bySlug)
+    const claimable = slugRows[0]
 
     if (claimable && !claimable.user_id) {
       const claimed = await supabaseRest({
@@ -284,18 +266,24 @@ async function findOrCreateProfile(input: {
         useServiceRole: true,
         init: {
           method: 'PATCH',
-          body: JSON.stringify({ user_id: input.user.id }),
+          body: JSON.stringify({
+            user_id: input.user.id,
+            ...buildGithubIdentity(input.user),
+          }),
         },
       })
       const claimedRows = await readRows<MemberProfileRow>(claimed)
       if (claimedRows[0]) return claimedRows[0]
     }
+
+    if (claimable?.user_id === input.user.id) return claimable
   }
 
   const created = await supabaseRest({
     config: input.config,
     accessToken: input.accessToken,
     path: `member_profiles?select=${select}`,
+    useServiceRole: canUseServiceRole,
     init: {
       method: 'POST',
       body: JSON.stringify(defaultInsert),
@@ -400,9 +388,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       config,
       accessToken,
       path: `member_profiles?id=eq.${profile.id}&select=${encodeURIComponent(MEMBER_PROFILE_COLUMNS)}`,
+      useServiceRole: hasServiceRoleKey(config),
       init: {
         method: 'PATCH',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          ...buildGithubIdentity(user),
+          is_visible: true,
+          is_public: true,
+        }),
       },
     })
 

@@ -29,12 +29,6 @@ const LEGACY_MEMBER_PROFILE_COLUMNS =
 
 export const MEMBER_PROFILE_SOCIAL_LINKS = [
   {
-    id: 'website',
-    label: 'Sitio web',
-    field: 'website_url',
-    placeholder: 'https://tu-sitio.com',
-  },
-  {
     id: 'github',
     label: 'GitHub',
     field: 'github_url',
@@ -63,23 +57,36 @@ export const MEMBER_PROFILE_SOCIAL_LINKS = [
 export type MemberProfileSocialField =
   (typeof MEMBER_PROFILE_SOCIAL_LINKS)[number]['field']
 
+export const EDITABLE_MEMBER_PROFILE_SOCIAL_LINKS = [
+  {
+    id: 'linkedin',
+    label: 'LinkedIn',
+    field: 'linkedin_url',
+    placeholder: 'https://linkedin.com/in/usuario',
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    field: 'instagram_url',
+    placeholder: 'https://instagram.com/usuario',
+  },
+  {
+    id: 'x',
+    label: 'X',
+    field: 'x_url',
+    placeholder: 'https://x.com/usuario',
+  },
+] as const
+
 export type EditableMemberProfileInput = {
-  display_name: string
-  slug: string
   bio: string
-  location: string
-  website_url: string
-  github_url: string
   linkedin_url: string
   instagram_url: string
   x_url: string
-  is_public: boolean
 }
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$/
 const URL_FIELDS: MemberProfileSocialField[] = [
-  'website_url',
-  'github_url',
   'linkedin_url',
   'instagram_url',
   'x_url',
@@ -430,16 +437,10 @@ export function normalizeMemberUrlInput(value: string) {
 
 export function toMemberProfilePayload(input: EditableMemberProfileInput) {
   const payload = {
-    display_name: input.display_name.trim(),
-    slug: normalizeMemberSlug(input.slug),
     bio: input.bio.trim() || null,
-    location: input.location.trim() || null,
-    website_url: normalizeMemberUrlInput(input.website_url) || null,
-    github_url: normalizeMemberUrlInput(input.github_url) || null,
     linkedin_url: normalizeMemberUrlInput(input.linkedin_url) || null,
     instagram_url: normalizeMemberUrlInput(input.instagram_url) || null,
     x_url: normalizeMemberUrlInput(input.x_url) || null,
-    is_public: input.is_public,
   }
 
   return payload
@@ -449,37 +450,18 @@ export function profileToEditableInput(
   profile: MemberProfile,
 ): EditableMemberProfileInput {
   return {
-    display_name: getMemberDisplayName(profile),
-    slug: getMemberSlug(profile),
     bio: profile.bio ?? '',
-    location: profile.location ?? '',
-    website_url: profile.website_url ?? '',
-    github_url: profile.github_url ?? '',
     linkedin_url: profile.linkedin_url ?? '',
     instagram_url: profile.instagram_url ?? '',
     x_url: profile.x_url ?? '',
-    is_public: profile.is_public,
   }
 }
 
 export function validateEditableMemberProfile(input: EditableMemberProfileInput) {
   const errors: Partial<Record<keyof EditableMemberProfileInput, string>> = {}
-  const slug = normalizeMemberSlug(input.slug)
-
-  if (!input.display_name.trim()) {
-    errors.display_name = 'Escribi tu nombre visible.'
-  }
-
-  if (!isValidMemberSlug(slug)) {
-    errors.slug = 'Usa 3 a 32 caracteres: letras, numeros y guiones.'
-  }
 
   if (input.bio.trim().length > 280) {
     errors.bio = 'La bio puede tener hasta 280 caracteres.'
-  }
-
-  if (input.location.trim().length > 80) {
-    errors.location = 'La ubicacion puede tener hasta 80 caracteres.'
   }
 
   for (const field of URL_FIELDS) {

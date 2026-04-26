@@ -86,7 +86,7 @@ const springPanel = {
   mass: 0.8,
 }
 
-function ProfileShareQrModal({
+export function ProfileShareQrModal({
   open,
   onClose,
   publicUrl,
