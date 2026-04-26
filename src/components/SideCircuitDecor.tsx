@@ -57,3 +57,27 @@ export function SideCircuitDecor({ className }: { className?: string }) {
     </>
   )
 }
+
+/**
+ * Patrón de circuitos como fondo de la tarjeta de perfil: cubre todo el rectángulo
+ * en todos los viewports (misma imagen que {@link SideCircuitDecor}, sin `bg-fixed`).
+ */
+export function ProfileCardCircuitDecor({ className }: { className?: string }) {
+  return (
+    <>
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-0 -z-10 select-none',
+          "bg-[url('/banner/cuyoconnect-circuit-vertical.png')] bg-cover bg-center bg-no-repeat",
+          'opacity-[0.1]',
+          className,
+        )}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_42%_at_100%_14%,rgba(0,0,0,0.03),transparent_52%)]"
+        aria-hidden
+      />
+    </>
+  )
+}

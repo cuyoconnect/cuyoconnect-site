@@ -4,9 +4,29 @@ export const prerender = false
 import { MemberProfilePage } from '@/MemberProfilePage'
 import { SiteHeader } from '@/SiteHeader'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { fetchPublicMemberProfileBySlug } from '@/lib/member-profile-server'
+import { getMemberDisplayName } from '@/lib/member-profiles'
 
 const slug = Astro.params.slug ?? ''
-const title = `${slug ? `@${slug} — ` : ''}CuyoConnect`
+let profile = null
+let loadError = ''
+
+try {
+  profile = await fetchPublicMemberProfileBySlug(slug)
+} catch (error) {
+  console.error('No se pudo cargar el perfil publico.', error)
+  loadError = 'No pudimos cargar este perfil. Intenta de nuevo en unos minutos.'
+}
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate')
+Astro.response.headers.set(
+  'Vercel-CDN-Cache-Control',
+  'public, s-maxage=60, stale-while-revalidate=300',
+)
+
+const title = profile
+  ? `${getMemberDisplayName(profile)} — CuyoConnect`
+  : `${slug ? `@${slug} — ` : ''}CuyoConnect`
 const description =
   'Perfil publico de un miembro de CuyoConnect con links, redes y QR para compartir.'
 ---
@@ -14,6 +34,6 @@ const description =
 <BaseLayout title={title} description={description} canonical={`/u/${slug}`}>
   <SiteHeader client:load pathname={`/u/${slug}`} />
   <main>
-    <MemberProfilePage client:load slug={slug} />
+    <MemberProfilePage client:load slug={slug} initialProfile={profile} initialError={loadError} />
   </main>
 </BaseLayout>

@@ -22,7 +22,7 @@ export type MemberProfile = {
   updated_at: string | null
 }
 
-const MEMBER_PROFILE_COLUMNS =
+export const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
 const LEGACY_MEMBER_PROFILE_COLUMNS =
   'id, github_login, display_name, avatar_url, github_url, joined_at, is_visible'
@@ -53,6 +53,9 @@ export const MEMBER_PROFILE_SOCIAL_LINKS = [
     placeholder: 'https://x.com/usuario',
   },
 ] as const
+
+export type MemberProfileSocialLinkId =
+  (typeof MEMBER_PROFILE_SOCIAL_LINKS)[number]['id']
 
 export type MemberProfileSocialField =
   (typeof MEMBER_PROFILE_SOCIAL_LINKS)[number]['field']
@@ -92,7 +95,7 @@ const URL_FIELDS: MemberProfileSocialField[] = [
   'x_url',
 ]
 
-type MemberProfileRow = Partial<MemberProfile> &
+export type MemberProfileRow = Partial<MemberProfile> &
   Pick<
     MemberProfile,
     'id' | 'github_login' | 'display_name' | 'avatar_url' | 'joined_at' | 'is_visible'
@@ -102,7 +105,7 @@ function isMissingMemberProfileColumn(error: { code?: string; message?: string }
   return error.code === '42703' || /column .*member_profiles.* does not exist/i.test(error.message ?? '')
 }
 
-function normalizeMemberProfile(row: MemberProfileRow): MemberProfile {
+export function normalizeMemberProfile(row: MemberProfileRow): MemberProfile {
   return {
     id: row.id,
     user_id: row.user_id ?? null,
