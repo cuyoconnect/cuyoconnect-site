@@ -9,7 +9,7 @@ lerna-debug.log*
  
 node_modules 
 .astro/ 
-.vercel/
+.vercel/ 
 dist
 dist-ssr
 *.local 
