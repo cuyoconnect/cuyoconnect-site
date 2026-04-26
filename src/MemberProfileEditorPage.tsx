@@ -199,6 +199,15 @@ export function MemberProfileEditorPage() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Cargando tu perfil...
                   </div>
+                ) : !profile && errorMessage ? (
+                  <div className="flex min-h-60 flex-col items-center justify-center text-center">
+                    <p className="text-sm font-medium tracking-[0.18em] uppercase text-neutral-500">
+                      No pudimos cargar tu perfil
+                    </p>
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-rose-600">
+                      {errorMessage}
+                    </p>
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col items-center text-center">

@@ -5,8 +5,19 @@ const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
 
 function getSupabaseConfig() {
-  const url = (process.env.SUPABASE_URL ?? '').trim()
-  const anonKey = (process.env.SUPABASE_ANON_KEY ?? '').trim()
+  const url = (
+    process.env.SUPABASE_URL ??
+    process.env.PUBLIC_SUPABASE_URL ??
+    process.env.VITE_SUPABASE_URL ??
+    ''
+  ).trim()
+  const anonKey = (
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+    ''
+  ).trim()
   return { url, anonKey }
 }
 

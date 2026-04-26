@@ -1,7 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-let supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL?.trim()
-let supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY?.trim()
+let supabaseUrl = (
+  import.meta.env.PUBLIC_SUPABASE_URL ??
+  import.meta.env.VITE_SUPABASE_URL ??
+  ''
+).trim()
+let supabaseAnonKey = (
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+  ''
+).trim()
 
 let browserClient: SupabaseClient | null = null
 

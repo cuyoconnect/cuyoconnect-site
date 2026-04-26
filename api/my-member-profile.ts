@@ -37,11 +37,14 @@ function getSupabaseConfig(): SupabaseConfig {
   const url = (
     process.env.SUPABASE_URL ??
     process.env.PUBLIC_SUPABASE_URL ??
+    process.env.VITE_SUPABASE_URL ??
     ''
   ).trim()
   const anonKey = (
     process.env.SUPABASE_ANON_KEY ??
     process.env.PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
     ''
   ).trim()
   const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim()
@@ -323,8 +326,9 @@ function sendSupabaseError(res: VercelResponse, error: unknown) {
 
   if (code === '23505' || /duplicate key|unique/i.test(message)) {
     res.status(409).json({
-      error: 'Slug already exists',
-      detail: 'Ese slash ya esta en uso. Proba con otro.',
+      error: 'Profile already exists',
+      detail:
+        'Tu perfil de GitHub ya existe, pero todavia no esta asociado a tu sesion. Configura SUPABASE_SERVICE_ROLE_KEY en Vercel o asocia ese registro en Supabase.',
     })
     return
   }
