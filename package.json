@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "clean:cache": "rm -rf node_modules/.vite .astro dist",
     "dev:clean": "npm run clean:cache && astro dev",
-    "build:clean": "npm run clean:cache && astro build"
+    "build:clean": "npm run clean:cache && astro build",
+    "db:redeploy-webhook": "node scripts/apply-cuyo-redeploy-webhook.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.2",
@@ -40,14 +41,17 @@
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^24.12.0",
+    "@types/pg": "^8.20.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vercel/node": "^5.7.0",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "pg": "^8.20.0",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.57.0",
