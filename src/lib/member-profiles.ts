@@ -393,6 +393,51 @@ export function getMemberDisplayName(profile: MemberProfile) {
   return profile.display_name.trim() || profile.github_login
 }
 
+const MEMBER_PROFILE_META_DESC_MAX = 280
+
+function clampMetaDescription(text: string, max = MEMBER_PROFILE_META_DESC_MAX) {
+  const t = text.trim().replace(/\s+/g, ' ')
+  if (t.length <= max) return t
+  const cut = t.slice(0, max - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  const base = lastSpace > 40 ? cut.slice(0, lastSpace) : cut
+  return `${base}…`
+}
+
+/**
+ * Texto para `<meta name="description">` y Open Graph: bio del miembro o un fallback alineado al sitio.
+ */
+export function getMemberPublicMetaDescription(profile: MemberProfile) {
+  const bio = profile.bio?.trim()
+  if (bio) return clampMetaDescription(bio)
+  const name = getMemberDisplayName(profile)
+  return clampMetaDescription(
+    `Perfil público de ${name} en CuyoConnect. Aprendé, construí y conectá con la comunidad tech del oeste argentino.`,
+  )
+}
+
+/**
+ * Avatar en HTTPS (la misma URL que viene de GitHub) para `og:image`, con tamaño razonable para compartir.
+ */
+export function getMemberOgAvatarUrl(profile: MemberProfile): string | null {
+  const raw = profile.avatar_url?.trim()
+  if (!raw) return null
+  if (!/^https:\/\//i.test(raw)) return null
+  try {
+    const url = new URL(raw)
+    const host = url.hostname.toLowerCase()
+    if (
+      host === 'avatars.githubusercontent.com' ||
+      host.endsWith('.githubusercontent.com')
+    ) {
+      if (!url.searchParams.has('s')) url.searchParams.set('s', '512')
+    }
+    return url.toString()
+  } catch {
+    return raw
+  }
+}
+
 export function getMemberSubtitle(profile: MemberProfile) {
   const login = profile.github_login.trim()
   if (login) return `@${login}`

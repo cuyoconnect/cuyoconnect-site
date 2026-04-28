@@ -12,7 +12,11 @@ import {
   fetchPublicMemberProfileBySlug,
   fetchPublicProfileSlugsForPrerender,
 } from '@/lib/member-profile-server'
-import { getMemberDisplayName } from '@/lib/member-profiles'
+import {
+  getMemberDisplayName,
+  getMemberOgAvatarUrl,
+  getMemberPublicMetaDescription,
+} from '@/lib/member-profiles'
 
 export async function getStaticPaths() {
   const slugs = await fetchPublicProfileSlugsForPrerender()
@@ -38,12 +42,28 @@ Astro.response.headers.set(
 
 const title = profile
   ? `${getMemberDisplayName(profile)} — CuyoConnect`
-  : `${slug ? `@${slug} — ` : ''}CuyoConnect`
-const description =
-  'Perfil publico de un miembro de CuyoConnect con links, redes y QR para compartir.'
+  : loadError
+    ? 'CuyoConnect'
+    : `${slug ? `@${slug} — ` : ''}CuyoConnect`
+
+const description = profile
+  ? getMemberPublicMetaDescription(profile)
+  : loadError
+    ? 'No pudimos cargar este perfil. Volvé a intentar en unos minutos.'
+    : 'Este perfil no está disponible o es privado. CuyoConnect es la comunidad tech del Cuyo: eventos, meetups y más.'
+
+const memberOgImage = profile ? getMemberOgAvatarUrl(profile) : null
 ---
 
-<BaseLayout title={title} description={description} canonical={`/u/${slug}`}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={`/u/${slug}`}
+  ogImage={memberOgImage ?? undefined}
+  ogImageWidth={memberOgImage ? 512 : undefined}
+  ogImageHeight={memberOgImage ? 512 : undefined}
+  twitterCard={memberOgImage ? 'summary' : 'summary_large_image'}
+>
   <SiteHeader client:load pathname={`/u/${slug}`} />
   <main>
     <MemberProfilePage client:load slug={slug} initialProfile={profile} initialError={loadError} />
