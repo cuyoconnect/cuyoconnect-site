@@ -1,16 +1,12 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ExternalLink, MapPin } from 'lucide-react'
 import { toString as qrToSvgString } from 'qrcode'
 
-import {
-  ProfileCardCircuitDecor,
-  SideCircuitDecor,
-} from '@/components/SideCircuitDecor'
+import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import {
   getMemberDisplayName,
-  getMemberPublicUrl,
   MEMBER_PROFILE_SOCIAL_LINKS,
   type MemberProfile,
   type MemberProfileSocialLinkId,
@@ -28,8 +24,6 @@ type LoadState =
   | { status: 'ready'; profile: MemberProfile; error: '' }
   | { status: 'not-found'; profile: null; error: '' }
   | { status: 'error'; profile: null; error: string }
-
-const FALLBACK_SITE_URL = 'https://cuyoconnect.com'
 
 function ProfileSocialIcon({
   id,
@@ -106,11 +100,11 @@ function ProfileSocialMarkerSpot({ className }: { className?: string }) {
       <g filter="url(#profile-social-marker-roughen)" mask="url(#profile-social-marker-wear)">
         <path
           d="M12.5 14.5C23 7.8 44.7 6.1 63.5 11.9C73.8 15.1 74 27.5 66.8 37.1C58.5 48.1 38.9 54.5 22.8 50.4C9.8 47.1 4.2 34.7 8.1 25.1C9.4 21.9 10.6 17.7 12.5 14.5Z"
-          fill="#ffec6b"
+          fill="#fae673"
         />
         <path
           d="M16 18.9C29.8 11.8 49.9 11.7 62.6 16.4C69 18.8 68.7 25.7 63.8 31.8C55.7 41.8 35.4 47.7 20.8 43.5C10.8 40.6 9.4 28.4 16 18.9Z"
-          fill="#ffe14f"
+          fill="#ebd85a"
           opacity="0.72"
         />
       </g>
@@ -176,6 +170,19 @@ const springPanel = {
   mass: 0.8,
 }
 
+function InteractiveProfileCardFrame({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        'relative [&_a]:relative [&_a]:z-10 rounded-[2rem] bg-[rgba(255,255,255,0.97)]',
+        'shadow-[0_0_165px_68px_rgba(255,255,255,0.78),_0_0_330px_138px_rgba(255,255,255,0.52),_0_0_490px_195px_rgba(255,255,255,0.32),_0_40px_130px_-14px_rgba(15,_23,_42,_0.048),_0_80px_210px_-42px_rgba(255,_255,_255,_0.62),_0_120px_300px_-56px_rgba(15,_23,_42,_0.03)]',
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
 export function ProfileShareQrModal({
   open,
   onClose,
@@ -222,7 +229,7 @@ export function ProfileShareQrModal({
         >
           <motion.button
             type="button"
-            className="absolute inset-0 bg-black/35 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/35"
             aria-label="Cerrar"
             onClick={onClose}
             initial={{ opacity: 0 }}
@@ -296,8 +303,15 @@ function ProfileShell({
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden bg-white px-4 pb-16 pt-24 text-neutral-950 sm:px-6 sm:pb-20 sm:pt-28">
       {showSideCircuitDecor ? <SideCircuitDecor /> : null}
-      <div className={cn('relative z-10 mx-auto w-full', HERO_CONTENT_WIDTH_CLASS)}>
-        {children}
+      <div
+        className={cn(
+          'relative z-10 mx-auto flex w-full flex-col justify-center',
+          HERO_CONTENT_WIDTH_CLASS,
+        )}
+      >
+        <div className="flex min-h-[calc(100svh-10rem)] w-full flex-col justify-center sm:min-h-[calc(100svh-12rem)]">
+          {children}
+        </div>
       </div>
     </section>
   )
@@ -345,16 +359,7 @@ export function MemberProfilePage({
     : initialProfile
       ? { status: 'ready', profile: initialProfile, error: '' }
       : { status: 'not-found', profile: null, error: '' }
-  const [shareQrOpen, setShareQrOpen] = useState(false)
-  const [origin] = useState(() =>
-    typeof window !== 'undefined' ? window.location.origin : FALLBACK_SITE_URL,
-  )
-
   const profile = state.profile
-  const publicUrl = useMemo(
-    () => getMemberPublicUrl(profile?.slug ?? slug, origin),
-    [origin, profile?.slug, slug],
-  )
 
   if (state.status === 'not-found') {
     return (
@@ -385,109 +390,84 @@ export function MemberProfilePage({
   })
 
   return (
-    <ProfileShell showSideCircuitDecor={false}>
+    <ProfileShell>
       <article className="mx-auto w-full max-w-xl">
         <ProfileSocialMarkerTextureDefs />
-        <div className="relative isolate overflow-hidden rounded-[2rem] border border-neutral-200/90 bg-white p-6 shadow-[0_18px_60px_-38px_rgba(0,0,0,0.35)] sm:p-8">
-          <ProfileCardCircuitDecor />
-          <header className="flex flex-col items-center text-center">
-            <p className="mb-6 text-sm font-medium tracking-[0.18em] uppercase text-neutral-500">
-              Miembro CuyoConnect
-            </p>
-            <div className="flex w-full flex-col items-center justify-center gap-5 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
-              <div className="relative shrink-0">
-                <img
-                  src={profile.avatar_url || '/logo.png'}
-                  alt=""
-                  width={112}
-                  height={112}
-                  className="h-28 w-28 rounded-full border border-neutral-200 bg-neutral-50 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShareQrOpen(true)}
-                  className="absolute bottom-0 right-0 inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[0.6875rem] font-medium text-neutral-700 shadow-sm transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-neutral-50 hover:text-neutral-950 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
-                  aria-label="Abrir QR del perfil"
-                >
-                  QR
-                </button>
+        <InteractiveProfileCardFrame>
+          <div className="relative p-5 sm:p-6">
+            <header className="flex flex-col items-center text-center">
+              <div className="flex w-full flex-col items-center justify-center gap-5 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
+                <div className="shrink-0">
+                  <img
+                    src={profile.avatar_url || '/logo.png'}
+                    alt=""
+                    width={112}
+                    height={112}
+                    className="h-28 w-28 rounded-full border border-white/50 bg-white/20 object-cover shadow-[0_18px_44px_-24px_rgba(15,23,42,0.35)]"
+                  />
+                </div>
+                <div className="flex min-w-0 flex-col items-center text-center sm:items-start sm:text-left sm:pt-0.5">
+                  <h1 className="text-balance text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl [&::selection]:bg-[#fae673] [&::selection]:text-neutral-950">
+                    {displayName}
+                  </h1>
+                  <p className="mt-2 text-center text-sm text-neutral-500 sm:text-left">
+                    @{profile.slug}
+                  </p>
+                </div>
               </div>
-              <div className="flex min-w-0 flex-col items-center text-center sm:pt-0.5">
-                <h1 className="text-balance text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl [&::selection]:bg-[#ffec6b] [&::selection]:text-neutral-950">
-                  {displayName}
-                </h1>
-                <p className="mt-2 self-start text-left text-sm text-neutral-500">
-                  @{profile.slug}
+              {profile.location ? (
+                <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-sm text-neutral-500">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  {profile.location}
                 </p>
-              </div>
-            </div>
-            {profile.location ? (
-              <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-sm text-neutral-500">
-                <MapPin className="h-4 w-4 shrink-0" />
-                {profile.location}
-              </p>
-            ) : null}
-            {profile.bio ? (
-              <p
-                className={cn(
-                  'relative mt-5 w-full max-w-xl self-start rounded-2xl border border-neutral-100 bg-neutral-50/70 py-3 pl-8 pr-4 text-left text-pretty text-base leading-relaxed text-neutral-600 sm:py-3.5 sm:pl-9 sm:pr-5',
-                  "before:pointer-events-none before:absolute before:left-3 before:top-2.5 before:font-serif before:text-[1.75rem] before:leading-none before:text-neutral-300 before:content-['\\201C'] sm:before:left-3.5 sm:before:top-3 sm:before:text-[2rem]",
-                )}
-              >
-                {profile.bio}
-              </p>
-            ) : null}
-          </header>
+              ) : null}
+            </header>
 
-          <div className="mt-8 flex justify-center">
-            {socialLinks.length > 0 ? (
-              <nav
-                className="grid w-full grid-cols-2 justify-items-center gap-x-10 gap-y-7 sm:flex sm:w-auto sm:flex-wrap sm:items-start sm:justify-center sm:gap-12"
-                aria-label="Links sociales"
-              >
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group inline-flex min-w-20 flex-col items-center gap-3 text-center text-neutral-950 transition-opacity duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:opacity-80 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-neutral-400"
-                    aria-label={`Abrir ${link.label}`}
-                    title={link.label}
-                  >
-                    <span className="relative flex h-16 w-20 items-center justify-center">
-                      <ProfileSocialMarkerSpot className="-rotate-6 scale-95 opacity-95 transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:-rotate-3 group-hover:scale-100 group-hover:duration-[240ms] group-hover:delay-0" />
-                      <ProfileSocialIcon
-                        id={link.id}
-                        className="relative h-9 w-9 text-neutral-950 [filter:url(#profile-social-ink-roughen)] transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-hover:duration-[240ms] group-hover:delay-0"
-                      />
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="text-xs font-medium leading-none underline decoration-neutral-950/45 decoration-1 underline-offset-4">
-                        {link.label}
+            <div className="mt-6 flex justify-center">
+              {socialLinks.length > 0 ? (
+                <nav
+                  className="flex w-full flex-row flex-nowrap items-start justify-center gap-4 sm:gap-8"
+                  aria-label="Links sociales"
+                >
+                  {socialLinks.map((link) => (
+                    <a
+                      key={link.id}
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group inline-flex min-w-20 flex-col items-center gap-3 text-center text-neutral-950 transition-opacity duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:opacity-80 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-neutral-400"
+                      aria-label={`Abrir ${link.label}`}
+                      title={link.label}
+                    >
+                      <span className="relative flex h-16 w-20 items-center justify-center">
+                        <ProfileSocialMarkerSpot className="-rotate-6 scale-95 opacity-95 transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:-rotate-3 group-hover:scale-100 group-hover:duration-[240ms] group-hover:delay-0" />
+                        <ProfileSocialIcon
+                          id={link.id}
+                          className="relative h-9 w-9 text-neutral-950 [filter:url(#profile-social-ink-roughen)] transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-hover:duration-[240ms] group-hover:delay-0"
+                        />
                       </span>
-                      <ExternalLink
-                        className="h-3.5 w-3.5 shrink-0 text-neutral-950/50 transition-colors duration-[420ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-neutral-950/80 group-hover:duration-[240ms]"
-                        strokeWidth={2.25}
-                        aria-hidden
-                      />
-                    </span>
-                  </a>
-                ))}
-              </nav>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 px-5 py-4 text-center text-sm text-neutral-500">
-                Este perfil todavia no agrego links.
-              </p>
-            )}
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="text-xs font-medium leading-none underline decoration-neutral-950/45 decoration-1 underline-offset-4">
+                          {link.label}
+                        </span>
+                        <ExternalLink
+                          className="h-3.5 w-3.5 shrink-0 text-neutral-950/50 transition-colors duration-[420ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-neutral-950/80 group-hover:duration-[240ms]"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      </span>
+                    </a>
+                  ))}
+                </nav>
+              ) : (
+                <p className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 px-5 py-4 text-center text-sm text-neutral-500">
+                  Este perfil todavia no agrego links.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </InteractiveProfileCardFrame>
       </article>
-      <ProfileShareQrModal
-        open={shareQrOpen}
-        onClose={() => setShareQrOpen(false)}
-        publicUrl={publicUrl}
-      />
     </ProfileShell>
   )
 }
