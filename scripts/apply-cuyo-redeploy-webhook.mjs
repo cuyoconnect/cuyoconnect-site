@@ -51,10 +51,17 @@ async function main() {
     'utf8',
   )
 
-  const client = new pg.Client({ connectionString })
+  // Sin timeout, un host inalcanzable puede colgar el proceso mucho tiempo.
+  const client = new pg.Client({
+    connectionString,
+    connectionTimeoutMillis: 20_000,
+  })
   try {
+    console.log('Conectando a Postgres (hasta ~20s si no responde)...')
     await client.connect()
+    console.log('Aplicando migración (pg_net + trigger)...')
     await client.query(sql)
+    console.log('Guardando token en cuyo_internal.redeploy_trigger...')
     await client.query(
       `update cuyo_internal.redeploy_trigger
          set bearer_token = $1,
@@ -72,6 +79,11 @@ async function main() {
 
 main().catch((e) => {
   console.error(e)
+  if (e?.code === 'ETIMEDOUT' || e?.code === 'ECONNREFUSED') {
+    console.error(
+      '\nNo llega la conexión a Postgres. Revisá DATABASE_URL (host/puerto), VPN, y que la URI lleve sslmode=require si Supabase lo pide.',
+    )
+  }
   if (
     e?.message &&
     (e.message.includes('pg_net') || e.code === '0A000')
