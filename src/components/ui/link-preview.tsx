@@ -8,9 +8,26 @@ import {
   useMotionValue,
   useSpring,
 } from 'motion/react'
-import { ExternalLink } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+
+/** Misma marca que el CTA «Unite» y las tarjetas de equipo. */
+function ArrowUpRightIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 17 17 7M7 7h10v10" />
+    </svg>
+  )
+}
 
 type LinkPreviewProps = {
   children: React.ReactNode
@@ -192,7 +209,7 @@ export function LinkPreviewCard({
             loading="lazy"
             decoding="async"
             draggable={false}
-            className="absolute left-2 top-2 z-20 h-9 w-9 rounded-xl border-2 border-white bg-white object-contain p-1 shadow-md"
+            className="absolute left-3 top-3 z-20 h-8 w-8 object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
             onError={() => setIconFailed(true)}
           />
         ) : null}
@@ -234,8 +251,15 @@ export function LinkPreviewCard({
             aria-label={title ? `Abrir ${title}` : 'Abrir el sitio del proyecto'}
             className="group absolute inset-0 z-30 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
           >
-            <span className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 text-neutral-900 shadow-md ring-1 ring-black/5 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
-              <ExternalLink className="h-4 w-4" aria-hidden />
+            <span
+              className={cn(
+                'absolute right-3 top-3 flex size-9 items-center justify-center rounded-full',
+                'bg-yellow-300 text-neutral-950 ring-1 ring-black/10',
+                'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]',
+                'transition-transform duration-200 ease-out group-hover:scale-105',
+              )}
+            >
+              <ArrowUpRightIcon className="size-4 shrink-0" />
             </span>
           </a>
         ) : null}
