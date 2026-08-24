@@ -67,6 +67,53 @@ function repoShortName(fullName: string) {
   return fullName.split('/')[1] || fullName
 }
 
+/** El dominio de las páginas personales es ruido: el nombre vive en el subdominio. */
+const HOSTING_SUFFIX = /\.(github\.io|vercel\.app|netlify\.app|pages\.dev)$/i
+
+/** Proporción ancho/alto del glifo medio en Inter semibold. */
+const LABEL_CHAR_RATIO = 0.52
+const LABEL_LINES = 2
+
+/** El separador que queda al final de una línea no ocupa lugar real. */
+function visibleLength(token: string) {
+  return token.replace(/[-_.]+$/, '').length
+}
+
+function truncate(word: string, perLine: number) {
+  return visibleLength(word) <= perLine
+    ? word
+    : `${word.slice(0, perLine - 1).replace(/[\s\-_.]+$/, '')}…`
+}
+
+/**
+ * Arma la etiqueta en como mucho dos líneas cortando por los separadores del
+ * nombre. Nunca parte una palabra al medio: si no entra, la trunca.
+ */
+function wrapLabel(name: string, widthPx: number, fontPx: number): string[] {
+  const label = name.replace(HOSTING_SUFFIX, '')
+  const perLine = Math.max(6, Math.floor(widthPx / (fontPx * LABEL_CHAR_RATIO)))
+  const tokens = label.split(/(?<=[-_.])/)
+  const lines: string[] = []
+  let current = ''
+
+  for (const token of tokens) {
+    if (!current) {
+      current = truncate(token, perLine)
+      continue
+    }
+    if (current.length + visibleLength(token) <= perLine) {
+      current += token
+      continue
+    }
+    lines.push(current)
+    if (lines.length === LABEL_LINES) return lines
+    current = truncate(token, perLine)
+  }
+
+  if (current) lines.push(current)
+  return lines
+}
+
 function repoOwner(fullName: string) {
   return fullName.split('/')[0] || fullName
 }
@@ -558,7 +605,9 @@ function MapCell({
   }
 
   const cellSize = Math.sqrt(Math.max(area, 1))
-  const labelWidth = Math.min(148, Math.max(56, cellSize * 0.72))
+  const labelWidth = Math.min(148, Math.max(52, cellSize * 0.72))
+  const fontPx = Math.min(12, Math.max(9, cellSize * 0.13))
+  const labelLines = wrapLabel(label, labelWidth, fontPx)
   const gradientId = `cell-grad-${label.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24)}-${Math.round(centroid[0])}-${Math.round(centroid[1])}`
   const light = shadeFill(fill, 0.12)
   const deep = shadeFill(fill, -0.07)
@@ -640,10 +689,18 @@ function MapCell({
           }}
         >
           <span
-            className="line-clamp-2 break-words text-[10px] font-semibold leading-tight sm:text-[11px]"
-            style={{ color: ink === '#ffffff' ? '#fff' : GITHUB_MAP_INK }}
+            title={label}
+            className="w-full font-semibold leading-tight whitespace-nowrap"
+            style={{
+              color: ink === '#ffffff' ? '#fff' : GITHUB_MAP_INK,
+              fontSize: fontPx,
+            }}
           >
-            {label}
+            {labelLines.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
           </span>
         </div>
       ) : null}
