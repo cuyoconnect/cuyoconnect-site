@@ -365,23 +365,25 @@ export function GitHubMapViewer({
   const hoveredOwner = hovered ? repoOwner(hovered.data.fullName) : ''
   const hoveredAvatar = hovered ? avatarFor(hovered.data) : null
 
-  // El sitio y el repo siempre están; el resto sale del perfil de quien publicó.
+  // El sitio del proyecto ya es la foto: las burbujas son el repo y el perfil del autor.
   const hoveredLinks = useMemo<ProjectLink[]>(() => {
     if (!hovered) return []
     const links = memberLinks.get(hoveredOwner.toLowerCase()) ?? {}
     const candidates: ProjectLink[] = [
-      {
-        id: 'site',
-        label: 'Sitio oficial del proyecto',
-        href: hovered.data.homepageUrl,
-        icon: 'website',
-      },
       {
         id: 'repo',
         label: `Ver ${hovered.data.fullName} en GitHub`,
         href: `https://github.com/${hovered.data.fullName}`,
         icon: 'github',
       },
+      links.website
+        ? {
+            id: 'site',
+            label: `Sitio personal de ${hoveredOwner}`,
+            href: links.website,
+            icon: 'website' as const,
+          }
+        : null,
       links.linkedin
         ? {
             id: 'linkedin',
@@ -395,10 +397,12 @@ export function GitHubMapViewer({
         : null,
     ].filter((link): link is ProjectLink => Boolean(link))
 
-    // Varios perfiles repiten su LinkedIn en el campo de sitio web.
-    const seen = new Set<string>()
+    // Varios perfiles repiten su LinkedIn en el campo de sitio web, y el sitio
+    // personal a veces es el propio proyecto: eso ya lo abre la foto.
+    const normalize = (href: string) => href.replace(/\/+$/, '').toLowerCase()
+    const seen = new Set<string>([normalize(hovered.data.homepageUrl)])
     return candidates.filter((link) => {
-      const key = link.href.replace(/\/+$/, '').toLowerCase()
+      const key = normalize(link.href)
       if (seen.has(key)) return false
       seen.add(key)
       return true

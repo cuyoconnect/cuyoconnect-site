@@ -8,6 +8,7 @@ import {
   useMotionValue,
   useSpring,
 } from 'motion/react'
+import { ExternalLink } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -224,15 +225,19 @@ export function LinkPreviewCard({
           </div>
         ) : null}
 
-        {/* Fijada, la tarjeta entera es el enlace al sitio publicado. */}
+        {/* Fijada, la foto entera es el enlace al sitio publicado; el sello lo anuncia. */}
         {interactive ? (
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={title ? `Abrir ${title}` : 'Abrir el sitio del proyecto'}
-            className="absolute inset-0 z-30 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
-          />
+            className="group absolute inset-0 z-30 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+          >
+            <span className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 text-neutral-900 shadow-md ring-1 ring-black/5 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
+              <ExternalLink className="h-4 w-4" aria-hidden />
+            </span>
+          </a>
         ) : null}
       </div>
     </div>
