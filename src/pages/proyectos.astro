@@ -1,0 +1,24 @@
+---
+import { ProyectosPage } from '@/ProyectosPage'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Proyectos — CuyoConnect'
+const description =
+  'Mapa de proyectos publicados de la comunidad CuyoConnect: el área de cada región sigue los commits del último año.'
+---
+
+<BaseLayout title={title} description={description} canonical="/proyectos">
+  <SiteHeader client:load pathname="/proyectos" />
+  <main>
+    <ProyectosPage client:only="react">
+      <div
+        slot="fallback"
+        class="bg-white px-4 pb-14 pt-24 sm:px-6 sm:pb-16 sm:pt-28"
+        aria-hidden="true"
+      >
+        <div class="mt-6 h-[min(68vh,44rem)] w-full animate-pulse rounded-[45%] bg-[#f2efe6] sm:mt-8"></div>
+      </div>
+    </ProyectosPage>
+  </main>
+</BaseLayout>

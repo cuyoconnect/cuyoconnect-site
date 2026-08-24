@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/github-map-refresh",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "functions": {
+    "api/github-map-refresh.ts": {
+      "maxDuration": 300
+    }
+  }
+}

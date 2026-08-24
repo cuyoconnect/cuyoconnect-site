@@ -17,3 +17,10 @@ export const SECTION_CONTENT_WIDTH_CLASS =
 
 /** Misma columna que las secciones de contenido (un poco más ancha que el hero). */
 export const DOME_STAGE_WIDTH_CLASS = SECTION_CONTENT_WIDTH_CLASS
+
+/**
+ * Visor del mapa de proyectos: ~50 % más ancho que el hero, con margen
+ * para que el circuito de fondo siga viéndose a los costados.
+ */
+export const GITHUB_MAP_WIDTH_CLASS =
+  'mx-auto w-full min-w-0 max-w-full sm:w-[clamp(22rem,min(calc(100vw-8rem),72rem),72rem)] sm:max-w-[72rem] md:w-[min(100%,69rem)] md:max-w-[69rem] lg:w-[min(100%,78rem)] lg:max-w-[78rem]' as const

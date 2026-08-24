@@ -5,6 +5,8 @@ import react from '@astrojs/react'
 import vercel from '@astrojs/vercel'
 import tailwindcss from '@tailwindcss/vite'
 
+import { githubMapDevApi } from './src/lib/github-map/dev-api-plugin'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
@@ -12,7 +14,7 @@ export default defineConfig({
   adapter: vercel(),
   integrations: [react()],
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), githubMapDevApi()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

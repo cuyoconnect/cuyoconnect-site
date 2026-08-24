@@ -94,6 +94,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   const isHome = pathname === '/'
   const logoHref = isHome ? '#inicio' : '/'
   const eventsHref = isHome ? '#eventos' : '/eventos'
+  const projectsHref = '/proyectos'
 
   useLayoutEffect(() => {
     setScrolled(window.scrollY >= SCROLL_PILL_THRESHOLD)
@@ -270,6 +271,20 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               style={navActionsStyle}
             >
               <a
+                href={projectsHref}
+                aria-current={pathname === '/proyectos' ? 'page' : undefined}
+                className={cn(
+                  navTextLinkClass,
+                  scrolled
+                    ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
+                    : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
+                )}
+                style={navItemStyle}
+              >
+                Proyectos
+              </a>
+
+              <a
                 href={eventsHref}
                 aria-current={pathname === '/eventos' ? 'page' : undefined}
                 className={cn(
@@ -324,6 +339,9 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             </span>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-[#6b6b6b] sm:px-4 sm:text-sm">
+                Proyectos
+              </span>
               <span className="inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-[#6b6b6b] sm:px-4 sm:text-sm">
                 Eventos
               </span>

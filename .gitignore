@@ -30,3 +30,5 @@ dist-ssr
 
 # Playwright MCP (snapshots locales, no versionar)
 .playwright-mcp/
+test-results/
+tmp-*.png
