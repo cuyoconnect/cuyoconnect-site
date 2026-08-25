@@ -1,6 +1,7 @@
 import type { Session, User } from '@supabase/supabase-js'
 
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { socialLinkDisplayLabel } from '@/lib/social-link-display'
 
 export type MemberProfile = {
   id: string
@@ -32,25 +33,26 @@ export const MEMBER_PROFILE_SOCIAL_LINKS = [
     id: 'github',
     label: 'GitHub',
     field: 'github_url',
-    placeholder: 'https://github.com/usuario',
   },
   {
     id: 'linkedin',
     label: 'LinkedIn',
     field: 'linkedin_url',
-    placeholder: 'https://linkedin.com/in/usuario',
-  },
-  {
-    id: 'instagram',
-    label: 'Instagram',
-    field: 'instagram_url',
-    placeholder: 'https://instagram.com/usuario',
   },
   {
     id: 'x',
     label: 'X',
     field: 'x_url',
-    placeholder: 'https://x.com/usuario',
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    field: 'instagram_url',
+  },
+  {
+    id: 'website',
+    label: 'Sitio',
+    field: 'website_url',
   },
 ] as const
 
@@ -60,40 +62,14 @@ export type MemberProfileSocialLinkId =
 export type MemberProfileSocialField =
   (typeof MEMBER_PROFILE_SOCIAL_LINKS)[number]['field']
 
-export const EDITABLE_MEMBER_PROFILE_SOCIAL_LINKS = [
-  {
-    id: 'linkedin',
-    label: 'LinkedIn',
-    field: 'linkedin_url',
-    placeholder: 'https://linkedin.com/in/usuario',
-  },
-  {
-    id: 'instagram',
-    label: 'Instagram',
-    field: 'instagram_url',
-    placeholder: 'https://instagram.com/usuario',
-  },
-  {
-    id: 'x',
-    label: 'X',
-    field: 'x_url',
-    placeholder: 'https://x.com/usuario',
-  },
-] as const
-
-export type EditableMemberProfileInput = {
-  bio: string
-  linkedin_url: string
-  instagram_url: string
-  x_url: string
+export type MemberPublicSocialLink = {
+  id: MemberProfileSocialLinkId
+  label: string
+  displayLabel: string
+  href: string
 }
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$/
-const URL_FIELDS: MemberProfileSocialField[] = [
-  'linkedin_url',
-  'instagram_url',
-  'x_url',
-]
 
 export type MemberProfileRow = Partial<MemberProfile> &
   Pick<
@@ -303,38 +279,6 @@ async function fetchMyMemberProfileFromSupabase(user: User) {
   return data ? (data as MemberProfile) : createMyMemberProfileFromSupabase(user)
 }
 
-async function saveMyMemberProfileToSupabase(
-  user: User,
-  input: EditableMemberProfileInput,
-) {
-  const supabase = getSupabaseBrowserClient()
-  if (!supabase) {
-    throw new Error(
-      'Supabase no esta configurado. Revisa PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY.',
-    )
-  }
-
-  const payload = toMemberProfilePayload(input)
-  const { data, error } = await supabase
-    .from('member_profiles')
-    .upsert(
-      {
-        ...buildDefaultProfileInsert(user),
-        ...payload,
-        user_id: user.id,
-      },
-      { onConflict: 'user_id' },
-    )
-    .select(MEMBER_PROFILE_COLUMNS)
-    .single()
-
-  if (error) {
-    throw error
-  }
-
-  return data as MemberProfile
-}
-
 export async function fetchMyMemberProfile(session: Session, user: User) {
   if (import.meta.env.DEV) {
     return fetchMyMemberProfileFromSupabase(user)
@@ -342,32 +286,6 @@ export async function fetchMyMemberProfile(session: Session, user: User) {
 
   const res = await fetch('/api/my-member-profile', {
     headers: getAuthHeaders(session),
-  })
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `my_member_profile HTTP ${res.status}`)
-  }
-
-  return (await res.json()) as MemberProfile
-}
-
-export async function saveMyMemberProfile(
-  session: Session,
-  user: User,
-  input: EditableMemberProfileInput,
-) {
-  if (import.meta.env.DEV) {
-    return saveMyMemberProfileToSupabase(user, input)
-  }
-
-  const res = await fetch('/api/my-member-profile', {
-    method: 'PATCH',
-    headers: {
-      ...getAuthHeaders(session),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(input),
   })
 
   if (!res.ok) {
@@ -476,55 +394,32 @@ export function getMemberPublicUrl(slug: string, origin?: string) {
   return base ? `${base}${path}` : path
 }
 
-export function normalizeMemberUrlInput(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
-
-export function toMemberProfilePayload(input: EditableMemberProfileInput) {
-  const payload = {
-    bio: input.bio.trim() || null,
-    linkedin_url: normalizeMemberUrlInput(input.linkedin_url) || null,
-    instagram_url: normalizeMemberUrlInput(input.instagram_url) || null,
-    x_url: normalizeMemberUrlInput(input.x_url) || null,
-  }
-
-  return payload
-}
-
-export function profileToEditableInput(
+function resolveMemberSocialHref(
   profile: MemberProfile,
-): EditableMemberProfileInput {
-  return {
-    bio: profile.bio ?? '',
-    linkedin_url: profile.linkedin_url ?? '',
-    instagram_url: profile.instagram_url ?? '',
-    x_url: profile.x_url ?? '',
+  field: MemberProfileSocialField,
+) {
+  const stored = profile[field]?.trim()
+  if (stored) return stored
+  if (field === 'github_url' && profile.github_login.trim()) {
+    return `https://github.com/${profile.github_login.trim()}`
   }
+  return ''
 }
 
-export function validateEditableMemberProfile(input: EditableMemberProfileInput) {
-  const errors: Partial<Record<keyof EditableMemberProfileInput, string>> = {}
-
-  if (input.bio.trim().length > 280) {
-    errors.bio = 'La bio puede tener hasta 280 caracteres.'
-  }
-
-  for (const field of URL_FIELDS) {
-    const value = input[field].trim()
-    if (!value) continue
-
-    try {
-      const parsed = new URL(normalizeMemberUrlInput(value))
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        errors[field] = 'Usa una URL http o https.'
-      }
-    } catch {
-      errors[field] = 'Usa una URL valida.'
-    }
-  }
-
-  return errors
+export function getMemberPublicSocialLinks(
+  profile: MemberProfile,
+): MemberPublicSocialLink[] {
+  return MEMBER_PROFILE_SOCIAL_LINKS.flatMap((link) => {
+    const href = resolveMemberSocialHref(profile, link.field)
+    return href
+      ? [
+          {
+            id: link.id,
+            label: link.label,
+            displayLabel: socialLinkDisplayLabel(link.id, href, link.label),
+            href,
+          },
+        ]
+      : []
+  })
 }

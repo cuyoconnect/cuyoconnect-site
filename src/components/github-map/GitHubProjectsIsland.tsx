@@ -1,7 +1,7 @@
-import { MemberProfileEditorPage } from '@/MemberProfileEditorPage'
+import { GitHubProjectsBubblesSection } from '@/GitHubProjectsBubblesSection'
 import { AuthProvider } from '@/providers/AuthProvider'
 
-export default function MemberProfileEditorIsland({
+export default function GitHubProjectsIsland({
   supabaseUrl,
   supabaseAnonKey,
 }: {
@@ -10,7 +10,7 @@ export default function MemberProfileEditorIsland({
 }) {
   return (
     <AuthProvider supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey}>
-      <MemberProfileEditorPage />
+      <GitHubProjectsBubblesSection />
     </AuthProvider>
   )
 }

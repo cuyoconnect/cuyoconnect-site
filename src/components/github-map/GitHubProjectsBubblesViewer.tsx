@@ -5,39 +5,26 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
+  type MouseEvent,
 } from 'react'
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-} from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import useMeasure from 'react-use-measure'
-import { GitCommitVertical } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 
-import { ProjectLinkOrbs } from '@/components/github-map/ProjectLinkOrbs'
-import {
-  LinkPreviewCard,
-  prefetchLinkPreviews,
-  prioritizeLinkPreview,
-} from '@/components/ui/link-preview'
+import { ProjectFocusPanel } from '@/components/github-map/ProjectFocusPanel'
+import { prefetchLinkPreviews } from '@/components/ui/link-preview'
 import {
   GITHUB_MAP_BUBBLE_SURFACES,
   GITHUB_MAP_EDGE,
-  GITHUB_MAP_EDGE_ACTIVE,
   GITHUB_MAP_HAIRLINE,
   GITHUB_MAP_INK,
   sequentialFillsByRank,
 } from '@/lib/github-map/colors'
 import {
-  avatarForProject,
-  fitLabelInCircle,
-  githubSocialImage,
+  bubbleBackgroundCandidates,
   memberAvatarMap,
   memberLinksMap,
-  projectLinksFor,
+  projectLinksAsProfileStyle,
   projectsFromPayload,
   repoOwner,
   repoShortName,
@@ -49,20 +36,33 @@ import { computeItemWeights } from '@/lib/github-map/weights'
 import { cn } from '@/lib/utils'
 
 const EASE = [0.33, 1, 0.68, 1] as const
-const CARD_WIDTH = 240
-const CARD_HEIGHT = 324
-const CARD_GAP = 18
-const CARD_SPRING = { stiffness: 520, damping: 42, mass: 0.5 } as const
-const STAGE_ASPECT = 0.52
+const EASE_OUT = [0.22, 1, 0.36, 1] as const
+const STAGE_ASPECT = 0.54
 const STAGE_MIN_HEIGHT = 380
-const STAGE_MAX_HEIGHT = 640
-/**
- * Umbral propio del racimo: con el mínimo del mapa entran demasiados repos y
- * las burbujas se achican hasta que ninguna etiqueta se lee.
- */
-const BUBBLE_MIN_COMMITS = 20
-/** La arista se mete un pelo bajo el borde para que no quede una junta visible. */
+const STAGE_MAX_HEIGHT = 560
+const BUBBLE_MAX_VISIBLE = 20
 const EDGE_TUCK = 1
+const ART_OPACITY = 0.94
+const PANEL_MAX_W = 576
+/** Offset superior del panel de detalle superpuesto. */
+const FOCUS_PANEL_TOP = 36
+/** Avatar compacto del panel (= destino de la burbuja). */
+const FOCUS_AVATAR_SIZE = 72
+/** Nav volver + margen inferior hasta el avatar. */
+const FOCUS_BREADCRUMB_BLOCK = 64
+const FOCUS_REVEAL_DELAY = 0.24
+const FOCUS_ENTER_S = 0.62
+const FOCUS_BACKDROP_S = 0.45
+const FOCUS_PEER_FADE_S = 0.38
+/** Respaldo si onAnimationComplete no dispara al volver al mapa. */
+const FOCUS_CLOSE_FALLBACK_MS = 1200
+const PROJECT_FOCUS_HISTORY_KEY = 'cuyoProjectFocus'
+
+type ProjectFocusHistoryState = {
+  [PROJECT_FOCUS_HISTORY_KEY]?: string
+}
+
+type FocusHistoryPhase = 'idle' | 'pushed' | 'closing'
 
 type EdgeLine = {
   id: string
@@ -83,105 +83,167 @@ type BubbleItem = {
   y: number
   r: number
   label: string
-  fontPx: number
-  lines: string[]
+  imageCandidates: string[]
 }
 
-export function GitHubProjectsBubblesViewer({ className }: { className?: string }) {
+function shouldDismissFromFocusClick(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+
+  if (target.closest('a, button, [role="button"], input, textarea, select, label')) {
+    return false
+  }
+
+  const selection = window.getSelection()
+  if (selection && selection.type === 'Range' && selection.toString().trim().length > 0) {
+    return false
+  }
+
+  if (target.closest('p, h1, h2, h3, h4, h5, h6')) {
+    return false
+  }
+
+  return true
+}
+
+export function GitHubProjectsBubblesViewer({
+  className,
+  onFocusChange,
+}: {
+  className?: string
+  onFocusChange?: (focused: boolean) => void
+}) {
   const reduceMotion = useReducedMotion()
   const [stageRef, bounds] = useMeasure()
+  const [focusPanelRef, focusPanelBounds] = useMeasure()
   const { payload, errorMessage, isLoading } = useGithubMapData()
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
-  const [pinnedId, setPinnedId] = useState<string | null>(null)
-  const hoverClearRef = useRef<number | null>(null)
-  const cardRef = useRef<HTMLDivElement | null>(null)
-  const stageElRef = useRef<HTMLDivElement | null>(null)
-
-  const pointerX = useMotionValue(0)
-  const pointerY = useMotionValue(0)
-  const followX = useSpring(pointerX, CARD_SPRING)
-  const followY = useSpring(pointerY, CARD_SPRING)
-  const [cardBelow, setCardBelow] = useState(false)
-
-  const placeCard = useCallback(
-    (x: number, y: number, stageWidth: number) => {
-      const half = CARD_WIDTH / 2
-      pointerX.set(Math.min(Math.max(x, half), Math.max(stageWidth - half, half)))
-      pointerY.set(y)
-      setCardBelow(y < CARD_HEIGHT + CARD_GAP)
-    },
-    [pointerX, pointerY],
-  )
-
-  const trackPointer = useCallback(
-    (event: ReactMouseEvent<HTMLDivElement>) => {
-      if (pinnedId) return
-      const rect = event.currentTarget.getBoundingClientRect()
-      placeCard(event.clientX - rect.left, event.clientY - rect.top, rect.width)
-    },
-    [pinnedId, placeCard],
-  )
-
-  /** Sin puntero (teclado) la card se ancla al centro de la burbuja. */
-  const placeCardAtClient = useCallback(
-    (point: { x: number; y: number } | null, fallback: [number, number]) => {
-      const rect = stageElRef.current?.getBoundingClientRect()
-      if (!rect) return
-      if (!point) {
-        placeCard(fallback[0], fallback[1], rect.width)
-        return
-      }
-      placeCard(point.x - rect.left, point.y - rect.top, rect.width)
-    },
-    [placeCard],
-  )
+  const [focusedId, setFocusedId] = useState<string | null>(null)
+  const [focusPanelOpen, setFocusPanelOpen] = useState(false)
+  const [handoffBubbleId, setHandoffBubbleId] = useState<string | null>(null)
+  const focusHistoryRef = useRef<FocusHistoryPhase>('idle')
+  const focusedIdRef = useRef<string | null>(null)
+  const focusPanelOpenRef = useRef(false)
 
   useEffect(() => {
-    if (!pinnedId) return
+    focusedIdRef.current = focusedId
+  }, [focusedId])
 
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as (Node & Element) | null
-      if (target && cardRef.current?.contains(target)) return
-      if (target?.closest?.('[data-bubble-node]')) return
-      setPinnedId(null)
-    }
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') setPinnedId(null)
-    }
+  useEffect(() => {
+    focusPanelOpenRef.current = focusPanelOpen
+  }, [focusPanelOpen])
 
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
+  const syncHistoryClose = useCallback(() => {
+    focusHistoryRef.current = 'idle'
+    if (focusPanelOpenRef.current) {
+      setFocusPanelOpen(false)
     }
-  }, [pinnedId])
+  }, [])
 
-  const setHoveredStable = useCallback((id: string | null) => {
-    if (hoverClearRef.current != null) {
-      window.clearTimeout(hoverClearRef.current)
-      hoverClearRef.current = null
-    }
-    if (id !== null) {
-      setHoveredId(id)
+  const finishFocusClose = useCallback(() => {
+    focusHistoryRef.current = 'idle'
+    setFocusedId((current) => {
+      if (current) setHandoffBubbleId(current)
+      return null
+    })
+    setFocusPanelOpen(false)
+  }, [])
+
+  const dismissFocus = useCallback(() => {
+    if (!focusedIdRef.current || !focusPanelOpenRef.current) return
+
+    if (
+      typeof window !== 'undefined' &&
+      focusHistoryRef.current === 'pushed'
+    ) {
+      focusHistoryRef.current = 'closing'
+      window.history.back()
       return
     }
-    hoverClearRef.current = window.setTimeout(() => {
-      setHoveredId(null)
-      hoverClearRef.current = null
-    }, 140)
+
+    setFocusPanelOpen(false)
   }, [])
+
+  const openFocus = useCallback((id: string) => {
+    setFocusedId(id)
+    setFocusPanelOpen(true)
+
+    if (typeof window === 'undefined') return
+
+    const state: ProjectFocusHistoryState = {
+      [PROJECT_FOCUS_HISTORY_KEY]: id,
+    }
+    window.history.pushState(state, '', window.location.href)
+    focusHistoryRef.current = 'pushed'
+  }, [])
+
+  const handleFocusSurfaceClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      if (!focusPanelOpen) return
+      if (!shouldDismissFromFocusClick(event.target)) return
+      dismissFocus()
+    },
+    [dismissFocus, focusPanelOpen],
+  )
+
+  const handleViewerShellClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      if (!focusPanelOpen) return
+      if (focusPanelRef.current?.contains(event.target as Node)) return
+      if (!shouldDismissFromFocusClick(event.target)) return
+      dismissFocus()
+    },
+    [dismissFocus, focusPanelOpen],
+  )
 
   useEffect(() => {
-    return () => {
-      if (hoverClearRef.current != null) {
-        window.clearTimeout(hoverClearRef.current)
+    if (typeof window === 'undefined') return undefined
+
+    const onPopState = () => {
+      if (
+        focusHistoryRef.current === 'closing' ||
+        focusHistoryRef.current === 'pushed'
+      ) {
+        focusHistoryRef.current = 'idle'
+        syncHistoryClose()
       }
     }
-  }, [])
 
-  // La primera medición puede caer antes de que Inter esté disponible, y con
-  // métricas de otra fuente los saltos de línea quedan mal calculados.
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [syncHistoryClose])
+
+  useEffect(() => {
+    if (!handoffBubbleId) return undefined
+    const frame = window.requestAnimationFrame(() => setHandoffBubbleId(null))
+    return () => window.cancelAnimationFrame(frame)
+  }, [handoffBubbleId])
+
+  useEffect(() => {
+    if (!reduceMotion || focusPanelOpen || !focusedId) return undefined
+    finishFocusClose()
+    return undefined
+  }, [reduceMotion, focusPanelOpen, focusedId, finishFocusClose])
+
+  useEffect(() => {
+    if (focusPanelOpen || !focusedId || reduceMotion) return undefined
+    const timeout = window.setTimeout(finishFocusClose, FOCUS_CLOSE_FALLBACK_MS)
+    return () => window.clearTimeout(timeout)
+  }, [focusPanelOpen, focusedId, reduceMotion, finishFocusClose])
+
+  useEffect(() => {
+    if (!focusedId) return
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') dismissFocus()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [focusedId, dismissFocus])
+
+  useEffect(() => {
+    onFocusChange?.(Boolean(focusedId && focusPanelOpen))
+  }, [focusedId, focusPanelOpen, onFocusChange])
+
   const [fontsReady, setFontsReady] = useState(false)
   useEffect(() => {
     let cancelled = false
@@ -193,18 +255,16 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
     }
   }, [])
 
+  const allProjects = useMemo(() => projectsFromPayload(payload), [payload])
   const projects = useMemo(
-    () =>
-      projectsFromPayload(payload).filter(
-        (project) => project.commits >= BUBBLE_MIN_COMMITS,
-      ),
-    [payload],
+    () => allProjects.slice(0, BUBBLE_MAX_VISIBLE),
+    [allProjects],
   )
   const memberAvatars = useMemo(() => memberAvatarMap(payload), [payload])
   const memberLinks = useMemo(() => memberLinksMap(payload), [payload])
 
   const stageWidth = Math.max(bounds.width, 0)
-  const stageHeight =
+  const layoutStageHeight =
     stageWidth > 0
       ? Math.round(
           Math.min(
@@ -214,8 +274,38 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
         )
       : 0
 
+  const focusBubbleLayout = useMemo(() => {
+    if (!focusedId || !focusPanelOpen || stageWidth <= 0) return null
+    const panelWidth = Math.min(stageWidth, PANEL_MAX_W)
+    const panelLeft = (stageWidth - panelWidth) / 2
+    return {
+      left: panelLeft,
+      top: FOCUS_PANEL_TOP + FOCUS_BREADCRUMB_BLOCK,
+      size: FOCUS_AVATAR_SIZE,
+    }
+  }, [focusedId, focusPanelOpen, stageWidth])
+
+  const peersHidden = Boolean(focusedId) && focusPanelOpen
+
+  const focusShellMinHeight = useMemo(() => {
+    if (layoutStageHeight <= 0) return 0
+    if (!focusedId) return layoutStageHeight
+    if (focusPanelBounds.height <= 0) {
+      return focusPanelOpen ? layoutStageHeight + 120 : layoutStageHeight
+    }
+    return Math.max(
+      layoutStageHeight,
+      FOCUS_PANEL_TOP + focusPanelBounds.height + 24,
+    )
+  }, [
+    focusedId,
+    focusPanelBounds.height,
+    focusPanelOpen,
+    layoutStageHeight,
+  ])
+
   const graph = useMemo(() => {
-    if (projects.length === 0 || stageWidth < 64 || stageHeight < 64) {
+    if (projects.length === 0 || stageWidth < 64 || layoutStageHeight < 64) {
       return { items: [] as BubbleItem[], edges: [] as EdgeLine[] }
     }
 
@@ -240,16 +330,13 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
         value: weights[index] ?? GITHUB_MAP_MIN_COMMITS,
       })),
       stageWidth,
-      stageHeight,
+      layoutStageHeight,
     )
 
     const items = layout.nodes.flatMap<BubbleItem>((node) => {
       const base = byId.get(node.id)
       if (!base) return []
       const label = repoShortName(base.project.fullName)
-      // Se resuelve acá y no al pintar: medir texto necesita el canvas y no
-      // tiene por qué repetirse en cada hover.
-      const fitted = fitLabelInCircle(label, node.r)
       return [
         {
           ...base,
@@ -257,8 +344,7 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
           y: node.y,
           r: node.r,
           label,
-          fontPx: fitted.fontPx,
-          lines: fitted.lines,
+          imageCandidates: bubbleBackgroundCandidates(base.project, memberAvatars),
         },
       ]
     })
@@ -269,8 +355,6 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
       const target = positions.get(edge.target)
       if (!source || !target) return []
 
-      // De borde a borde, no de centro a centro: al atenuar un nodo su fondo
-      // queda translúcido y una arista que lo cruzara se vería por debajo.
       const dx = target.x - source.x
       const dy = target.y - source.y
       const distance = Math.hypot(dx, dy) || 1
@@ -291,56 +375,59 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
     })
 
     return { items, edges }
-  }, [fontsReady, projects, stageHeight, stageWidth])
+  }, [fontsReady, memberAvatars, projects, layoutStageHeight, stageWidth])
 
   const { items, edges } = graph
-
-  const avatarFor = useCallback(
-    (project: GithubMapProject) => avatarForProject(project, memberAvatars),
-    [memberAvatars],
-  )
 
   useEffect(() => {
     if (projects.length === 0) return
     const byActivity = [...projects].sort((a, b) => b.commits - a.commits)
     prefetchLinkPreviews(
-      byActivity.flatMap((project) => {
-        const avatar = avatarFor(project)
-        return [
-          avatar,
-          project.imageUrl,
-          // Solo se pide cuando de verdad va a hacer falta: si el proyecto ya
-          // tiene retrato propio, la imagen de GitHub nunca llega a mostrarse.
-          avatar || project.imageUrl
-            ? null
-            : githubSocialImage(project.fullName),
-          project.faviconUrl,
-        ]
-      }),
+      byActivity.flatMap((project) =>
+        bubbleBackgroundCandidates(project, memberAvatars),
+      ),
     )
-  }, [avatarFor, projects])
+  }, [memberAvatars, projects])
 
-  const activeId = pinnedId ?? hoveredId
-  const activeItem = items.find((item) => item.id === activeId) ?? null
-  const hoveredOwner = activeItem ? repoOwner(activeItem.project.fullName) : ''
-  const hoveredAvatar = activeItem ? avatarFor(activeItem.project) : null
-  const hoveredLinks = activeItem
-    ? projectLinksFor(activeItem.project, memberLinks)
+  const focusedItem = items.find((item) => item.id === focusedId) ?? null
+  const focusedOwner = focusedItem ? repoOwner(focusedItem.project.fullName) : ''
+  const focusedProfileLinks = focusedItem
+    ? projectLinksAsProfileStyle(focusedItem.project, memberLinks)
     : []
 
+  const emptyMessage = (() => {
+    if (!payload?.fetchedAt && allProjects.length === 0) {
+      return 'Estamos sincronizando los proyectos de la comunidad. Volvé a cargar en unos minutos.'
+    }
+    if (allProjects.length === 0) {
+      return 'Todavía no hay repos con homepage y al menos 10 commits en el último año.'
+    }
+    return 'Todavía no hay proyectos publicados con suficiente actividad.'
+  })()
+
+  const panelTransition = reduceMotion
+    ? { duration: 0 }
+    : { duration: FOCUS_ENTER_S, ease: EASE_OUT, delay: FOCUS_REVEAL_DELAY }
+
+  const panelExitTransition = reduceMotion
+    ? { duration: 0 }
+    : { duration: FOCUS_ENTER_S, ease: EASE_OUT }
+
   return (
-    <div className={cn('relative min-w-0', className)}>
+    <div
+      ref={stageRef}
+      className={cn('relative w-full min-w-0', focusedId && 'z-20', className)}
+      style={{
+        minHeight: focusShellMinHeight > 0 ? focusShellMinHeight : undefined,
+      }}
+      onClick={handleViewerShellClick}
+    >
       <div
-        ref={(node) => {
-          stageRef(node)
-          stageElRef.current = node
-        }}
-        className="relative w-full min-w-0"
+        className="relative w-full min-w-0 overflow-hidden"
         style={{
-          height: stageHeight > 0 ? stageHeight : undefined,
-          minHeight: '22rem',
+          height: layoutStageHeight > 0 ? layoutStageHeight : undefined,
+          minHeight: layoutStageHeight > 0 ? undefined : '20rem',
         }}
-        onMouseMove={trackPointer}
       >
         {isLoading ? (
           <div className="absolute inset-[8%] z-[2] animate-pulse rounded-[45%] bg-neutral-100" />
@@ -349,125 +436,156 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
             {errorMessage}
           </p>
         ) : items.length === 0 && stageWidth > 0 ? (
-          // El ancho recién se conoce tras medir: sin esa guarda, el primer
-          // frame anuncia que no hay proyectos aunque los haya.
           <p className="absolute inset-0 z-[2] flex items-center justify-center px-6 text-center text-neutral-600">
-            Todavía no hay proyectos publicados con suficiente actividad.
+            {emptyMessage}
           </p>
         ) : (
-          <div className="absolute inset-0 z-[2]">
-            <svg
-              className="pointer-events-none absolute inset-0"
-              width={stageWidth}
-              height={stageHeight}
-              viewBox={`0 0 ${stageWidth} ${stageHeight}`}
-              aria-hidden
+          <>
+            <AnimatePresence>
+              {focusedId ? (
+                <motion.button
+                  type="button"
+                  key="focus-backdrop"
+                  aria-label="Volver al mapa de proyectos"
+                  className="absolute inset-0 z-[3] cursor-default bg-white/55"
+                  initial={reduceMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: focusPanelOpen ? 1 : 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : focusPanelOpen
+                        ? { duration: FOCUS_BACKDROP_S, ease: EASE_OUT }
+                        : { duration: FOCUS_BACKDROP_S, ease: EASE_OUT }
+                  }
+                  onClick={dismissFocus}
+                />
+              ) : null}
+            </AnimatePresence>
+
+            <div
+              className="absolute inset-0 z-[4]"
+              style={{
+                width: stageWidth,
+                height: layoutStageHeight,
+              }}
             >
-              {edges.map((edge) => {
-                const linked =
-                  activeId === edge.source || activeId === edge.target
+              <svg
+                className="pointer-events-none absolute inset-0"
+                width={stageWidth}
+                height={layoutStageHeight}
+                viewBox={`0 0 ${stageWidth} ${layoutStageHeight}`}
+                aria-hidden
+              >
+                {edges.map((edge) => {
+                  if (peersHidden) return null
+                  return (
+                    <motion.line
+                      key={edge.id}
+                      x1={edge.x1}
+                      y1={edge.y1}
+                      x2={edge.x2}
+                      y2={edge.y2}
+                      stroke={GITHUB_MAP_EDGE}
+                      strokeLinecap="round"
+                      initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1, strokeWidth: 1.25 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
+                    />
+                  )
+                })}
+              </svg>
+
+              {items.map((item, index) => {
+                if (focusedId === item.id) return null
                 return (
-                  <motion.line
-                    key={edge.id}
-                    x1={edge.x1}
-                    y1={edge.y1}
-                    x2={edge.x2}
-                    y2={edge.y2}
-                    // Filete, no cable: la conexión sugiere el racimo y se
-                    // corre del paso cuando mirás un proyecto.
-                    stroke={linked ? GITHUB_MAP_EDGE_ACTIVE : GITHUB_MAP_EDGE}
-                    strokeLinecap="round"
-                    initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
-                    animate={{
-                      pathLength: 1,
-                      opacity: activeId && !linked ? 0.35 : 1,
-                      strokeWidth: linked ? 2 : 1.25,
-                    }}
-                    transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
+                  <BubbleNode
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    focused={false}
+                    inactive={peersHidden}
+                    peerRevealDelay={false}
+                    skipInitialAnimation={handoffBubbleId === item.id}
+                    focusLayout={null}
+                    reduceMotion={Boolean(reduceMotion)}
+                    onSelect={() => openFocus(item.id)}
                   />
                 )
               })}
-            </svg>
-
-            {items.map((item, index) => (
-              <BubbleNode
-                key={item.id}
-                item={item}
-                index={index}
-                hovered={activeId === item.id}
-                dimmed={activeId !== null && activeId !== item.id}
-                reduceMotion={Boolean(reduceMotion)}
-                onHoverStart={() => {
-                  prioritizeLinkPreview(
-                    avatarFor(item.project) ??
-                      item.project.imageUrl ??
-                      item.project.faviconUrl,
-                  )
-                  setHoveredStable(item.id)
-                }}
-                onHoverEnd={() => setHoveredStable(null)}
-                onSelect={(point) => {
-                  if (pinnedId === item.id) {
-                    setPinnedId(null)
-                    return
-                  }
-                  placeCardAtClient(point, [item.x, item.y])
-                  setPinnedId(item.id)
-                }}
-              />
-            ))}
-          </div>
+            </div>
+          </>
         )}
-
-        <AnimatePresence>
-          {activeItem ? (
-            <motion.div
-              key="project-card"
-              ref={cardRef}
-              data-card-root
-              className="pointer-events-none absolute left-0 top-0 z-10"
-              style={
-                reduceMotion
-                  ? { x: pointerX, y: pointerY }
-                  : { x: followX, y: followY }
-              }
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduceMotion ? undefined : { opacity: 0, scale: 0.96 }}
-              transition={{ duration: reduceMotion ? 0 : 0.16, ease: EASE }}
-            >
-              <div
-                className={pinnedId ? 'pointer-events-auto' : 'pointer-events-none'}
-                style={{
-                  transform: cardBelow
-                    ? `translate(-50%, ${CARD_GAP}px)`
-                    : `translate(-50%, calc(-100% - ${CARD_GAP}px))`,
-                }}
-              >
-                <LinkPreviewCard
-                  url={activeItem.project.homepageUrl}
-                  title={repoShortName(activeItem.project.fullName)}
-                  meta={
-                    <>
-                      <GitCommitVertical className="h-4 w-4 shrink-0" aria-hidden />
-                      {activeItem.project.commits} commits
-                    </>
-                  }
-                  imageUrl={
-                    activeItem.project.imageUrl ??
-                    githubSocialImage(activeItem.project.fullName)
-                  }
-                  faviconUrl={activeItem.project.faviconUrl}
-                  avatarUrl={hoveredAvatar}
-                  avatarLabel={hoveredOwner}
-                  interactive={Boolean(pinnedId)}
-                />
-                <ProjectLinkOrbs links={hoveredLinks} visible={Boolean(pinnedId)} />
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
       </div>
+
+      {focusedItem ? (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-[8]"
+          style={{ height: layoutStageHeight }}
+        >
+          <BubbleNode
+            item={focusedItem}
+            index={0}
+            focused
+            inactive={false}
+            peerRevealDelay={false}
+            skipInitialAnimation={false}
+            focusLayout={focusBubbleLayout}
+            reduceMotion={Boolean(reduceMotion)}
+            onSelect={dismissFocus}
+            onReturnHomeComplete={
+              !focusPanelOpen ? finishFocusClose : undefined
+            }
+          />
+        </div>
+      ) : null}
+
+      <AnimatePresence initial={false}>
+        {focusedItem && focusPanelOpen ? (
+          <motion.div
+            key={focusedItem.id}
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={
+              reduceMotion
+                ? undefined
+                : { opacity: 0, y: 16, transition: panelExitTransition }
+            }
+            transition={panelTransition}
+            className="pointer-events-none absolute inset-x-0 z-[7] px-1"
+            style={{ top: FOCUS_PANEL_TOP }}
+          >
+            <div
+              ref={focusPanelRef}
+              className="pointer-events-auto mx-auto w-full max-w-xl"
+              onClick={handleFocusSurfaceClick}
+            >
+              <nav
+                aria-label="Volver al mapa de proyectos"
+                className="mb-8 flex justify-start"
+              >
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900"
+                  onClick={dismissFocus}
+                >
+                  <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+                  Volver
+                </button>
+              </nav>
+              <ProjectFocusPanel
+                project={focusedItem.project}
+                title={focusedItem.label}
+                ownerHandle={focusedOwner}
+                imageSrc={focusedItem.imageCandidates[0] ?? null}
+                links={focusedProfileLinks}
+                compact
+                bubbleAvatarSlot
+              />
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }
@@ -475,28 +593,61 @@ export function GitHubProjectsBubblesViewer({ className }: { className?: string 
 function BubbleNode({
   item,
   index,
-  hovered,
-  dimmed,
+  focused,
+  inactive,
+  peerRevealDelay,
+  skipInitialAnimation = false,
+  focusLayout,
   reduceMotion,
-  onHoverStart,
-  onHoverEnd,
   onSelect,
+  onReturnHomeComplete,
 }: {
   item: BubbleItem
   index: number
-  hovered: boolean
-  dimmed: boolean
+  focused: boolean
+  inactive: boolean
+  peerRevealDelay: boolean
+  skipInitialAnimation?: boolean
+  focusLayout: { left: number; top: number; size: number } | null
   reduceMotion: boolean
-  onHoverStart: () => void
-  onHoverEnd: () => void
-  onSelect: (point: { x: number; y: number } | null) => void
+  onSelect: () => void
+  onReturnHomeComplete?: () => void
 }) {
   const diameter = item.r * 2
+  const [attempt, setAttempt] = useState(0)
+  const artSrc = item.imageCandidates[attempt] ?? null
+  const showArt = Boolean(artSrc)
+  const returnHomeCompleteRef = useRef(false)
+  const springTransition = reduceMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, stiffness: 180, damping: 26, mass: 1.05 }
+
+  useEffect(() => {
+    setAttempt(0)
+  }, [item.imageCandidates])
+
+  useEffect(() => {
+    if (focusLayout) {
+      returnHomeCompleteRef.current = false
+    }
+  }, [focusLayout])
+
+  const handleLayoutAnimationComplete = () => {
+    if (
+      !onReturnHomeComplete ||
+      returnHomeCompleteRef.current ||
+      focusLayout
+    ) {
+      return
+    }
+    returnHomeCompleteRef.current = true
+    onReturnHomeComplete()
+  }
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      onSelect(null)
+      onSelect()
     }
   }
 
@@ -505,58 +656,87 @@ function BubbleNode({
       type="button"
       data-bubble-node
       aria-label={`${item.label}, ${item.project.commits} commits`}
+      aria-pressed={focused}
       className={cn(
         'absolute flex cursor-pointer flex-col items-center justify-center rounded-full text-center outline-none',
         'focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
+        inactive && 'pointer-events-none',
+        focused && 'pointer-events-auto',
+        !inactive && !focused && 'pointer-events-auto',
+        focused ? 'overflow-visible' : 'overflow-hidden',
       )}
       style={{
-        left: item.x - item.r,
-        top: item.y - item.r,
-        width: diameter,
-        height: diameter,
-        // Relleno plano: un degradado haría que el mismo valor se lea distinto
-        // según qué parte del disco mires.
         background: item.fill,
-        // La superficie se separa del fondo por profundidad, no por contorno.
         border: `1px solid ${GITHUB_MAP_HAIRLINE}`,
-        zIndex: hovered ? 3 : 2,
-        boxShadow: hovered
-          ? '0 2px 4px rgba(29,29,31,0.05), 0 18px 36px rgba(29,29,31,0.13)'
-          : '0 1px 2px rgba(29,29,31,0.04), 0 6px 16px rgba(29,29,31,0.05)',
-        transition: 'box-shadow 220ms cubic-bezier(0.33, 1, 0.68, 1)',
       }}
-      initial={reduceMotion ? false : { scale: 0.6, opacity: 0 }}
+      initial={
+        reduceMotion || skipInitialAnimation
+          ? false
+          : {
+              left: item.x - item.r,
+              top: item.y - item.r,
+              width: diameter,
+              height: diameter,
+              scale: 0.6,
+              opacity: 0,
+            }
+      }
       animate={{
-        scale: hovered ? 1.04 : 1,
-        opacity: dimmed ? 0.4 : 1,
+        left: focusLayout ? focusLayout.left : item.x - item.r,
+        top: focusLayout ? focusLayout.top : item.y - item.r,
+        width: focusLayout ? focusLayout.size : diameter,
+        height: focusLayout ? focusLayout.size : diameter,
+        scale: inactive ? 0.92 : 1,
+        opacity: inactive ? 0 : 1,
+        boxShadow: focused
+          ? '0 8px 20px rgba(29,29,31,0.1)'
+          : '0 1px 2px rgba(29,29,31,0.04), 0 6px 16px rgba(29,29,31,0.05)',
       }}
+      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.88 }}
       transition={{
-        scale: { type: 'spring', stiffness: 340, damping: 24, mass: 0.6 },
-        opacity: { duration: 0.22, ease: EASE },
+        left: springTransition,
+        top: springTransition,
+        width: springTransition,
+        height: springTransition,
+        boxShadow: { duration: reduceMotion ? 0 : 0.32, ease: EASE_OUT },
+        opacity: {
+          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : focusLayout ? FOCUS_ENTER_S * 0.5 : 0.22,
+          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : 0,
+          ease: EASE_OUT,
+        },
+        scale: {
+          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : 0.22,
+          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : 0,
+          ease: EASE_OUT,
+        },
         default: { delay: reduceMotion ? 0 : index * 0.02 },
       }}
-      onMouseEnter={onHoverStart}
-      onMouseLeave={onHoverEnd}
-      onFocus={onHoverStart}
-      onBlur={onHoverEnd}
-      onClick={(event) => onSelect({ x: event.clientX, y: event.clientY })}
+      onClick={(event) => {
+        event.stopPropagation()
+        onSelect()
+      }}
       onKeyDown={onKeyDown}
+      onAnimationComplete={handleLayoutAnimationComplete}
     >
-      <span
-        title={item.label}
-        className="font-data font-medium"
-        style={{
-          fontSize: item.fontPx,
-          lineHeight: 1.12,
-          letterSpacing: '-0.012em',
-          color: item.ink,
-        }}
-      >
-        {item.lines.map((line, index) => (
-          <span key={`${line}-${index}`} className="block whitespace-pre">
-            {line}
-          </span>
-        ))}
+      <span className="absolute inset-0 overflow-hidden rounded-full">
+        {showArt ? (
+          <img
+            key={artSrc}
+            src={artSrc!}
+            alt=""
+            aria-hidden
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="pointer-events-none h-full w-full object-cover"
+            style={{ opacity: ART_OPACITY }}
+            onError={() =>
+              setAttempt((current) =>
+                current + 1 < item.imageCandidates.length ? current + 1 : current,
+              )
+            }
+          />
+        ) : null}
       </span>
     </motion.button>
   )

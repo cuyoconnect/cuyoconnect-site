@@ -5,6 +5,14 @@ import type {
 } from '@/lib/github-map/types'
 import { aggregateMapProjects } from '@/lib/github-map/projects'
 import type { ProjectLink } from '@/components/github-map/ProjectLinkOrbs'
+import type { MemberProfileSocialLinkId } from '@/lib/member-profiles'
+import type { ProfileStyleSocialLink } from '@/components/ProfileSocialLinkRow'
+import {
+  socialLinkDisplayLabel,
+  truncateLinkLabel,
+  websiteDisplayLabel,
+  xHandleFromUrl,
+} from '@/lib/social-link-display'
 
 const EMPTY_PROJECTS: GithubMapProject[] = []
 
@@ -42,6 +50,17 @@ export function memberLinksMap(payload: GithubMapPayload | null) {
   return byLogin
 }
 
+export function memberDisplayName(
+  payload: GithubMapPayload | null,
+  githubLogin: string,
+) {
+  const login = githubLogin.toLowerCase()
+  const member = payload?.members?.find(
+    (row) => row.githubLogin.toLowerCase() === login,
+  )
+  return member?.displayName?.trim() || githubLogin
+}
+
 /**
  * Imagen social que GitHub genera para cualquier repo. Es la red final del
  * retrato: los favicons de los deploys suelen faltar (404) o medir 32px, y
@@ -58,6 +77,28 @@ export function avatarForProject(
   const owner = repoOwner(project.fullName)
   if (!owner) return null
   return memberAvatars.get(owner.toLowerCase()) ?? project.ownerAvatarUrl ?? null
+}
+
+/**
+ * Fondo de burbuja: og:image del deploy, retrato del dueño, tarjeta social de GitHub.
+ */
+export function bubbleBackgroundCandidates(
+  project: GithubMapProject,
+  memberAvatars: Map<string, string>,
+): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  const push = (value: string | null | undefined) => {
+    const src = value?.trim()
+    if (!src || seen.has(src)) return
+    seen.add(src)
+    out.push(src)
+  }
+
+  push(project.imageUrl)
+  push(avatarForProject(project, memberAvatars))
+  push(githubSocialImage(project.fullName))
+  return out
 }
 
 export function projectLinksFor(
@@ -110,6 +151,40 @@ export function projectLinksFor(
     seen.add(key)
     return true
   })
+}
+
+function projectLinkIcon(icon: ProjectLink['icon']): MemberProfileSocialLinkId {
+  if (icon === 'github') return 'github'
+  if (icon === 'linkedin') return 'linkedin'
+  if (icon === 'x') return 'x'
+  return 'website'
+}
+
+function projectLinkDisplayLabel(link: ProjectLink, project: GithubMapProject) {
+  if (link.id === 'homepage') {
+    return truncateLinkLabel(repoShortName(project.fullName))
+  }
+  if (link.id === 'repo') return 'Repo'
+  if (link.id === 'site') return websiteDisplayLabel(link.href)
+  if (link.id === 'linkedin') return 'LinkedIn'
+  if (link.id === 'x') {
+    return xHandleFromUrl(link.href) ?? `@${repoOwner(project.fullName)}`
+  }
+  return socialLinkDisplayLabel(link.id, link.href, link.label)
+}
+
+/** Enlaces del proyecto en el mismo formato que los perfiles de miembro. */
+export function projectLinksAsProfileStyle(
+  project: GithubMapProject,
+  memberLinks: Map<string, GithubMapLinks>,
+): ProfileStyleSocialLink[] {
+  return projectLinksFor(project, memberLinks).map((link) => ({
+    id: link.id,
+    label: link.label,
+    displayLabel: projectLinkDisplayLabel(link, project),
+    href: link.href,
+    icon: projectLinkIcon(link.icon),
+  }))
 }
 
 const HOSTING_SUFFIX = /\.(github\.io|vercel\.app|netlify\.app|pages\.dev)$/i

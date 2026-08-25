@@ -51,8 +51,8 @@ async function mockGithubMap(page: Page) {
   })
 }
 
-test.describe('mapa Voronoi de proyectos', () => {
-  test('muestra proyectos por commits y abre la homepage', async ({ page }) => {
+test.describe('mapa de burbujas de proyectos', () => {
+  test('enfoca un proyecto y abre la homepage desde un sub-nodo', async ({ page }) => {
     await mockGithubMap(page)
     await page.goto('/proyectos')
 
@@ -64,11 +64,12 @@ test.describe('mapa Voronoi de proyectos', () => {
     await expect(page.getByRole('button', { name: /connect/i })).toBeVisible()
     await expect(page.getByRole('button', { name: /notas/i })).toBeVisible()
 
-    const cellCount = await page.locator('svg path').count()
-    expect(cellCount).toBeGreaterThanOrEqual(3)
+    await cuyoApp.click()
+    await expect(page.getByRole('navigation', { name: 'Navegación del proyecto' })).toBeVisible()
+    await expect(page.getByText('cuyo-app')).toBeVisible()
 
     const popupPromise = page.waitForEvent('popup')
-    await cuyoApp.click()
+    await page.getByRole('link', { name: /Abrir cuyo-app/i }).click()
     const popup = await popupPromise
     expect(popup.url()).toMatch(/^https:\/\/cuyo-app\.vercel\.app\/?$/)
   })

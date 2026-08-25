@@ -33,7 +33,17 @@ export function readCachedGithubMap(
   try {
     const raw = sessionStorage.getItem(sessionKey(scope))
     if (!raw) return null
-    return parsePayload(JSON.parse(raw), scope)
+    const parsed = parsePayload(JSON.parse(raw), scope)
+    if (
+      parsed &&
+      parsed.projects.length === 0 &&
+      parsed.members.length === 0 &&
+      !parsed.fetchedAt
+    ) {
+      sessionStorage.removeItem(sessionKey(scope))
+      return null
+    }
+    return parsed
   } catch {
     return null
   }
@@ -41,6 +51,14 @@ export function readCachedGithubMap(
 
 function writeCachedGithubMap(payload: GithubMapPayload) {
   if (typeof sessionStorage === 'undefined') return
+  // No persistir snapshots vacíos: bloquean el fallback demo en dev.
+  if (
+    payload.projects.length === 0 &&
+    payload.members.length === 0 &&
+    !payload.fetchedAt
+  ) {
+    return
+  }
   try {
     sessionStorage.setItem(sessionKey(payload.scope), JSON.stringify(payload))
   } catch {
@@ -127,7 +145,7 @@ export async function fetchGithubMap(
     first.members.length === 0 &&
     !first.fetchedAt
 
-  if (needsWarm && import.meta.env.DEV) {
+  if (needsWarm) {
     await refreshGithubMap(scope)
     try {
       const warmed = await fetchFromApi(scope)

@@ -11,6 +11,7 @@ import {
   submitSpeakerProposal,
   type SpeakerProposalDuration,
 } from "@/lib/speaker-proposals";
+import { useEnsureMemberProfile } from "@/lib/use-ensure-member-profile";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 
@@ -134,6 +135,7 @@ export function SpeakersPage() {
   const talkSpeakerId = useId();
   const durationGroupId = useId();
   const { user, hasAuthConfigured, signInWithGitHub, isSigningIn } = useAuth();
+  useEnsureMemberProfile();
 
   const [talkMain, setTalkMain] = useState("");
   const [talkSpeaker, setTalkSpeaker] = useState("");

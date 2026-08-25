@@ -2,23 +2,15 @@ import { randomUUID } from 'node:crypto'
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+import { syncMemberGithubProfile } from '../src/lib/github-social-sync'
+
 const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'
-
-const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$/
-const URL_FIELDS = ['linkedin_url', 'instagram_url', 'x_url'] as const
 
 type AuthUser = {
   id: string
   email?: string
   user_metadata?: Record<string, string | undefined>
-}
-
-type EditableMemberProfileInput = {
-  bio?: unknown
-  linkedin_url?: unknown
-  instagram_url?: unknown
-  x_url?: unknown
 }
 
 type MemberProfileRow = {
@@ -95,57 +87,6 @@ function normalizeSlug(value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 32)
-}
-
-function isValidSlug(slug: string) {
-  return SLUG_PATTERN.test(slug)
-}
-
-function normalizeUrlInput(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
-
-function validateUrl(value: string) {
-  try {
-    const url = new URL(normalizeUrlInput(value) ?? '')
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
-}
-
-function sanitizeEditableProfile(input: EditableMemberProfileInput) {
-  const bio = String(input.bio ?? '').trim()
-  const errors: Record<string, string> = {}
-
-  if (bio.length > 280) errors.bio = 'La bio puede tener hasta 280 caracteres.'
-
-  const urls = Object.fromEntries(
-    URL_FIELDS.map((field) => {
-      const value = String(input[field] ?? '')
-      if (value.trim() && !validateUrl(value)) {
-        errors[field] = 'Usa una URL http o https.'
-      }
-      return [field, normalizeUrlInput(value)]
-    }),
-  ) as Record<(typeof URL_FIELDS)[number], string | null>
-
-  if (Object.keys(errors).length > 0) {
-    return { data: null, errors }
-  }
-
-  return {
-    data: {
-      bio: bio || null,
-      linkedin_url: urls.linkedin_url,
-      instagram_url: urls.instagram_url,
-      x_url: urls.x_url,
-    },
-    errors: null,
-  }
 }
 
 async function getAuthenticatedUser(input: SupabaseConfig & { accessToken: string }) {
@@ -236,7 +177,7 @@ async function findOrCreateProfile(input: {
   config: SupabaseConfig
   accessToken: string
   user: AuthUser
-}) {
+}): Promise<{ profile: MemberProfileRow; shouldSync: boolean }> {
   const defaultInsert = buildDefaultProfileInsert(input.user)
   const select = encodeURIComponent(MEMBER_PROFILE_COLUMNS)
   const canUseServiceRole = hasServiceRoleKey(input.config)
@@ -249,7 +190,7 @@ async function findOrCreateProfile(input: {
   })
   const ownRows = await readRows<MemberProfileRow>(byUser)
 
-  if (ownRows[0]) return ownRows[0]
+  if (ownRows[0]) return { profile: ownRows[0], shouldSync: false }
 
   if (canUseServiceRole && defaultInsert.slug) {
     const bySlug = await supabaseRest({
@@ -276,10 +217,12 @@ async function findOrCreateProfile(input: {
         },
       })
       const claimedRows = await readRows<MemberProfileRow>(claimed)
-      if (claimedRows[0]) return claimedRows[0]
+      if (claimedRows[0]) return { profile: claimedRows[0], shouldSync: true }
     }
 
-    if (claimable?.user_id === input.user.id) return claimable
+    if (claimable?.user_id === input.user.id) {
+      return { profile: claimable, shouldSync: false }
+    }
   }
 
   const created = await supabaseRest({
@@ -294,7 +237,7 @@ async function findOrCreateProfile(input: {
   })
 
   const createdRows = await readRows<MemberProfileRow>(created)
-  return createdRows[0]
+  return { profile: createdRows[0]!, shouldSync: true }
 }
 
 function parseSupabaseError(error: unknown) {
@@ -348,7 +291,8 @@ function sendSupabaseError(res: VercelResponse, error: unknown) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET' && req.method !== 'PATCH') {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
     res.status(405).json({ error: 'Method not allowed' })
     return
   }
@@ -368,44 +312,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const user = await getAuthenticatedUser({ ...config, accessToken })
 
-    const profile = await findOrCreateProfile({
+    const { profile, shouldSync } = await findOrCreateProfile({
       config,
       accessToken,
       user,
     })
 
-    if (req.method === 'GET') {
-      res.status(200).json(profile)
-      return
+    if (shouldSync && profile?.id && profile.github_login) {
+      await syncMemberGithubProfile({
+        id: profile.id,
+        github_login: profile.github_login,
+      })
     }
 
-    const { data, errors } = sanitizeEditableProfile(
-      (req.body ?? {}) as Record<string, unknown>,
-    )
-
-    if (!data) {
-      res.status(400).json({ error: 'Validation error', fields: errors })
-      return
-    }
-
-    const updated = await supabaseRest({
-      config,
-      accessToken,
-      path: `member_profiles?id=eq.${profile.id}&select=${encodeURIComponent(MEMBER_PROFILE_COLUMNS)}`,
-      useServiceRole: hasServiceRoleKey(config),
-      init: {
-        method: 'PATCH',
-        body: JSON.stringify({
-          ...data,
-          ...buildGithubIdentity(user),
-          is_visible: true,
-          is_public: true,
-        }),
-      },
-    })
-
-    const updatedRows = await readRows<MemberProfileRow>(updated)
-    res.status(200).json(updatedRows[0] ?? profile)
+    res.status(200).json(profile)
   } catch (error) {
     if (error instanceof Error && /validar la sesion/i.test(error.message)) {
       res.status(401).json({ error: 'Invalid session' })

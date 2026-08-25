@@ -1,5 +1,5 @@
 -- Ejecutar en Supabase: SQL Editor -> New query -> Run.
--- Extiende member_profiles para paginas publicas tipo Linktree y edicion propia.
+-- Extiende member_profiles para paginas publicas. Los links salen de GitHub.
 
 create table if not exists public.member_profiles (
   id uuid primary key default gen_random_uuid(),
@@ -119,7 +119,7 @@ create trigger member_profiles_set_updated_at
 alter table public.member_profiles enable row level security;
 
 grant select on public.member_profiles to anon, authenticated;
-grant insert, update on public.member_profiles to authenticated;
+grant insert on public.member_profiles to authenticated;
 
 drop policy if exists "member_profiles_select_public" on public.member_profiles;
 create policy "member_profiles_select_public"
@@ -143,9 +143,3 @@ create policy "member_profiles_insert_own"
   with check (auth.uid() = user_id);
 
 drop policy if exists "member_profiles_update_own" on public.member_profiles;
-create policy "member_profiles_update_own"
-  on public.member_profiles
-  for update
-  to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);

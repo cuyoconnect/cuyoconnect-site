@@ -8,9 +8,8 @@ type GitHubJoinCtaProps = {
   /**
    * `community`: CTA para sumarse a la galería (default).
    * `speakers`: flujo de propuestas de charla.
-   * `profile`: edición del perfil público de miembros.
    */
-  intent?: 'community' | 'speakers' | 'profile'
+  intent?: 'community' | 'speakers'
   /**
    * Solo `intent="speakers"`.
    * `footer`: solo botón o sesión compacta (fila de acciones con enviar).
@@ -50,12 +49,6 @@ export function GitHubJoinCta({
         if (intent === 'community') {
           await signInWithGitHub({
             redirectTo: `${origin}/speakers?thanks=miembros`,
-          })
-          return
-        }
-        if (intent === 'profile') {
-          await signInWithGitHub({
-            redirectTo: `${origin}/mi-perfil`,
           })
           return
         }
@@ -105,25 +98,6 @@ export function GitHubJoinCta({
   }
 
   if (user) {
-    if (intent === 'profile') {
-      return (
-        <div className={cn('flex flex-col items-center gap-3', className)}>
-          <a
-            href="/mi-perfil"
-            className={cn(
-              'inline-flex w-fit max-w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-3 text-sm font-medium text-white',
-              'transition-colors duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)]',
-              'hover:bg-black hover:duration-[240ms] hover:delay-0',
-              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
-              'sm:px-6',
-            )}
-          >
-            Editar mi perfil
-          </a>
-        </div>
-      )
-    }
-
     if (intent === 'speakers') {
       const meta = user.user_metadata as Record<string, string | undefined>
       const login = meta.user_name ?? meta.preferred_username
@@ -298,11 +272,7 @@ export function GitHubJoinCta({
       >
         <GitHubMark className="h-4 w-4" />
         <span>
-          {isSigningIn
-            ? 'Redirigiendo a GitHub...'
-            : intent === 'profile'
-              ? 'Crear mi link CuyoConnect'
-              : 'Ser parte de CuyoConnect'}
+          {isSigningIn ? 'Redirigiendo a GitHub...' : 'Ser parte de CuyoConnect'}
         </span>
       </button>
 

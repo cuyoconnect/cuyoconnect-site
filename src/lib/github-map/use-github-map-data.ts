@@ -8,11 +8,17 @@ import {
 import type { GithubMapPayload } from '@/lib/github-map/types'
 
 export function useGithubMapData() {
-  const [payload, setPayload] = useState<GithubMapPayload | null>(() =>
-    readCachedGithubMap('all'),
-  )
+  const [payload, setPayload] = useState<GithubMapPayload | null>(() => {
+    const cached = readCachedGithubMap('all')
+    if (cached) return cached
+    if (import.meta.env.DEV) return DEMO_GITHUB_MAP
+    return null
+  })
   const [errorMessage, setErrorMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(() => !readCachedGithubMap('all'))
+  const [isLoading, setIsLoading] = useState(() => {
+    if (readCachedGithubMap('all')) return false
+    return !import.meta.env.DEV
+  })
 
   useEffect(() => {
     let cancelled = false

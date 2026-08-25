@@ -3,10 +3,17 @@
     {
       "path": "/api/github-map-refresh",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/member-profiles-sync",
+      "schedule": "0 8 * * 1"
     }
   ],
   "functions": {
     "api/github-map-refresh.ts": {
+      "maxDuration": 300
+    },
+    "api/member-profiles-sync.ts": {
       "maxDuration": 300
     }
   }

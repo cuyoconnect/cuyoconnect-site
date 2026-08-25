@@ -1,13 +1,13 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ExternalLink, MapPin } from 'lucide-react'
+import { ArrowUpRight, MapPin } from 'lucide-react'
 import { toString as qrToSvgString } from 'qrcode'
 
 import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import {
   getMemberDisplayName,
-  MEMBER_PROFILE_SOCIAL_LINKS,
+  getMemberPublicSocialLinks,
   type MemberProfile,
   type MemberProfileSocialLinkId,
 } from '@/lib/member-profiles'
@@ -56,6 +56,22 @@ function ProfileSocialIcon({
       return (
         <svg className={iconClass} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      )
+    case 'website':
+      return (
+        <svg
+          className={iconClass}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          aria-hidden
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3.6 9h16.8M3.6 15h16.8" />
+          <path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z" />
         </svg>
       )
     default:
@@ -384,10 +400,7 @@ export function MemberProfilePage({
   if (!profile) return null
 
   const displayName = getMemberDisplayName(profile)
-  const socialLinks = MEMBER_PROFILE_SOCIAL_LINKS.flatMap((link) => {
-    const href = profile[link.field]
-    return typeof href === 'string' && href.trim() ? [{ ...link, href }] : []
-  })
+  const socialLinks = getMemberPublicSocialLinks(profile)
 
   return (
     <ProfileShell>
@@ -426,7 +439,7 @@ export function MemberProfilePage({
             <div className="mt-6 flex justify-center">
               {socialLinks.length > 0 ? (
                 <nav
-                  className="flex w-full flex-row flex-nowrap items-start justify-center gap-4 sm:gap-8"
+                  className="flex w-full flex-row flex-wrap items-start justify-center gap-4 sm:gap-8"
                   aria-label="Links sociales"
                 >
                   {socialLinks.map((link) => (
@@ -448,9 +461,9 @@ export function MemberProfilePage({
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <span className="text-xs font-medium leading-none underline decoration-neutral-950/45 decoration-1 underline-offset-4">
-                          {link.label}
+                          {link.displayLabel}
                         </span>
-                        <ExternalLink
+                        <ArrowUpRight
                           className="h-3.5 w-3.5 shrink-0 text-neutral-950/50 transition-colors duration-[420ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-neutral-950/80 group-hover:duration-[240ms]"
                           strokeWidth={2.25}
                           aria-hidden
@@ -461,7 +474,7 @@ export function MemberProfilePage({
                 </nav>
               ) : (
                 <p className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 px-5 py-4 text-center text-sm text-neutral-500">
-                  Este perfil todavia no agrego links.
+                  Este perfil todavía no tiene redes públicas en GitHub.
                 </p>
               )}
             </div>

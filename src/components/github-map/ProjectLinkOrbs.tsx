@@ -1,4 +1,7 @@
+import { useMemo, type CSSProperties } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+
+import { cn } from '@/lib/utils'
 
 export type ProjectLink = {
   id: string
@@ -7,16 +10,49 @@ export type ProjectLink = {
   icon: 'arrow' | 'github' | 'linkedin' | 'x' | 'website'
 }
 
-const ORB_SPRING = { type: 'spring', stiffness: 420, damping: 24, mass: 0.6 } as const
+export const ORB_SIZE = 40
+const ORB_GAP = 12
+const LTR_STAGGER_S = 0.04
+const LTR_BASE_DELAY_S = 0.12
+const EDGE_TUCK = 1
 
-/** Cada marca reacciona distinto al hover: el globo gira, el resto respira. */
-const ICON_MOTION: Record<ProjectLink['icon'], string> = {
-  arrow:
-    'transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5',
-  website: 'transition-transform duration-700 ease-out group-hover:rotate-[360deg]',
-  github: 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5',
-  linkedin: 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5',
-  x: 'transition-transform duration-300 ease-out group-hover:rotate-[-12deg]',
+const ORB_SHADOW =
+  'shadow-[0_1px_2px_rgba(29,29,31,0.06),0_4px_12px_rgba(29,29,31,0.08)]'
+
+function orbBrandClassName(icon: ProjectLink['icon']) {
+  const base = cn(
+    'relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border',
+    ORB_SHADOW,
+    'transition-[filter,opacity] duration-150',
+  )
+
+  switch (icon) {
+    case 'arrow':
+      return cn(
+        base,
+        'border-[#EAB308]/40 bg-[#FACC15] text-neutral-900 hover:brightness-[1.04]',
+      )
+    case 'github':
+      return cn(
+        base,
+        'border-black/20 bg-[#1d1d1f] text-white hover:brightness-110',
+      )
+    case 'linkedin':
+      return cn(
+        base,
+        'border-[#0A66C2] bg-[#0A66C2] text-white hover:brightness-110',
+      )
+    case 'x':
+      return cn(
+        base,
+        'border-black/20 bg-black text-white hover:brightness-110',
+      )
+    case 'website':
+      return cn(
+        base,
+        'border-[#EAB308]/40 bg-[#FACC15] text-neutral-900 hover:brightness-[1.04]',
+      )
+  }
 }
 
 function Icon({ name }: { name: ProjectLink['icon'] }) {
@@ -26,7 +62,6 @@ function Icon({ name }: { name: ProjectLink['icon'] }) {
   } as const
 
   if (name === 'arrow') {
-    // Misma marca que el CTA «Unite»: la flecha anuncia salir del sitio.
     return (
       <svg
         {...common}
@@ -82,70 +117,235 @@ function Icon({ name }: { name: ProjectLink['icon'] }) {
   )
 }
 
+function OrbLink({
+  link,
+  index,
+  reduceMotion,
+  className,
+  style,
+  stagger = false,
+}: {
+  link: ProjectLink
+  index: number
+  reduceMotion: boolean
+  className?: string
+  style?: CSSProperties
+  stagger?: boolean
+}) {
+  return (
+    <motion.a
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={link.label}
+      title={link.label}
+      className={className ?? orbBrandClassName(link.icon)}
+      style={style}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.16,
+        ease: 'easeOut',
+        delay: stagger && !reduceMotion ? LTR_BASE_DELAY_S + index * LTR_STAGGER_S : 0,
+      }}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Icon name={link.icon} />
+    </motion.a>
+  )
+}
+
+export function orbitLinkPosition(
+  index: number,
+  total: number,
+  anchor: { x: number; y: number; r: number },
+  gap = 52,
+) {
+  const angle = (index / Math.max(total, 1)) * Math.PI * 2 - Math.PI / 2
+  const orbit = anchor.r + gap
+  return {
+    x: anchor.x + Math.cos(angle) * orbit,
+    y: anchor.y + Math.sin(angle) * orbit,
+    angle,
+    orbit,
+  }
+}
+
+/** Fila centrada bajo la burbuja enfocada, de izquierda a derecha. */
+export function focusLinkRowPositions(
+  anchor: { x: number; y: number; r: number },
+  count: number,
+  rowGap: number,
+) {
+  const rowY = anchor.y + anchor.r + rowGap + ORB_SIZE / 2
+  const rowWidth = count * ORB_SIZE + Math.max(count - 1, 0) * ORB_GAP
+  const startX = anchor.x - rowWidth / 2 + ORB_SIZE / 2
+
+  return Array.from({ length: count }, (_, index) => ({
+    x: startX + index * (ORB_SIZE + ORB_GAP),
+    y: rowY,
+  }))
+}
+
+function edgeFromAnchorToOrb(
+  anchor: { x: number; y: number; r: number },
+  orb: { x: number; y: number },
+) {
+  const dx = orb.x - anchor.x
+  const dy = orb.y - anchor.y
+  const distance = Math.hypot(dx, dy) || 1
+  const unitX = dx / distance
+  const unitY = dy / distance
+  const orbRadius = ORB_SIZE / 2
+
+  return {
+    x1: anchor.x + unitX * (anchor.r - EDGE_TUCK),
+    y1: anchor.y + unitY * (anchor.r - EDGE_TUCK),
+    x2: orb.x - unitX * (orbRadius - EDGE_TUCK),
+    y2: orb.y - unitY * (orbRadius - EDGE_TUCK),
+  }
+}
+
 /**
- * Botones circulares que brotan bajo la tarjeta fijada, uno detrás de otro.
- * Misma receta que las burbujas: superficie clara, filete de un píxel y sombra
- * suave. Antes eran de vidrio, que funcionaba sobre el mapa oscuro pero
- * desaparece sobre el blanco de la página.
+ * Botones circulares de enlaces. En fila van bajo una tarjeta o bajo la burbuja
+ * enfocada; en órbita (legacy) rodean el nodo central.
  */
 export function ProjectLinkOrbs({
   links,
   visible,
+  layout = 'row',
+  anchor,
+  rowGap = 14,
+  edgeColor = 'rgba(29,29,31,0.22)',
+  stageWidth = 0,
+  stageHeight = 0,
 }: {
   links: readonly ProjectLink[]
   visible: boolean
+  layout?: 'row' | 'orbit' | 'below' | 'connected-row'
+  anchor?: { x: number; y: number; r: number }
+  rowGap?: number
+  edgeColor?: string
+  stageWidth?: number
+  stageHeight?: number
 }) {
   const reduceMotion = useReducedMotion()
+  const rowPositions = useMemo(
+    () =>
+      anchor && layout === 'connected-row'
+        ? focusLinkRowPositions(anchor, links.length, rowGap)
+        : [],
+    [anchor, layout, links.length, rowGap],
+  )
 
   return (
     <AnimatePresence>
       {visible && links.length > 0 ? (
-        <motion.div
-          className="pointer-events-auto mt-2.5 flex items-center justify-center gap-2"
-          initial={false}
-        >
-          {links.map((link, index) => (
-            <motion.a
-              key={link.id}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-              title={link.label}
-              className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[rgba(29,29,31,0.10)] bg-white text-[#1d1d1f] shadow-[0_1px_2px_rgba(29,29,31,0.04),0_8px_20px_rgba(29,29,31,0.10)] transition-colors hover:bg-neutral-50"
-              initial={
-                reduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.3, y: -16, filter: 'blur(8px)' }
-              }
-              animate={
-                reduceMotion
-                  ? { opacity: 1 }
-                  : { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
-              }
-              exit={
-                reduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.3, y: -10, filter: 'blur(6px)' }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { ...ORB_SPRING, delay: index * 0.07 }
-              }
-              whileHover={reduceMotion ? undefined : { scale: 1.12 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+        layout === 'connected-row' && anchor ? (
+          <>
+            <svg
+              className="pointer-events-none absolute left-0 top-0 z-[5]"
+              width={stageWidth}
+              height={stageHeight}
+              viewBox={`0 0 ${stageWidth} ${stageHeight}`}
+              aria-hidden
             >
-              <span
-                className={
-                  reduceMotion ? 'relative' : `relative ${ICON_MOTION[link.icon]}`
-                }
-              >
-                <Icon name={link.icon} />
-              </span>
-            </motion.a>
-          ))}
-        </motion.div>
+              {rowPositions.map((point, index) => {
+                const edge = edgeFromAnchorToOrb(anchor, point)
+                return (
+                  <motion.line
+                    key={`edge-${links[index]!.id}`}
+                    x1={edge.x1}
+                    y1={edge.y1}
+                    x2={edge.x2}
+                    y2={edge.y2}
+                    stroke={edgeColor}
+                    strokeLinecap="round"
+                    strokeWidth={1.25}
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduceMotion ? undefined : { opacity: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.18,
+                      ease: 'easeOut',
+                      delay: reduceMotion ? 0 : LTR_BASE_DELAY_S + index * 0.03,
+                    }}
+                  />
+                )
+              })}
+            </svg>
+            {rowPositions.map((point, index) => (
+              <OrbLink
+                key={links[index]!.id}
+                link={links[index]!}
+                index={index}
+                stagger
+                reduceMotion={Boolean(reduceMotion)}
+                className={cn(
+                  orbBrandClassName(links[index]!.icon),
+                  'absolute z-[6] pointer-events-auto',
+                )}
+                style={{
+                  left: point.x - ORB_SIZE / 2,
+                  top: point.y - ORB_SIZE / 2,
+                  width: ORB_SIZE,
+                  height: ORB_SIZE,
+                }}
+              />
+            ))}
+          </>
+        ) : layout === 'below' && anchor ? (
+          <div
+            className="pointer-events-auto absolute z-[6] flex -translate-x-1/2 items-center justify-center gap-2"
+            style={{
+              left: anchor.x,
+              top: anchor.y + anchor.r + rowGap,
+            }}
+          >
+            {links.map((link, index) => (
+              <OrbLink
+                key={link.id}
+                link={link}
+                index={index}
+                stagger
+                reduceMotion={Boolean(reduceMotion)}
+              />
+            ))}
+          </div>
+        ) : layout === 'orbit' && anchor ? (
+          <>
+            {links.map((link, index) => {
+              const point = orbitLinkPosition(index, links.length, anchor)
+              return (
+                <OrbLink
+                  key={link.id}
+                  link={link}
+                  index={index}
+                  reduceMotion={Boolean(reduceMotion)}
+                  className={cn(orbBrandClassName(link.icon), 'absolute z-[6]')}
+                  style={{
+                    left: point.x - ORB_SIZE / 2,
+                    top: point.y - ORB_SIZE / 2,
+                    width: ORB_SIZE,
+                    height: ORB_SIZE,
+                  }}
+                />
+              )
+            })}
+          </>
+        ) : (
+          <div className="pointer-events-auto mt-2.5 flex items-center justify-center gap-2">
+            {links.map((link, index) => (
+              <OrbLink
+                key={link.id}
+                link={link}
+                index={index}
+                reduceMotion={Boolean(reduceMotion)}
+              />
+            ))}
+          </div>
+        )
       ) : null}
     </AnimatePresence>
   )

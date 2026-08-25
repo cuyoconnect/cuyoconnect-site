@@ -2,6 +2,12 @@ import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDrag } from '@use-gesture/react';
 import { openCommunityLink } from '@/lib/community-links';
 
+type OverlayLink = {
+  id: string;
+  label: string;
+  href: string;
+};
+
 type ImageItem =
   | string
   | {
@@ -14,6 +20,7 @@ type ImageItem =
       href?: string;
       hrefLabel?: string;
       date?: string;
+      links?: OverlayLink[];
     };
 
 type DomeGalleryProps = {
@@ -54,6 +61,7 @@ type ItemDef = {
   href?: string;
   hrefLabel?: string;
   date?: string;
+  links?: OverlayLink[];
   x: number;
   y: number;
   sizeX: number;
@@ -148,6 +156,7 @@ type NormalizedTile = {
   href?: string;
   hrefLabel?: string;
   date?: string;
+  links?: OverlayLink[];
 };
 
 function domeTileMixSeed(totalSlots: number, poolLen: number, identityKey: string): number {
@@ -359,6 +368,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       href: undefined,
       hrefLabel: undefined,
       date: undefined,
+      links: undefined,
     }));
   }
 
@@ -374,6 +384,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
         href: undefined,
         hrefLabel: undefined,
         date: undefined,
+        links: undefined,
       };
     }
     return {
@@ -386,6 +397,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       href: image.href,
       hrefLabel: image.hrefLabel,
       date: image.date,
+      links: image.links,
     };
   });
 
@@ -404,7 +416,28 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     href: usedImages[i].href,
     hrefLabel: usedImages[i].hrefLabel,
     date: usedImages[i].date,
+    links: usedImages[i].links,
   }));
+}
+
+function parseOverlayLinks(raw: string | undefined): OverlayLink[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is OverlayLink => {
+      if (!item || typeof item !== 'object') return false;
+      const link = item as Partial<OverlayLink>;
+      return (
+        typeof link.id === 'string' &&
+        typeof link.label === 'string' &&
+        typeof link.href === 'string' &&
+        Boolean(link.href.trim())
+      );
+    });
+  } catch {
+    return [];
+  }
 }
 
 function computeItemBaseRotation(offsetX: number, offsetY: number, sizeX: number, sizeY: number, segments: number) {
@@ -970,13 +1003,25 @@ export default function DomeGallery({
     const rawSubtitle = parent.dataset.subtitle || parent.dataset.date || '';
     const rawSlug = parent.dataset.slug || '';
     const rawHref = parent.dataset.href || '';
-    const rawHrefLabel = parent.dataset.hrefLabel || 'Abrir perfil en una pestaña nueva';
+    const rawHrefLabel = parent.dataset.hrefLabel || 'Abrir perfil en CuyoConnect';
+    const overlayLinks = parseOverlayLinks(parent.dataset.links);
+    const profileHref = rawHref || (rawSlug ? `/u/${rawSlug}` : '');
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = rawAlt || rawTitle;
     img.style.cssText =
       'width:100%; height:100%; object-fit:cover; position:relative; z-index:0;';
-    overlay.appendChild(img);
+    if (profileHref) {
+      const photoLink = document.createElement('a');
+      photoLink.href = profileHref;
+      photoLink.setAttribute('aria-label', rawHrefLabel);
+      photoLink.style.cssText =
+        'display:block;width:100%;height:100%;position:relative;z-index:0;cursor:pointer;';
+      photoLink.appendChild(img);
+      overlay.appendChild(photoLink);
+    } else {
+      overlay.appendChild(img);
+    }
 
     // Header (Title + optional subtitle + close button)
     const header = document.createElement('div');
@@ -1060,7 +1105,6 @@ export default function DomeGallery({
 
     overlay.appendChild(header);
 
-    // Footer (Button)
     const footer = document.createElement('div');
     footer.style.cssText = `
         position: absolute;
@@ -1074,8 +1118,10 @@ export default function DomeGallery({
         padding-bottom: max(52px, calc(24px + env(safe-area-inset-bottom, 0px)));
         padding-left: max(var(--overlay-inline-pad), calc(20px + env(safe-area-inset-left, 0px)));
         display: flex;
-        justify-content: flex-end;
+        flex-wrap: wrap;
+        justify-content: flex-start;
         align-items: flex-end;
+        gap: 10px 18px;
         background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 52%, transparent 100%);
         opacity: 0;
         transition: opacity 0.5s ease 0.2s;
@@ -1083,48 +1129,48 @@ export default function DomeGallery({
         pointer-events: none;
     `;
 
-    const btn = document.createElement('button');
-    btn.setAttribute('aria-label', rawHrefLabel);
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`;
-    btn.style.cssText = `
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: white;
-        color: #1a1918;
-        border: none;
-        display: flex;
+    const footerLinks: HTMLAnchorElement[] = [];
+    for (const link of overlayLinks) {
+      const social = document.createElement('a');
+      social.href = link.href;
+      social.target = '_blank';
+      social.rel = 'noopener noreferrer';
+      social.setAttribute('aria-label', `Abrir ${link.label}`);
+      social.style.cssText = `
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        cursor: pointer;
+        gap: 5px;
+        color: #fff;
+        font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        text-decoration-thickness: 1px;
+        text-decoration-color: rgba(255,255,255,0.72);
         pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        transition: transform 0.2s ease;
-    `;
-    btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
-    btn.onmouseout = () => btn.style.transform = 'scale(1)';
-    
-    if (rawHref) {
-      btn.onclick = () => {
-        if (rawHref.startsWith('/')) {
-          window.location.href = rawHref;
-          return;
-        }
-        window.open(rawHref, '_blank', 'noopener,noreferrer');
-      };
-    } else if (rawSlug) {
-      btn.onclick = () => {
-        window.location.href = `/talentos/${rawSlug}`;
-      };
+        cursor: pointer;
+      `;
+      const label = document.createElement('span');
+      label.textContent = link.label;
+      social.appendChild(label);
+      social.insertAdjacentHTML(
+        'beforeend',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>',
+      );
+      footer.appendChild(social);
+      footerLinks.push(social);
     }
-    
-    footer.appendChild(btn);
+
     overlay.appendChild(footer);
 
     /** Móvil: tras abrir el overlay, el `click` sintético del toque puede llegar al botón de enlace recién montado. */
     window.setTimeout(() => {
       closeBtn.style.pointerEvents = 'auto';
-      btn.style.pointerEvents = 'auto';
+      for (const social of footerLinks) {
+        social.style.pointerEvents = 'auto';
+      }
     }, 400);
 
     viewerRef.current!.appendChild(overlay);
@@ -1317,6 +1363,7 @@ export default function DomeGallery({
                   data-slug={it.slug || ''}
                   data-href={it.href || ''}
                   data-href-label={it.hrefLabel || ''}
+                  data-links={it.links?.length ? JSON.stringify(it.links) : ''}
                   data-date={it.date || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}

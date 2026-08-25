@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import {
   GITHUB_MAP_CACHE_VERSION,
   GITHUB_MAP_MIN_COMMITS,
@@ -8,6 +10,8 @@ import {
   type GithubMapRepo,
   type GithubMapScope,
 } from './types'
+import { parseGithubSocialAccounts } from '../github-social-links'
+import { persistMemberGithubLinks } from '../github-social-sync'
 import { aggregateMapProjects } from './projects'
 import { fetchOwnerAvatar, fetchSiteMeta } from './site-meta'
 
@@ -151,9 +155,42 @@ function remember(scope: GithubMapScope, payload: GithubMapPayload) {
   })
 }
 
+function localSnapshotPath(scope: GithubMapScope) {
+  return path.join(process.cwd(), 'node_modules/.cache', `github-map-${scope}.json`)
+}
+
+function readLocalSnapshot(scope: GithubMapScope): GithubMapPayload | null {
+  if (process.env.VERCEL === '1') return null
+  try {
+    const raw = fs.readFileSync(localSnapshotPath(scope), 'utf8')
+    const payload = JSON.parse(raw) as GithubMapPayload
+    if ((payload.cacheVersion ?? 0) < GITHUB_MAP_CACHE_VERSION) return null
+    const projects = Array.isArray(payload.projects)
+      ? payload.projects
+      : aggregateMapProjects(payload.members ?? [])
+    return { ...payload, projects, scope }
+  } catch {
+    return null
+  }
+}
+
+function writeLocalSnapshot(payload: GithubMapPayload) {
+  if (process.env.VERCEL === '1') return
+  try {
+    const file = localSnapshotPath(payload.scope)
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, JSON.stringify(payload))
+  } catch (error) {
+    console.warn('GitHub map: no se pudo guardar la caché local.', error)
+  }
+}
+
 async function readMapSnapshot(
   scope: GithubMapScope,
 ): Promise<GithubMapPayload | null> {
+  const local = readLocalSnapshot(scope)
+  if (local) return local
+
   try {
     const rows = await supabaseRest<SnapshotRow[]>(
       `github_map_cache?scope=eq.${encodeURIComponent(scope)}&select=scope,payload,fetched_at&limit=1`,
@@ -177,6 +214,7 @@ async function readMapSnapshot(
 }
 
 async function writeMapSnapshot(payload: GithubMapPayload) {
+  writeLocalSnapshot(payload)
   const key = serviceRoleKey()
   const config = supabaseConfig()
   if (!key || !config.url) return
@@ -329,19 +367,11 @@ function toRepo(
 
 /** El perfil de GitHub ya guarda los enlaces sociales: no hace falta scrapear nada. */
 function toLinks(user: NonNullable<GithubUserResponse['data']>['user']): GithubMapLinks {
-  const accounts = (user?.socialAccounts?.nodes ?? []).filter(Boolean) as Array<{
-    provider?: string
-    url?: string
-  }>
-  const byProvider = (provider: string) =>
-    accounts.find((account) => account.provider === provider)?.url?.trim() || null
-
-  const twitter = user?.twitterUsername?.trim()
-  return {
-    website: normalizeHomepageUrl(user?.websiteUrl) ?? byProvider('GENERIC'),
-    linkedin: byProvider('LINKEDIN'),
-    x: byProvider('TWITTER') ?? (twitter ? `https://x.com/${twitter}` : null),
-  }
+  return parseGithubSocialAccounts({
+    websiteUrl: user?.websiteUrl,
+    twitterUsername: user?.twitterUsername,
+    socialAccounts: user?.socialAccounts?.nodes,
+  })
 }
 
 async function fetchGithubProfile(
@@ -487,6 +517,8 @@ async function fetchFreshPayload(
     }
   })
 
+  await persistMapMemberLinks(members)
+
   const projects = await withSiteMeta(aggregateMapProjects(members))
   const visibleMembers = members.filter(
     (member) => member.commits >= GITHUB_MAP_MIN_COMMITS,
@@ -524,6 +556,27 @@ async function refreshFromGithub(scope: GithubMapScope): Promise<GithubMapPayloa
   } finally {
     refreshInflight.delete(scope)
   }
+}
+
+async function persistMapMemberLinks(members: GithubMapMember[]) {
+  await Promise.all(
+    members.map(async (member) => {
+      if (!member.links) return
+      try {
+        await persistMemberGithubLinks(member.id, {
+          website: member.links.website ?? null,
+          linkedin: member.links.linkedin ?? null,
+          instagram: member.links.instagram ?? null,
+          x: member.links.x ?? null,
+        })
+      } catch (error) {
+        console.warn(
+          `GitHub map: no se pudieron persistir los links de ${member.githubLogin}.`,
+          error,
+        )
+      }
+    }),
+  )
 }
 
 export async function refreshGithubMapPayload(

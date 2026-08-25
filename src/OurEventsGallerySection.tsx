@@ -6,9 +6,11 @@ import {
   fetchVisibleMemberProfiles,
   getMemberDisplayName,
   getMemberProfileHref,
+  getMemberPublicSocialLinks,
   getMemberSubtitle,
   type MemberProfile,
 } from '@/lib/member-profiles'
+import { useEnsureMemberProfile } from '@/lib/use-ensure-member-profile'
 import {
   DOME_STAGE_WIDTH_CLASS,
   HERO_CONTENT_WIDTH_CLASS,
@@ -21,6 +23,7 @@ const MEMBERS_GALLERY_HEADING = 'Miembros de CuyoConnect'
 
 export function OurEventsGallerySection() {
   const { hasAuthConfigured } = useAuth()
+  useEnsureMemberProfile()
   const tailHighlight = useMemo(() => heroTopicTailHighlight(1), [])
   const [profiles, setProfiles] = useState<MemberProfile[]>([])
   const [isLoading, setIsLoading] = useState(hasAuthConfigured)
@@ -69,7 +72,8 @@ export function OurEventsGallerySection() {
     title: getMemberDisplayName(profile),
     subtitle: getMemberSubtitle(profile),
     href: getMemberProfileHref(profile),
-    hrefLabel: `Abrir perfil de ${getMemberDisplayName(profile)}`,
+    hrefLabel: `Abrir perfil de ${getMemberDisplayName(profile)} en CuyoConnect`,
+    links: getMemberPublicSocialLinks(profile),
   }))
 
   const emptyStateMessage = hasAuthConfigured
@@ -105,8 +109,8 @@ export function OurEventsGallerySection() {
             />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-            Sumate con GitHub para aparecer en la galería, crear tu slash y
-            compartir tu link CuyoConnect con QR propio.
+            Sumate con GitHub para aparecer en la galería. Tu link CuyoConnect y
+            las redes salen de tu perfil de GitHub.
           </p>
         </div>
 
@@ -150,7 +154,7 @@ export function OurEventsGallerySection() {
         </div>
 
         <GitHubJoinCta
-          intent="profile"
+          intent="community"
           className="mt-12 text-center sm:mt-14"
         />
       </div>

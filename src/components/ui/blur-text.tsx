@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
 import { annotate } from 'rough-notation'
 import type { RoughAnnotation } from 'rough-notation/lib/model'
@@ -101,6 +101,23 @@ function findSingleWordHighlightBounds(
  * Texto que pasa de blur a foco, al estilo de los text animations de shadcn.io.
  * Usa Motion y se activa al entrar en viewport.
  */
+function isAlreadyInView(
+  element: HTMLElement,
+  margin = '0px 0px -8% 0px',
+): boolean {
+  const rect = element.getBoundingClientRect()
+  const parts = margin.trim().split(/\s+/)
+  const bottomToken = parts[2] ?? '0px'
+  let bottomInset = 0
+  if (bottomToken.endsWith('%')) {
+    bottomInset = -window.innerHeight * (parseFloat(bottomToken) / 100)
+  } else {
+    bottomInset = -parseFloat(bottomToken)
+  }
+  const rootBottom = window.innerHeight - bottomInset
+  return rect.top < rootBottom && rect.bottom > 0
+}
+
 export function BlurText({
   text,
   className,
@@ -128,11 +145,48 @@ export function BlurText({
   onCompleteRef.current = onComplete
   tailHighlightRef.current = tailHighlight
 
-  const isInView = useInView(ref, {
+  const resolvedMargin = inViewMargin ?? '0px 0px -8% 0px'
+  const isInViewFromObserver = useInView(ref, {
     once: true,
-    margin: inViewMargin ?? '0px 0px -8% 0px',
+    margin: resolvedMargin,
     initial: inViewInitial,
   })
+  const [isInViewOnMount, setIsInViewOnMount] = useState(inViewInitial)
+
+  useEffect(() => {
+    if (inViewInitial || isInViewFromObserver || isInViewOnMount) return
+    const el = ref.current
+    if (!el) return
+
+    const syncInView = () => {
+      if (isAlreadyInView(el, resolvedMargin)) {
+        setIsInViewOnMount(true)
+      }
+    }
+
+    syncInView()
+    const raf = window.requestAnimationFrame(syncInView)
+    window.addEventListener('scroll', syncInView, { passive: true })
+    window.addEventListener('resize', syncInView, { passive: true })
+    const vv = window.visualViewport
+    vv?.addEventListener('scroll', syncInView, { passive: true })
+    vv?.addEventListener('resize', syncInView, { passive: true })
+
+    return () => {
+      window.cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', syncInView)
+      window.removeEventListener('resize', syncInView)
+      vv?.removeEventListener('scroll', syncInView)
+      vv?.removeEventListener('resize', syncInView)
+    }
+  }, [
+    inViewInitial,
+    isInViewFromObserver,
+    isInViewOnMount,
+    resolvedMargin,
+  ])
+
+  const isInView = isInViewFromObserver || isInViewOnMount
 
   const segments = useMemo(
     () =>

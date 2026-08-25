@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
+import { GitHubProjectsSectionActions } from '@/components/github-map/GitHubProjectsSectionActions'
 import { GitHubProjectsBubblesViewer } from '@/components/github-map/GitHubProjectsBubblesViewer'
 import { BlurText } from '@/components/ui/blur-text'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
@@ -8,10 +9,11 @@ import { cn } from '@/lib/utils'
 
 const HEADING = 'Proyectos de la comunidad'
 const LEAD =
-  'Cada burbuja es un proyecto publicado y su tamaño sigue los commits del último año.'
+  'Cada burbuja es un proyecto publicado de la comunidad: el tamaño refleja su actividad en commits. Hacé clic en una para ver quién lo hizo.'
 
 export function GitHubProjectsBubblesSection() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(1), [])
+  const [mapFocused, setMapFocused] = useState(false)
 
   return (
     <section
@@ -38,24 +40,15 @@ export function GitHubProjectsBubblesSection() {
         <p className="mt-3 max-w-2xl text-pretty text-neutral-600 sm:text-lg">
           {LEAD}
         </p>
-      </div>
 
-      {/* Sin columna máxima: el racimo usa todo el ancho, como el hero. */}
-      <div className="mt-10 w-full min-w-0 sm:mt-12">
-        <GitHubProjectsBubblesViewer />
-      </div>
+        <div className="mt-10 w-full min-w-0 sm:mt-12">
+          <GitHubProjectsBubblesViewer onFocusChange={setMapFocused} />
+        </div>
 
-      <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'mt-8 min-w-0')}>
-        <a
-          href="/proyectos"
-          className={cn(
-            'inline-flex items-center rounded-full bg-[#1d1d1f] px-4 py-2.5 text-sm font-medium text-white',
-            'transition-colors hover:bg-black',
-            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
-          )}
-        >
-          Ver todos los proyectos
-        </a>
+        <GitHubProjectsSectionActions
+          visible={!mapFocused}
+          className="mt-12 text-center sm:mt-14"
+        />
       </div>
     </section>
   )

@@ -1,4 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { spawn } from 'node:child_process'
 import type { Plugin } from 'vite'
 
 import type { GithubMapPayload } from './types'
@@ -6,6 +9,45 @@ import type { GithubMapPayload } from './types'
 type GithubMapServer = {
   readGithubMapPayload: (scope?: string | null) => Promise<GithubMapPayload>
   refreshGithubMapPayload: (scope?: string | null) => Promise<GithubMapPayload>
+}
+
+const pluginDir = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.resolve(pluginDir, '../../..')
+
+function runRefreshScript() {
+  return new Promise<{ members: number; fetchedAt: string | null }>((resolve, reject) => {
+    const child = spawn(process.execPath, ['scripts/refresh-github-map.mjs'], {
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.on('data', (chunk) => {
+      stdout += String(chunk)
+    })
+    child.stderr.on('data', (chunk) => {
+      stderr += String(chunk)
+    })
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(stderr.slice(-500) || stdout.slice(-500) || `exit ${code}`))
+        return
+      }
+      try {
+        const parsed = JSON.parse(stdout.trim().split('\n').pop() ?? '{}') as {
+          members?: number
+          fetchedAt?: string | null
+        }
+        resolve({
+          members: parsed.members ?? 0,
+          fetchedAt: parsed.fetchedAt ?? null,
+        })
+      } catch (error) {
+        reject(error instanceof Error ? error : new Error(String(error)))
+      }
+    })
+  })
 }
 
 function sendJson(
@@ -60,13 +102,27 @@ export function githubMapDevApi(): Plugin {
           )
 
           if (isRefresh) {
-            const payload = await mod.refreshGithubMapPayload(scope)
-            sendJson(res, 200, {
-              ok: true,
-              scope: payload.scope,
-              members: payload.members.length,
-              fetchedAt: payload.fetchedAt,
-            })
+            const scopeValue = scope ?? 'all'
+            try {
+              const refreshed = await runRefreshScript()
+              sendJson(res, 200, {
+                ok: true,
+                scope: scopeValue,
+                members: refreshed.members,
+                fetchedAt: refreshed.fetchedAt,
+              })
+            } catch (error) {
+              const mod = (await server.ssrLoadModule(
+                '/src/lib/github-map/server.ts',
+              )) as GithubMapServer
+              const payload = await mod.refreshGithubMapPayload(scope)
+              sendJson(res, 200, {
+                ok: true,
+                scope: payload.scope,
+                members: payload.members.length,
+                fetchedAt: payload.fetchedAt,
+              })
+            }
             return
           }
 

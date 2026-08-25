@@ -26,10 +26,11 @@ export type GithubMapProject = {
   ownerAvatarUrl?: string | null
 }
 
-/** Enlaces públicos del perfil de GitHub (sitio, LinkedIn, X). */
+/** Enlaces públicos del perfil de GitHub (sitio, LinkedIn, Instagram, X). */
 export type GithubMapLinks = {
   website?: string | null
   linkedin?: string | null
+  instagram?: string | null
   x?: string | null
 }
 

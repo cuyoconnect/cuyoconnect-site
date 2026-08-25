@@ -20,12 +20,13 @@ export type BubbleGraph = {
 }
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
-/** Porción del lienzo cubierta por los discos: el resto es aire entre nodos. */
-const AREA_FILL = 0.48
-const RELAX_ITERATIONS = 320
+/** Porción del lienzo cubierta por los discos: llena el ancho del contenedor. */
+const AREA_FILL = 0.52
+const RELAX_ITERATIONS = 420
 /** Aire mínimo entre dos burbujas, para que la arista se lea entre ellas. */
-const NODE_PADDING = 22
-const BOUNDS_MARGIN = 4
+const NODE_PADDING = 24
+const BOUNDS_MARGIN = 6
+const OVERLAP_EPSILON = 0.75
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -51,35 +52,104 @@ const RADIUS_EXPONENT = 0.64
 
 /**
  * Radio derivado del peso, con piso y techo atados al espacio disponible: el
- * piso para que el nombre siga entrando y el techo para que una burbuja no se
+ * piso para que la imagen siga legible y el techo para que una burbuja no se
  * coma el lienzo.
  */
 function computeRadii(values: readonly number[], width: number, height: number) {
   const count = values.length
   const budget = AREA_FILL * width * height
   const evenRadius = Math.sqrt(budget / (count * Math.PI))
-  const minRadius = clamp(evenRadius * 0.4, 34, 52)
+  const minRadius = clamp(evenRadius * 0.4, 28, 42)
   const maxRadius = Math.max(minRadius + 1, evenRadius * 2.4)
 
   const roots = values.map((value) => Math.max(value, 1) ** RADIUS_EXPONENT)
   const sumSquares = roots.reduce((sum, root) => sum + root * root, 0) || 1
   const scale = Math.sqrt(budget / (Math.PI * sumSquares))
 
-  return roots.map((root) => clamp(root * scale, minRadius, maxRadius))
+  let radii = roots.map((root) => clamp(root * scale, minRadius, maxRadius))
+
+  // Si el clamp infló el área total, achicamos proporcionalmente hasta entrar.
+  let totalArea = radii.reduce((sum, radius) => sum + Math.PI * radius * radius, 0)
+  if (totalArea > budget) {
+    const shrink = Math.sqrt(budget / totalArea)
+    radii = radii.map((radius) => Math.max(minRadius, radius * shrink))
+    totalArea = radii.reduce((sum, radius) => sum + Math.PI * radius * radius, 0)
+  }
+
+  // Segunda pasada: si aún no entra, bajamos el techo antes de relajar posiciones.
+  if (totalArea > budget * 1.02) {
+    const cap = Math.sqrt((budget * 0.98) / totalArea)
+    radii = radii.map((radius) => Math.max(minRadius, radius * cap))
+  }
+
+  return radii
 }
 
 /** Semilla filotáctica: los discos grandes arrancan al centro del racimo. */
 function seedPositions(nodes: BubbleNode[], width: number, height: number) {
   const centerX = width / 2
   const centerY = height / 2
-  const spread = Math.min(width, height) * 0.42
+  const spreadX = width * 0.46
+  const spreadY = height * 0.4
 
   nodes.forEach((node, index) => {
-    const radial = Math.sqrt((index + 0.5) / nodes.length) * spread
+    const radial = Math.sqrt((index + 0.5) / nodes.length)
     const angle = index * GOLDEN_ANGLE + hash01(node.id) * 0.9
-    node.x = centerX + Math.cos(angle) * radial * (width / Math.min(width, height))
-    node.y = centerY + Math.sin(angle) * radial
+    node.x = centerX + Math.cos(angle) * radial * spreadX
+    node.y = centerY + Math.sin(angle) * radial * spreadY
   })
+}
+
+function clampToBounds(nodes: BubbleNode[], width: number, height: number) {
+  for (const node of nodes) {
+    const margin = node.r + BOUNDS_MARGIN
+    node.x = clamp(node.x, margin, width - margin)
+    node.y = clamp(node.y, margin, height - margin)
+  }
+}
+
+function minCenterDistance(a: BubbleNode, b: BubbleNode) {
+  return a.r + b.r + NODE_PADDING
+}
+
+function hasOverlap(nodes: readonly BubbleNode[]) {
+  for (let i = 0; i < nodes.length; i += 1) {
+    const a = nodes[i]!
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const b = nodes[j]!
+      const distance = Math.hypot(b.x - a.x, b.y - a.y)
+      if (distance < minCenterDistance(a, b) - OVERLAP_EPSILON) return true
+    }
+  }
+  return false
+}
+
+/** Empuja pares solapados hasta respetar el aire mínimo entre bordes. */
+function resolveCollisions(nodes: BubbleNode[]) {
+  let moved = false
+
+  for (let i = 0; i < nodes.length; i += 1) {
+    const a = nodes[i]!
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const b = nodes[j]!
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const distance = Math.hypot(dx, dy) || 0.01
+      const minDistance = minCenterDistance(a, b)
+      if (distance >= minDistance) continue
+
+      const push = (minDistance - distance) / distance / 2
+      const offsetX = dx * push
+      const offsetY = dy * push
+      a.x -= offsetX
+      a.y -= offsetY
+      b.x += offsetX
+      b.y += offsetY
+      moved = true
+    }
+  }
+
+  return moved
 }
 
 /** Separa solapes y compacta el racimo hacia el centro. */
@@ -88,41 +158,33 @@ function relax(nodes: BubbleNode[], width: number, height: number) {
   const centerY = height / 2
 
   for (let step = 0; step < RELAX_ITERATIONS; step += 1) {
-    // Gravedad anisótropa: el racimo se estira a lo ancho en vez de quedar
-    // como un disco centrado con aire muerto a los costados.
-    const gravityX = 0.012 * (height / width)
-    const gravityY = 0.012
+    const gravityX = 0.01 * (height / width)
+    const gravityY = 0.01
 
     for (const node of nodes) {
       node.x += (centerX - node.x) * gravityX
       node.y += (centerY - node.y) * gravityY
     }
 
-    for (let i = 0; i < nodes.length; i += 1) {
-      const a = nodes[i]!
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const b = nodes[j]!
-        const dx = b.x - a.x
-        const dy = b.y - a.y
-        const distance = Math.hypot(dx, dy) || 0.01
-        const minDistance = a.r + b.r + NODE_PADDING
-        if (distance >= minDistance) continue
+    resolveCollisions(nodes)
+    clampToBounds(nodes, width, height)
+    resolveCollisions(nodes)
+  }
+}
 
-        const push = (minDistance - distance) / distance / 2
-        const offsetX = dx * push
-        const offsetY = dy * push
-        a.x -= offsetX
-        a.y -= offsetY
-        b.x += offsetX
-        b.y += offsetY
-      }
-    }
+/** Pasada final hasta eliminar solapes residuales (p. ej. tras clamp al borde). */
+function enforceNonOverlap(nodes: BubbleNode[], width: number, height: number) {
+  for (let step = 0; step < 160; step += 1) {
+    const moved = resolveCollisions(nodes)
+    clampToBounds(nodes, width, height)
+    resolveCollisions(nodes)
+    if (!moved && !hasOverlap(nodes)) break
+  }
+}
 
-    for (const node of nodes) {
-      const margin = node.r + BOUNDS_MARGIN
-      node.x = clamp(node.x, margin, width - margin)
-      node.y = clamp(node.y, margin, height - margin)
-    }
+function shrinkRadii(nodes: BubbleNode[], factor: number) {
+  for (const node of nodes) {
+    node.r *= factor
   }
 }
 
@@ -235,6 +297,14 @@ export function layoutBubbleGraph(
 
   seedPositions(nodes, width, height)
   relax(nodes, width, height)
+  enforceNonOverlap(nodes, width, height)
+
+  let safety = 0
+  while (hasOverlap(nodes) && safety < 6) {
+    shrinkRadii(nodes, 0.96)
+    enforceNonOverlap(nodes, width, height)
+    safety += 1
+  }
 
   const tree = spanningEdges(nodes)
   return { nodes, edges: [...tree, ...bridgeEdges(nodes, tree)] }
