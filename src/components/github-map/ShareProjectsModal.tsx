@@ -161,9 +161,6 @@ export function ShareProjectsModal({ open, onClose }: ShareProjectsModalProps) {
                 >
                   Sumá tus proyectos al mapa
                 </h2>
-                <p className="mt-1 text-sm text-neutral-600">
-                  Open source, en público, hecho en la comunidad.
-                </p>
               </div>
               <button
                 type="button"
@@ -187,84 +184,25 @@ export function ShareProjectsModal({ open, onClose }: ShareProjectsModalProps) {
 
             <div className="min-h-0 flex-auto overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
               <p className="text-pretty text-sm leading-relaxed text-neutral-600">
-                Mostramos repos open source con deploy en vivo y actividad reciente.
-                Conectá GitHub y listo — el mapa se actualiza solo en unas horas.
-              </p>
-
-              <h3 className="mt-4 text-sm font-semibold text-neutral-950">
-                Requisitos
-              </h3>
-              <ul className="mt-2 list-none space-y-1.5 text-sm leading-relaxed text-neutral-600">
-                <li className="flex gap-2.5">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
-                  <span>Cuenta de GitHub conectada a CuyoConnect.</span>
-                </li>
-                <li className="flex gap-2.5">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
-                  <span>
-                    Repo público con al menos{' '}
-                    <strong className="font-medium text-neutral-800">
-                      {GITHUB_MAP_MIN_COMMITS} commits
-                    </strong>{' '}
-                    en el último año.
-                  </span>
-                </li>
-                <li className="flex gap-2.5">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
-                  <span>
-                    URL del deploy en la sección{' '}
-                    <strong className="font-medium text-neutral-800">About</strong> del repo
-                    (campo <strong className="font-medium text-neutral-800">Website</strong>).
-                  </span>
-                </li>
-              </ul>
-
-              <div className="mt-4 rounded-xl border border-neutral-100 bg-neutral-50/90 px-3.5 py-3 text-sm leading-relaxed text-neutral-600">
-                <p className="font-medium text-neutral-900">Cómo cargar la URL del deploy</p>
-                <ol className="mt-2 list-decimal space-y-1 pl-4 marker:text-neutral-400">
-                  <li>Abrí tu repo en GitHub.</li>
-                  <li>
-                    En la barra lateral derecha, sección <strong className="font-medium text-neutral-800">About</strong>, tocá el ícono de engranaje.
-                  </li>
-                  <li>
-                    En <strong className="font-medium text-neutral-800">Website</strong>, pegá la URL pública
-                    (Vercel, Netlify, GitHub Pages, etc.).
-                  </li>
-                  <li>Guardá los cambios.</li>
-                </ol>
-              </div>
-
-              <p className="mt-4 text-pretty text-sm leading-relaxed text-neutral-500">
-                Para que aparezcan tus redes (LinkedIn, X, sitio web) al abrir un proyecto,
-                tenelas cargadas en tu{' '}
-                <a
-                  href="https://github.com/settings/profile"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-neutral-700 underline decoration-neutral-400 underline-offset-2 hover:text-neutral-950"
-                >
-                  perfil de GitHub
-                </a>
-                . Las tomamos de ahí cuando sincronizamos.
+                Conectá GitHub y sincronizá. Entra al mapa si el repo es público, tiene la
+                URL en <strong className="font-medium text-neutral-800">About</strong> y estuvo
+                activo el último año ({GITHUB_MAP_MIN_COMMITS} commits o más).
               </p>
 
               {user && githubLogin ? (
-                <p className="mt-4 rounded-xl bg-neutral-50 px-3.5 py-3 text-sm text-neutral-600">
+                <p className="mt-4 text-sm text-neutral-600">
                   Conectado como{' '}
                   <span className="font-medium text-neutral-900">@{githubLogin}</span>.
-                  {synced
-                    ? ' En las próximas horas revisamos tus repos y actualizamos el mapa.'
-                    : ' Tocá sincronizar para que tomemos tus repos públicos.'}
+                  {synced ? ' Listo — actualizamos el mapa en las próximas horas.' : null}
                 </p>
               ) : null}
 
               {synced ? (
                 <p
-                  className="mt-4 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-3.5 py-3 text-sm text-emerald-900"
+                  className="mt-4 text-sm text-emerald-800"
                   role="status"
                 >
-                  Listo. Cuando corra la próxima sincronización, tu proyecto puede
-                  aparecer acá.
+                  Sincronizado. Tu proyecto puede aparecer en el mapa pronto.
                 </p>
               ) : null}
 
