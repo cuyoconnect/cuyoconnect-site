@@ -9,11 +9,11 @@ import {
   type GithubMapProject,
   type GithubMapRepo,
   type GithubMapScope,
-} from './types'
-import { parseGithubSocialAccounts } from '../github-social-links'
-import { persistMemberGithubLinks } from '../github-social-sync'
-import { aggregateMapProjects } from './projects'
-import { fetchOwnerAvatar, fetchSiteMeta } from './site-meta'
+} from './types.js'
+import { parseGithubSocialAccounts } from '../github-social-links.js'
+import { persistMemberGithubLinks } from '../github-social-sync.js'
+import { aggregateMapProjects } from './projects.js'
+import { fetchOwnerAvatar, fetchSiteMeta } from './site-meta.js'
 
 const MEMBER_COLUMNS =
   'id, github_login, display_name, avatar_url, slug, is_visible, is_public'

@@ -2,7 +2,7 @@ import {
   GITHUB_MAP_MIN_COMMITS,
   type GithubMapMember,
   type GithubMapProject,
-} from '@/lib/github-map/types'
+} from './types.js'
 
 /** Une repos de todos los miembros; el tamaño del mapa usa la suma de commits. */
 export function aggregateMapProjects(

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-import { syncAllMemberGithubProfiles } from '../src/lib/github-social-sync'
+import { syncAllMemberGithubProfiles } from '../src/lib/github-social-sync.js'
 
 export const config = {
   maxDuration: 300,

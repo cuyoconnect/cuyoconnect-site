@@ -1,4 +1,4 @@
-import { parseGithubSocialAccounts, type GithubSocialLinks } from './github-social-links'
+import { parseGithubSocialAccounts, type GithubSocialLinks } from './github-social-links.js'
 
 type MemberSyncRow = {
   id: string

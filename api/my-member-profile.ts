@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-import { syncMemberGithubProfile } from '../src/lib/github-social-sync'
+import { syncMemberGithubProfile } from '../src/lib/github-social-sync.js'
 
 const MEMBER_PROFILE_COLUMNS =
   'id, user_id, github_login, display_name, avatar_url, github_url, joined_at, is_visible, slug, bio, location, website_url, linkedin_url, instagram_url, x_url, is_public, updated_at'

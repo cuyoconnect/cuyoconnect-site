@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-import { refreshGithubMapPayload } from '../src/lib/github-map/server'
+import { refreshGithubMapPayload } from '../src/lib/github-map/server.js'
 
 export const config = {
   maxDuration: 300,
