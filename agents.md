@@ -14,3 +14,4 @@
 - El padre de la columna debe llevar padding horizontal de página coherente (p. ej. `px-4 sm:px-6`), igual que en otras secciones.
 - **Pie de página** (`src/SiteFooter.tsx`): el `<footer>` va sin padding/margin extra (`p-0`, sin `pt-*` ni `px-*` en el propio footer). Fondo **blanco** como el resto de la página (sin imagen ni tonos grises de relleno). El contenedor `#footer-surface` es ancho completo; el contenido usa `px-4 sm:px-6` + `HERO_CONTENT_WIDTH_CLASS` centrado, igual que el ritmo horizontal del hero.
  
+ 
