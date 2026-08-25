@@ -7,7 +7,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   use: {
-    baseURL: 'http://localhost:4333',
+    baseURL: 'http://localhost:4333', 
     trace: 'off',
   },
   webServer: {
