@@ -65,8 +65,8 @@ test.describe('mapa de burbujas de proyectos', () => {
     await expect(page.getByRole('button', { name: /notas/i })).toBeVisible()
 
     await cuyoApp.click()
-    await expect(page.getByRole('navigation', { name: 'Navegación del proyecto' })).toBeVisible()
-    await expect(page.getByText('cuyo-app')).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Volver al mapa de proyectos' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Volver' })).toBeVisible()
 
     const popupPromise = page.waitForEvent('popup')
     await page.getByRole('link', { name: /Abrir cuyo-app/i }).click()

@@ -15,6 +15,11 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss(), githubMapDevApi()],
+    server: {
+      watch: {
+        ignored: ['**/.vercel/**', '**/dist/**'],
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
