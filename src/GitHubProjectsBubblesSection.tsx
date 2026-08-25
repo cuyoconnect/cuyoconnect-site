@@ -1,16 +1,16 @@
 import { useMemo } from 'react'
 
-import { GitHubMapViewer } from '@/components/github-map/GitHubMapViewer'
+import { GitHubProjectsBubblesViewer } from '@/components/github-map/GitHubProjectsBubblesViewer'
 import { BlurText } from '@/components/ui/blur-text'
-import { HERO_CONTENT_WIDTH_CLASS, GITHUB_MAP_WIDTH_CLASS } from '@/lib/content-width'
+import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
 const HEADING = 'Proyectos de la comunidad'
 const LEAD =
-  'Cada isla es un proyecto publicado. El área sigue los commits de la comunidad en el último año.'
+  'Cada burbuja es un proyecto publicado y su tamaño sigue los commits del último año.'
 
-export function GitHubMapSection() {
+export function GitHubProjectsBubblesSection() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(1), [])
 
   return (
@@ -40,20 +40,22 @@ export function GitHubMapSection() {
         </p>
       </div>
 
-      <div className={cn(GITHUB_MAP_WIDTH_CLASS, 'mt-10 min-w-0 sm:mt-12')}>
-        <GitHubMapViewer variant="teaser" />
-        <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'mt-6 px-0')}>
-          <a
-            href="/proyectos"
-            className={cn(
-              'inline-flex items-center rounded-full bg-[#1d1d1f] px-4 py-2.5 text-sm font-medium text-white',
-              'transition-colors hover:bg-black',
-              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
-            )}
-          >
-            Explorar el mapa
-          </a>
-        </div>
+      {/* Sin columna máxima: el racimo usa todo el ancho, como el hero. */}
+      <div className="mt-10 w-full min-w-0 sm:mt-12">
+        <GitHubProjectsBubblesViewer />
+      </div>
+
+      <div className={cn(HERO_CONTENT_WIDTH_CLASS, 'mt-8 min-w-0')}>
+        <a
+          href="/proyectos"
+          className={cn(
+            'inline-flex items-center rounded-full bg-[#1d1d1f] px-4 py-2.5 text-sm font-medium text-white',
+            'transition-colors hover:bg-black',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900',
+          )}
+        >
+          Ver todos los proyectos
+        </a>
       </div>
     </section>
   )

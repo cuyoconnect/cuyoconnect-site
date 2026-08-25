@@ -4,13 +4,15 @@ export type ProjectLink = {
   id: string
   label: string
   href: string
-  icon: 'github' | 'linkedin' | 'x' | 'website'
+  icon: 'arrow' | 'github' | 'linkedin' | 'x' | 'website'
 }
 
 const ORB_SPRING = { type: 'spring', stiffness: 420, damping: 24, mass: 0.6 } as const
 
 /** Cada marca reacciona distinto al hover: el globo gira, el resto respira. */
 const ICON_MOTION: Record<ProjectLink['icon'], string> = {
+  arrow:
+    'transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5',
   website: 'transition-transform duration-700 ease-out group-hover:rotate-[360deg]',
   github: 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5',
   linkedin: 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5',
@@ -22,6 +24,23 @@ function Icon({ name }: { name: ProjectLink['icon'] }) {
     className: 'h-[18px] w-[18px]',
     'aria-hidden': true,
   } as const
+
+  if (name === 'arrow') {
+    // Misma marca que el CTA «Unite»: la flecha anuncia salir del sitio.
+    return (
+      <svg
+        {...common}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M7 17 17 7M7 7h10v10" />
+      </svg>
+    )
+  }
 
   if (name === 'github') {
     return (
@@ -65,8 +84,9 @@ function Icon({ name }: { name: ProjectLink['icon'] }) {
 
 /**
  * Botones circulares que brotan bajo la tarjeta fijada, uno detrás de otro.
- * El vidrio no es una textura: es el fondo del mapa desenfocado a través del
- * botón, así que cada burbuja toma el color de la región que tiene debajo.
+ * Misma receta que las burbujas: superficie clara, filete de un píxel y sombra
+ * suave. Antes eran de vidrio, que funcionaba sobre el mapa oscuro pero
+ * desaparece sobre el blanco de la página.
  */
 export function ProjectLinkOrbs({
   links,
@@ -92,7 +112,7 @@ export function ProjectLinkOrbs({
               rel="noopener noreferrer"
               aria-label={link.label}
               title={link.label}
-              className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-white/45 text-[#1d1d1f] shadow-[0_10px_24px_-10px_rgba(29,29,31,0.7)] backdrop-blur-xl backdrop-saturate-150 transition-colors hover:bg-white/70"
+              className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[rgba(29,29,31,0.10)] bg-white text-[#1d1d1f] shadow-[0_1px_2px_rgba(29,29,31,0.04),0_8px_20px_rgba(29,29,31,0.10)] transition-colors hover:bg-neutral-50"
               initial={
                 reduceMotion
                   ? { opacity: 0 }
@@ -116,15 +136,6 @@ export function ProjectLinkOrbs({
               whileHover={reduceMotion ? undefined : { scale: 1.12 }}
               whileTap={reduceMotion ? undefined : { scale: 0.94 }}
             >
-              {/* Reflejo especular: la ceja de luz que define el vidrio. */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-b from-white/85 via-white/10 to-transparent opacity-70"
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-2 bottom-0 h-1/2 rounded-full bg-gradient-to-t from-white/40 to-transparent blur-[2px]"
-              />
               <span
                 className={
                   reduceMotion ? 'relative' : `relative ${ICON_MOTION[link.icon]}`

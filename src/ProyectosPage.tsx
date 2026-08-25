@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
 
-import { GitHubMapViewer } from '@/components/github-map/GitHubMapViewer'
+import { GitHubProjectsBubblesViewer } from '@/components/github-map/GitHubProjectsBubblesViewer'
 import { BlurText } from '@/components/ui/blur-text'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
-const HEADING = 'Mapa de proyectos'
+const HEADING = 'Proyectos de la comunidad'
 const PAGE_LEAD =
-  'Cada región es un proyecto publicado por la comunidad y su área sigue los commits del último año. Pasá el mouse para verlo y hacé clic para fijar la tarjeta.'
+  'Cada burbuja es un proyecto publicado y su tamaño sigue los commits del último año. Pasá el mouse para verlo y hacé clic para fijar la tarjeta.'
 
 export function ProyectosPage() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(1), [])
@@ -37,12 +37,9 @@ export function ProyectosPage() {
           </p>
         </div>
 
-        {/* Sin columna máxima: el mapa usa todo el ancho de la ventana. */}
-        <div className="relative mt-6 h-[min(68vh,44rem)] w-full min-w-0 sm:mt-8">
-          <GitHubMapViewer
-            variant="full"
-            className="absolute inset-0 h-full w-full"
-          />
+        {/* Sin columna máxima: el racimo usa todo el ancho de la ventana. */}
+        <div className="mt-6 w-full min-w-0 sm:mt-8">
+          <GitHubProjectsBubblesViewer />
         </div>
       </section>
     </div>

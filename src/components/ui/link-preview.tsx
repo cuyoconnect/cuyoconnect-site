@@ -11,24 +11,6 @@ import {
 
 import { cn } from '@/lib/utils'
 
-/** Misma marca que el CTA «Unite» y las tarjetas de equipo. */
-function ArrowUpRightIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M7 17 17 7M7 7h10v10" />
-    </svg>
-  )
-}
-
 type LinkPreviewProps = {
   children: React.ReactNode
   url: string
@@ -240,28 +222,6 @@ export function LinkPreviewCard({
               ) : null}
             </div>
           </div>
-        ) : null}
-
-        {/* Fijada, la foto entera es el enlace al sitio publicado; el sello lo anuncia. */}
-        {interactive ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={title ? `Abrir ${title}` : 'Abrir el sitio del proyecto'}
-            className="group absolute inset-0 z-30 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
-          >
-            <span
-              className={cn(
-                'absolute right-3 top-3 flex size-9 items-center justify-center rounded-full',
-                'bg-yellow-300 text-neutral-950 ring-1 ring-black/10',
-                'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)]',
-                'transition-transform duration-200 ease-out group-hover:scale-105',
-              )}
-            >
-              <ArrowUpRightIcon className="size-4 shrink-0" />
-            </span>
-          </a>
         ) : null}
       </div>
     </div>

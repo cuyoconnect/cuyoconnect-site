@@ -8,7 +8,7 @@ import SiteFooter from '@/SiteFooter.astro'
 import { TeamSection } from '@/TeamSection'
 import { FaqSection } from '@/FaqSection'
 import OurEventsGalleryIsland from '@/components/OurEventsGalleryIsland'
-import { GitHubMapSection } from '@/GitHubMapSection'
+import { GitHubProjectsBubblesSection } from '@/GitHubProjectsBubblesSection'
 
 interface Props {
   pathname: string
@@ -36,7 +36,7 @@ const supabaseAnonKey =
   <PastEventsSliderSection client:visible />
   <EventsSection client:visible />
   <TeamSection client:visible />
-  <GitHubMapSection client:only="react">
+  <GitHubProjectsBubblesSection client:only="react">
     <section
       slot="fallback"
       class="px-4 py-16 sm:px-6 sm:py-20"
@@ -44,7 +44,7 @@ const supabaseAnonKey =
     >
       <div class="mx-auto h-[28rem] max-w-3xl animate-pulse rounded-[2rem] bg-neutral-100"></div>
     </section>
-  </GitHubMapSection>
+  </GitHubProjectsBubblesSection>
   <FaqSection client:visible />
 </main>
 <SiteFooter />

@@ -18,6 +18,10 @@
   --font-faq:
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol';
+  /* Etiquetas dentro de gráficos: a 12px lo que sostiene la lectura es la
+     altura de x y las aperturas abiertas, no el carácter de la tipografía. */
+  --font-data:
+    'Inter', ui-sans-serif, system-ui, sans-serif;
   --animate-marquee: marquee var(--marquee-duration, 45s) linear infinite;
 
   /* Tokens tipo shadcn (p. ej. acordeón FAQ en `components/ui`) */

@@ -8,7 +8,7 @@ type CircuitGutter = 'hero' | 'wide'
  * - **lg+:** máscaras en los laterales (to_right / to_left).
  * - Halo muy suave arriba-derecha.
  *
- * `wide` encaja con `GITHUB_MAP_WIDTH_CLASS` (~78rem): tiras más angostas y un fade más corto.
+ * `wide` encaja con `WIDE_STAGE_WIDTH_CLASS` (~78rem): tiras más angostas y un fade más corto.
  */
 export function SideCircuitDecor({
   className,

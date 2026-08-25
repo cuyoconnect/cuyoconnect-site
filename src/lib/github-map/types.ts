@@ -62,13 +62,3 @@ export type WeightedMapItem = {
   id: string
   weight: number
 }
-
-export type VoronoiCell<T> = {
-  id: string
-  points: [number, number][]
-  centroid: [number, number]
-  area: number
-  data: T
-}
-
-export type MapLod = 'color' | 'avatar' | 'name'
