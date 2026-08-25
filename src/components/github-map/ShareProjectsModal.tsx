@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 
 import { fetchMyMemberProfile } from '@/lib/member-profiles'
-import { GITHUB_MAP_MIN_COMMITS } from '@/lib/github-map/types'
 import { useAuth } from '@/providers/AuthProvider'
 import { cn } from '@/lib/utils'
 
@@ -184,9 +183,9 @@ export function ShareProjectsModal({ open, onClose }: ShareProjectsModalProps) {
 
             <div className="min-h-0 flex-auto overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
               <p className="text-pretty text-sm leading-relaxed text-neutral-600">
-                Conectá GitHub y sincronizá. Entra al mapa si el repo es público, tiene la
-                URL en <strong className="font-medium text-neutral-800">About</strong> y estuvo
-                activo el último año ({GITHUB_MAP_MIN_COMMITS} commits o más).
+                Conectá GitHub y sincronizá. Si tu repo es público y tiene la URL del
+                deploy en <strong className="font-medium text-neutral-800">About</strong>, puede
+                aparecer en el mapa.
               </p>
 
               {user && githubLogin ? (

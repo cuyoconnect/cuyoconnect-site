@@ -48,7 +48,7 @@ export type GithubMapMember = {
 export const GITHUB_MAP_CACHE_VERSION = 9
 
 /** Menos de esto no entra al mapa (evita islas muertas). */
-export const GITHUB_MAP_MIN_COMMITS = 20
+export const GITHUB_MAP_MIN_COMMITS = 10
 
 export type GithubMapPayload = {
   scope: GithubMapScope

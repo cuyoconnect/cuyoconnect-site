@@ -400,7 +400,7 @@ export function GitHubProjectsBubblesViewer({
       return 'Estamos sincronizando los proyectos de la comunidad. Volvé a cargar en unos minutos.'
     }
     if (allProjects.length === 0) {
-      return `Todavía no hay repos con homepage y al menos ${GITHUB_MAP_MIN_COMMITS} commits en el último año.`
+      return 'Todavía no hay repos con homepage y al menos 10 commits en el último año.'
     }
     return 'Todavía no hay proyectos publicados con suficiente actividad.'
   })()
