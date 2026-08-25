@@ -13,6 +13,7 @@ import {
 import { parseGithubSocialAccounts } from '../github-social-links.js'
 import { persistMemberGithubLinks } from '../github-social-sync.js'
 import { aggregateMapProjects } from './projects.js'
+import { resolveServiceRoleKey } from '../supabase-server-env.js'
 import { fetchOwnerAvatar, fetchSiteMeta } from './site-meta.js'
 
 const MEMBER_COLUMNS =
@@ -139,7 +140,7 @@ function githubToken() {
 }
 
 function serviceRoleKey() {
-  return envValue('SUPABASE_SERVICE_ROLE_KEY')
+  return resolveServiceRoleKey(envValue)
 }
 
 type SnapshotRow = {

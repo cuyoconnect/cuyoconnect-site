@@ -145,7 +145,7 @@ export async function fetchGithubMap(
     first.members.length === 0 &&
     !first.fetchedAt
 
-  if (needsWarm) {
+  if (needsWarm && import.meta.env.DEV) {
     await refreshGithubMap(scope)
     try {
       const warmed = await fetchFromApi(scope)

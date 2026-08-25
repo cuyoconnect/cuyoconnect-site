@@ -13,9 +13,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const payload = await readGithubMapPayload(scope)
+    const isEmpty =
+      payload.members.length === 0 &&
+      payload.projects.length === 0 &&
+      !payload.fetchedAt
     res.setHeader(
       'Cache-Control',
-      'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400',
+      isEmpty
+        ? 'no-store'
+        : 'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400',
     )
     res.status(200).json(payload)
   } catch (error) {

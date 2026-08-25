@@ -1,4 +1,5 @@
 import { parseGithubSocialAccounts, type GithubSocialLinks } from './github-social-links.js'
+import { resolveServiceRoleKey } from './supabase-server-env.js'
 
 type MemberSyncRow = {
   id: string
@@ -62,7 +63,7 @@ function envValue(...keys: string[]) {
 function supabaseConfig() {
   return {
     url: envValue('SUPABASE_URL', 'PUBLIC_SUPABASE_URL', 'VITE_SUPABASE_URL'),
-    serviceRoleKey: envValue('SUPABASE_SERVICE_ROLE_KEY'),
+    serviceRoleKey: resolveServiceRoleKey(envValue),
     anonKey: envValue(
       'SUPABASE_ANON_KEY',
       'PUBLIC_SUPABASE_ANON_KEY',
