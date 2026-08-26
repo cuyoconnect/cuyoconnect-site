@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config'
 import react from '@astrojs/react'
 import vercel from '@astrojs/vercel'
 import tailwindcss from '@tailwindcss/vite'
-
+ 
 import { githubMapDevApi } from './src/lib/github-map/dev-api-plugin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
