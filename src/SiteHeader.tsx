@@ -53,11 +53,6 @@ function ArrowUpRightIcon({ className }: { className?: string }) {
   )
 }
 
-const navTextLinkClass = cn(
-  'shrink-0 whitespace-nowrap rounded-full font-medium transition-colors duration-[600ms] delay-0 ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:duration-[240ms] hover:delay-0',
-  'hover:bg-black/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
-)
-
 function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>) {
   return !(
     event.button !== 0 ||
@@ -93,8 +88,6 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   const navTransitionTiming = `${navShellTransitionDuration} ${navShellEase} 0s`
   const isHome = pathname === '/'
   const logoHref = isHome ? '#inicio' : '/'
-  const eventsHref = isHome ? '#eventos' : '/eventos'
-  const projectsHref = '/proyectos'
 
   useLayoutEffect(() => {
     setScrolled(window.scrollY >= SCROLL_PILL_THRESHOLD)
@@ -238,10 +231,8 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             <a
               href={logoHref}
               className={cn(
-                'flex min-w-0 shrink items-center gap-1.5 rounded-[10px] font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 sm:shrink-0 sm:gap-2 sm:whitespace-nowrap',
-                scrolled
-                  ? 'px-2 py-1.5 text-sm text-[#1d1d1f] sm:gap-2 sm:px-3 sm:text-base'
-                  : 'px-1 py-1 text-sm text-neutral-950 sm:gap-2.5 sm:px-0 sm:py-0 sm:text-base md:text-lg',
+                'flex shrink-0 items-center rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
+                scrolled ? 'px-2 py-1.5 sm:px-3' : 'px-1 py-1 sm:px-0 sm:py-0',
               )}
               aria-label="CuyoConnect — inicio"
               style={navItemStyle}
@@ -251,57 +242,9 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               }}
             >
               <NavLogoMark className="h-7 shrink-0 sm:h-9" />
-              {!scrolled ? (
-                <span className="min-w-0 truncate sm:overflow-visible">
-                  CuyoConnect
-                </span>
-              ) : (
-                <>
-                  <span className="hidden min-[380px]:inline">CuyoConnect</span>
-                  <span className="min-[380px]:hidden">Cuyo</span>
-                </>
-              )}
             </a>
 
-            <div
-              className={cn(
-                'flex shrink-0 items-center',
-                scrolled ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-3',
-              )}
-              style={navActionsStyle}
-            >
-              <a
-                href={projectsHref}
-                aria-current={pathname === '/proyectos' ? 'page' : undefined}
-                className={cn(
-                  navTextLinkClass,
-                  scrolled
-                    ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
-                    : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
-                )}
-                style={navItemStyle}
-              >
-                Proyectos
-              </a>
-
-              <a
-                href={eventsHref}
-                aria-current={pathname === '/eventos' ? 'page' : undefined}
-                className={cn(
-                  navTextLinkClass,
-                  scrolled
-                    ? 'inline-flex px-3 py-2 text-xs text-[#6b6b6b] hover:text-[#1d1d1f] sm:px-4 sm:text-sm'
-                    : 'inline-flex px-2 py-2 text-xs text-neutral-800 hover:text-neutral-950 sm:px-3 sm:text-sm',
-                )}
-                style={navItemStyle}
-                onClick={(event) => {
-                  if (event.defaultPrevented) return
-                  tryScrollLandingSection(event, pathname, 'eventos', '#eventos')
-                }}
-              >
-                Eventos
-              </a>
-
+            <div className="flex shrink-0 items-center" style={navActionsStyle}>
               <button
                 type="button"
                 className={cn(
@@ -332,20 +275,11 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             ref={scrolledMeasureRef}
             className="relative z-10 flex min-h-14 w-max min-w-0 items-center justify-between gap-3 px-2 py-2 sm:min-h-16 sm:gap-4 sm:px-3"
           >
-            <span className="flex min-w-0 shrink items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-sm font-semibold tracking-tight text-[#1d1d1f] sm:shrink-0 sm:gap-2 sm:whitespace-nowrap sm:px-3 sm:text-base">
+            <span className="flex shrink-0 items-center rounded-[10px] px-2 py-1.5 sm:px-3">
               <NavLogoMark className="h-7 shrink-0 sm:h-9" />
-              <span className="hidden min-[380px]:inline">CuyoConnect</span>
-              <span className="min-[380px]:hidden">Cuyo</span>
             </span>
 
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-[#6b6b6b] sm:px-4 sm:text-sm">
-                Proyectos
-              </span>
-              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-[#6b6b6b] sm:px-4 sm:text-sm">
-                Eventos
-              </span>
-
+            <div className="flex shrink-0 items-center">
               <span className="inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-[#1d1d1f] px-3 text-xs font-medium text-white shadow-sm sm:gap-1.5 sm:h-10 sm:px-5 sm:text-sm">
                 Unite
                 <ArrowUpRightIcon
