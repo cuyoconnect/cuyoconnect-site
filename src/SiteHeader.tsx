@@ -231,8 +231,10 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             <a
               href={logoHref}
               className={cn(
-                'flex shrink-0 items-center rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400',
-                scrolled ? 'px-2 py-1.5 sm:px-3' : 'px-1 py-1 sm:px-0 sm:py-0',
+                'flex min-w-0 shrink items-center gap-1.5 rounded-[10px] font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 sm:shrink-0 sm:gap-2 sm:whitespace-nowrap',
+                scrolled
+                  ? 'px-2 py-1.5 text-sm text-[#1d1d1f] sm:gap-2 sm:px-3 sm:text-base'
+                  : 'px-1 py-1 text-sm text-neutral-950 sm:gap-2.5 sm:px-0 sm:py-0 sm:text-base md:text-lg',
               )}
               aria-label="CuyoConnect — inicio"
               style={navItemStyle}
@@ -242,6 +244,16 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               }}
             >
               <NavLogoMark className="h-7 shrink-0 sm:h-9" />
+              {!scrolled ? (
+                <span className="min-w-0 truncate sm:overflow-visible">
+                  CuyoConnect
+                </span>
+              ) : (
+                <>
+                  <span className="hidden min-[380px]:inline">CuyoConnect</span>
+                  <span className="min-[380px]:hidden">Cuyo</span>
+                </>
+              )}
             </a>
 
             <div className="flex shrink-0 items-center" style={navActionsStyle}>
@@ -275,8 +287,10 @@ export function SiteHeader({ pathname }: { pathname: string }) {
             ref={scrolledMeasureRef}
             className="relative z-10 flex min-h-14 w-max min-w-0 items-center justify-between gap-3 px-2 py-2 sm:min-h-16 sm:gap-4 sm:px-3"
           >
-            <span className="flex shrink-0 items-center rounded-[10px] px-2 py-1.5 sm:px-3">
+            <span className="flex min-w-0 shrink items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-sm font-semibold tracking-tight text-[#1d1d1f] sm:shrink-0 sm:gap-2 sm:whitespace-nowrap sm:px-3 sm:text-base">
               <NavLogoMark className="h-7 shrink-0 sm:h-9" />
+              <span className="hidden min-[380px]:inline">CuyoConnect</span>
+              <span className="min-[380px]:hidden">Cuyo</span>
             </span>
 
             <div className="flex shrink-0 items-center">
