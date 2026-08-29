@@ -13,7 +13,7 @@ Sitio estático en Astro con islas React para conservar la interacción existent
    
 - `/`: landing principal.
 - `/recursos`: archivo de recursos y materiales.
-- `/eventos`: landing con scroll inicial a la sección  de eventos.
+- `/eventos`: landing con scroll inicial a la sección  de evento s.
 - `/miembros`: landing con scroll inicial a la sección de miembros.
 
 ## Variables de entorno
