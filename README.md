@@ -3,7 +3,7 @@
 Sitio estático en Astro con islas React para conservar la interacción existente.
 
 ## Scripts
-
+ 
 - `npm run dev`: inicia Astro en desarrollo. 
 - `npm run build`: genera el sitio estático en `dist/`. 
 - `npm run preview`: sirve el build localmente. 
