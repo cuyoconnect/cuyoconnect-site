@@ -9,7 +9,7 @@
       "schedule": "0 8 * * 1"
     }
   ],
-  "functions": {
+  "functions": { 
     "api/github-map-refresh.ts": {
       "maxDuration": 300
     },
