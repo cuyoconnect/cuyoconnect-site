@@ -43,8 +43,16 @@ export const COMMUNITY_LINKS = [
 
 export type CommunityLinkId = (typeof COMMUNITY_LINKS)[number]['id']
 
+export const LUMA_CALENDAR_ID = 'cal-GDIEkhScyp1dPKU' as const
+
+export const LUMA_CALENDAR_HREF = `https://luma.com/calendar/${LUMA_CALENDAR_ID}`
+
 export const LUMA_CALENDAR_EMBED_SRC =
-  'https://luma.com/embed/calendar/cal-GDIEkhScyp1dPKU/events?lt=light'
+  `https://luma.com/embed/calendar/${LUMA_CALENDAR_ID}/events?lt=light`
+
+export function lumaEventHref(slug: string) {
+  return `https://luma.com/${slug.replace(/^\/+/, '')}`
+}
 
 /** Abre el enlace en una pestaña nueva (comportamiento de navegador, no popup). */
 export function openCommunityLink(href: string) {

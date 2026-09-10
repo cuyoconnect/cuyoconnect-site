@@ -16,6 +16,7 @@ import { prefetchLinkPreviews } from '@/components/ui/link-preview'
 import {
   GITHUB_MAP_BUBBLE_SURFACES,
   GITHUB_MAP_EDGE,
+  GITHUB_MAP_EDGE_ACTIVE,
   GITHUB_MAP_HAIRLINE,
   GITHUB_MAP_INK,
   sequentialFillsByRank,
@@ -37,6 +38,12 @@ import { cn } from '@/lib/utils'
 
 const EASE = [0.33, 1, 0.68, 1] as const
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
+/** Ritmo de hover del resto del sitio (CTA ~420ms + 90ms). */
+const HOVER_S = 0.5
+const HOVER_DELAY_S = 0.09
+/** El cable sale un poco más lento, después del scale down. */
+const EDGE_DRAW_S = 0.84
+const EDGE_DRAW_DELAY_S = 0.12
 const STAGE_ASPECT = 0.54
 const STAGE_MIN_HEIGHT = 380
 const STAGE_MAX_HEIGHT = 560
@@ -57,6 +64,92 @@ const FOCUS_PEER_FADE_S = 0.38
 /** Respaldo si onAnimationComplete no dispara al volver al mapa. */
 const FOCUS_CLOSE_FALLBACK_MS = 1200
 const PROJECT_FOCUS_HISTORY_KEY = 'cuyoProjectFocus'
+
+const EDGE_VARIANTS = {
+  rest: {
+    pathLength: 1,
+    opacity: 1,
+    strokeWidth: 1.25,
+    stroke: GITHUB_MAP_EDGE,
+  },
+  unrelated: {
+    pathLength: 1,
+    opacity: 0.28,
+    strokeWidth: 1.1,
+    stroke: GITHUB_MAP_EDGE,
+  },
+} as const
+
+function GraphEdge({
+  edge,
+  hoveredId,
+  reduceMotion,
+}: {
+  edge: EdgeLine
+  hoveredId: string | null
+  reduceMotion: boolean
+}) {
+  const connected = hoveredId === edge.source || hoveredId === edge.target
+  const unrelated = Boolean(hoveredId) && !connected
+  const fromHoveredNode =
+    hoveredId === edge.target
+      ? { x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1 }
+      : { x1: edge.x1, y1: edge.y1, x2: edge.x2, y2: edge.y2 }
+
+  return (
+    <>
+      <motion.line
+        x1={edge.x1}
+        y1={edge.y1}
+        x2={edge.x2}
+        y2={edge.y2}
+        strokeLinecap="round"
+        variants={EDGE_VARIANTS}
+        initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+        animate={
+          connected
+            ? { opacity: 0, pathLength: 1, strokeWidth: 1.25, stroke: GITHUB_MAP_EDGE }
+            : reduceMotion
+              ? {
+                  opacity: unrelated ? 0.28 : 1,
+                  strokeWidth: 1.25,
+                  stroke: GITHUB_MAP_EDGE,
+                }
+              : unrelated
+                ? 'unrelated'
+                : 'rest'
+        }
+        transition={
+          reduceMotion || connected
+            ? { duration: 0 }
+            : { duration: HOVER_S, delay: HOVER_DELAY_S, ease: EASE }
+        }
+      />
+      {connected && hoveredId ? (
+        <motion.line
+          key={`${edge.id}-out-${hoveredId}`}
+          x1={fromHoveredNode.x1}
+          y1={fromHoveredNode.y1}
+          x2={fromHoveredNode.x2}
+          y2={fromHoveredNode.y2}
+          strokeLinecap="round"
+          stroke={GITHUB_MAP_EDGE_ACTIVE}
+          initial={
+            reduceMotion
+              ? false
+              : { pathLength: 0, opacity: 1, strokeWidth: 2.2 }
+          }
+          animate={{ pathLength: 1, opacity: 1, strokeWidth: 2.2 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: EDGE_DRAW_S, delay: EDGE_DRAW_DELAY_S, ease: EASE }
+          }
+        />
+      ) : null}
+    </>
+  )
+}
 
 type ProjectFocusHistoryState = {
   [PROJECT_FOCUS_HISTORY_KEY]?: string
@@ -119,6 +212,7 @@ export function GitHubProjectsBubblesViewer({
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [focusPanelOpen, setFocusPanelOpen] = useState(false)
   const [handoffBubbleId, setHandoffBubbleId] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const focusHistoryRef = useRef<FocusHistoryPhase>('idle')
   const focusedIdRef = useRef<string | null>(null)
   const focusPanelOpenRef = useRef(false)
@@ -163,6 +257,7 @@ export function GitHubProjectsBubblesViewer({
   }, [])
 
   const openFocus = useCallback((id: string) => {
+    setHoveredId(null)
     setFocusedId(id)
     setFocusPanelOpen(true)
 
@@ -423,7 +518,7 @@ export function GitHubProjectsBubblesViewer({
       onClick={handleViewerShellClick}
     >
       <div
-        className="relative w-full min-w-0 overflow-hidden"
+        className="relative w-full min-w-0 overflow-visible"
         style={{
           height: layoutStageHeight > 0 ? layoutStageHeight : undefined,
           minHeight: layoutStageHeight > 0 ? undefined : '20rem',
@@ -477,23 +572,16 @@ export function GitHubProjectsBubblesViewer({
                 viewBox={`0 0 ${stageWidth} ${layoutStageHeight}`}
                 aria-hidden
               >
-                {edges.map((edge) => {
-                  if (peersHidden) return null
-                  return (
-                    <motion.line
+                {edges.map((edge) =>
+                  peersHidden ? null : (
+                    <GraphEdge
                       key={edge.id}
-                      x1={edge.x1}
-                      y1={edge.y1}
-                      x2={edge.x2}
-                      y2={edge.y2}
-                      stroke={GITHUB_MAP_EDGE}
-                      strokeLinecap="round"
-                      initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 1, strokeWidth: 1.25 }}
-                      transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
+                      edge={edge}
+                      hoveredId={hoveredId}
+                      reduceMotion={Boolean(reduceMotion)}
                     />
-                  )
-                })}
+                  ),
+                )}
               </svg>
 
               {items.map((item, index) => {
@@ -504,11 +592,19 @@ export function GitHubProjectsBubblesViewer({
                     item={item}
                     index={index}
                     focused={false}
+                    hovered={hoveredId === item.id}
+                    dimmed={Boolean(hoveredId) && hoveredId !== item.id}
                     inactive={peersHidden}
                     peerRevealDelay={false}
                     skipInitialAnimation={handoffBubbleId === item.id}
                     focusLayout={null}
                     reduceMotion={Boolean(reduceMotion)}
+                    onHoverChange={(nextHovered) => {
+                      setHoveredId((current) => {
+                        if (nextHovered) return item.id
+                        return current === item.id ? null : current
+                      })
+                    }}
                     onSelect={() => openFocus(item.id)}
                   />
                 )
@@ -527,6 +623,8 @@ export function GitHubProjectsBubblesViewer({
             item={focusedItem}
             index={0}
             focused
+            hovered={false}
+            dimmed={false}
             inactive={false}
             peerRevealDelay={false}
             skipInitialAnimation={false}
@@ -592,25 +690,30 @@ export function GitHubProjectsBubblesViewer({
 
 function BubbleNode({
   item,
-  index,
   focused,
+  hovered = false,
+  dimmed = false,
   inactive,
   peerRevealDelay,
   skipInitialAnimation = false,
   focusLayout,
   reduceMotion,
   onSelect,
+  onHoverChange,
   onReturnHomeComplete,
 }: {
   item: BubbleItem
   index: number
   focused: boolean
+  hovered?: boolean
+  dimmed?: boolean
   inactive: boolean
   peerRevealDelay: boolean
   skipInitialAnimation?: boolean
   focusLayout: { left: number; top: number; size: number } | null
   reduceMotion: boolean
   onSelect: () => void
+  onHoverChange?: (hovered: boolean) => void
   onReturnHomeComplete?: () => void
 }) {
   const diameter = item.r * 2
@@ -621,6 +724,9 @@ function BubbleNode({
   const springTransition = reduceMotion
     ? { duration: 0 }
     : { type: 'spring' as const, stiffness: 180, damping: 26, mass: 1.05 }
+  const isHovered = hovered && !focused && !inactive
+  const hoverMotion = isHovered && !reduceMotion
+  const dimMotion = dimmed && !focused && !inactive
 
   useEffect(() => {
     setAttempt(0)
@@ -667,7 +773,8 @@ function BubbleNode({
       )}
       style={{
         background: item.fill,
-        border: `1px solid ${GITHUB_MAP_HAIRLINE}`,
+        borderStyle: 'solid',
+        zIndex: focused ? 8 : isHovered ? 6 : 1,
       }}
       initial={
         reduceMotion || skipInitialAnimation
@@ -679,6 +786,9 @@ function BubbleNode({
               height: diameter,
               scale: 0.6,
               opacity: 0,
+              filter: 'saturate(1)',
+              borderColor: GITHUB_MAP_HAIRLINE,
+              borderWidth: 1,
             }
       }
       animate={{
@@ -686,11 +796,16 @@ function BubbleNode({
         top: focusLayout ? focusLayout.top : item.y - item.r,
         width: focusLayout ? focusLayout.size : diameter,
         height: focusLayout ? focusLayout.size : diameter,
-        scale: inactive ? 0.92 : 1,
+        scale: inactive ? 0.92 : hoverMotion ? 0.94 : 1,
         opacity: inactive ? 0 : 1,
+        filter: dimMotion ? 'saturate(0.38)' : 'saturate(1)',
+        borderColor: isHovered ? GITHUB_MAP_INK : GITHUB_MAP_HAIRLINE,
+        borderWidth: isHovered ? 2 : 1,
         boxShadow: focused
           ? '0 8px 20px rgba(29,29,31,0.1)'
-          : '0 1px 2px rgba(29,29,31,0.04), 0 6px 16px rgba(29,29,31,0.05)',
+          : hoverMotion
+            ? '0 6px 18px rgba(29,29,31,0.12), 0 1px 3px rgba(29,29,31,0.05)'
+            : '0 1px 2px rgba(29,29,31,0.04), 0 6px 16px rgba(29,29,31,0.05)',
       }}
       exit={reduceMotion ? undefined : { opacity: 0, scale: 0.88 }}
       transition={{
@@ -698,19 +813,39 @@ function BubbleNode({
         top: springTransition,
         width: springTransition,
         height: springTransition,
-        boxShadow: { duration: reduceMotion ? 0 : 0.32, ease: EASE_OUT },
+        boxShadow: {
+          duration: reduceMotion ? 0 : HOVER_S,
+          delay: reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
+        },
         opacity: {
-          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : focusLayout ? FOCUS_ENTER_S * 0.5 : 0.22,
-          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : 0,
-          ease: EASE_OUT,
+          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : HOVER_S,
+          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
         },
         scale: {
-          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : 0.22,
-          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : 0,
-          ease: EASE_OUT,
+          duration: inactive || peerRevealDelay ? FOCUS_PEER_FADE_S : HOVER_S,
+          delay: peerRevealDelay ? FOCUS_REVEAL_DELAY : reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
         },
-        default: { delay: reduceMotion ? 0 : index * 0.02 },
+        filter: {
+          duration: reduceMotion ? 0 : HOVER_S,
+          delay: reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
+        },
+        borderColor: {
+          duration: reduceMotion ? 0 : HOVER_S,
+          delay: reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
+        },
+        borderWidth: {
+          duration: reduceMotion ? 0 : HOVER_S,
+          delay: reduceMotion ? 0 : HOVER_DELAY_S,
+          ease: EASE,
+        },
       }}
+      onHoverStart={() => onHoverChange?.(true)}
+      onHoverEnd={() => onHoverChange?.(false)}
       onClick={(event) => {
         event.stopPropagation()
         onSelect()

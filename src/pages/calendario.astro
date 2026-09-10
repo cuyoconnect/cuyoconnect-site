@@ -1,0 +1,26 @@
+---
+export const prerender = false
+
+import { CalendarioPage } from '@/CalendarioPage'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { fetchLumaPosterEvents } from '@/lib/luma-calendar'
+
+const title = 'Calendario — CuyoConnect'
+const description =
+  'Próximos meetups y encuentros de CuyoConnect. Reservá tu lugar en Luma.'
+
+let events: Awaited<ReturnType<typeof fetchLumaPosterEvents>> = []
+try {
+  events = await fetchLumaPosterEvents()
+} catch {
+  events = []
+}
+---
+
+<BaseLayout title={title} description={description} canonical="/calendario">
+  <SiteHeader client:load pathname="/calendario" />
+  <main>
+    <CalendarioPage client:load events={events} />
+  </main>
+</BaseLayout>

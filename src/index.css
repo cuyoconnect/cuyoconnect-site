@@ -2,9 +2,11 @@
 @import '@fontsource/sora/500.css';
 @import '@fontsource/sora/600.css';
 /* Inter: pareja muy usada con Sora para bloques de UI / lectura (p. ej. FAQ). */
+@import '@fontsource/inter/300.css';
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
 @import '@fontsource/bebas-neue/400.css';
+@import '@fontsource/anton/400.css';
 
 @import 'tailwindcss';
 
@@ -14,6 +16,8 @@
     'Segoe UI Emoji', 'Segoe UI Symbol';
   --font-bebas:
     'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
+  --font-anton:
+    'Anton', ui-sans-serif, system-ui, sans-serif;
   /* Acordeón FAQ: sans neutra y legible; contrasta con Sora del resto del sitio. */
   --font-faq:
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
@@ -31,6 +35,21 @@
   --color-secondary-foreground: #18181b;
   --color-muted: #f4f4f5;
   --color-muted-foreground: #737373;
+
+  /* Paleta CuyoConnect — usar bg-ink, text-sun, bg-paper, etc. */
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #3f3f42;
+  --color-ink-foreground: #f4f0e6;
+  --color-ink-muted: #c8c2b4;
+  --color-paper: #f6f2e6;
+  --color-sun: #ffec6b;
+  --color-sun-deep: #e8c94a;
+  --color-dusk: #4a6f9c;
+  --color-dusk-muted: #d5dfec;
+  --color-mint: #d7f3d2;
+  --color-blush: #ffd9df;
+  --color-lilac: #d9d2ff;
+  --color-sky: #c5f0ff;
 }
 
 @keyframes marquee {
@@ -48,15 +67,14 @@
   }
 }
 
-/* Mismo tono de marcador que el hero (#ffec6b). */
 ::selection {
-  background-color: rgba(255, 236, 107, 0.92);
-  color: #0f172a;
+  background-color: color-mix(in srgb, var(--color-sun) 92%, transparent);
+  color: var(--color-ink);
 }
 
 ::-moz-selection {
-  background-color: rgba(255, 236, 107, 0.92);
-  color: #0f172a;
+  background-color: color-mix(in srgb, var(--color-sun) 92%, transparent);
+  color: var(--color-ink);
 }
 
 html {
@@ -132,5 +150,77 @@ main {
 @supports (height: 100lvh) {
   .hero-viewport {
     min-height: 100lvh;
+  }
+}
+
+/*
+ * Papel de cuaderno (Anthropic econ-scenarios): grilla fina + mayor cada 4.
+ * Overlay multiply para que se imprima sobre bloques de color.
+ */
+.cuyo-graph-overlay {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-ink) 16%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-ink) 16%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-ink) 8%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-ink) 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size:
+    112px 112px,
+    112px 112px,
+    28px 28px,
+    28px 28px;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+/* Mancha de marcador — mismo sol del hero, diluido. */
+.cuyo-wash {
+  background-color: color-mix(in srgb, var(--cuyo-wash) 38%, white);
+}
+
+.cuyo-wash-ink {
+  --cuyo-wash: var(--color-ink);
+}
+
+.cuyo-wash-paper {
+  --cuyo-wash: var(--color-sun-deep);
+  background-color: color-mix(in srgb, var(--cuyo-wash) 16%, var(--color-paper));
+}
+
+.cuyo-wash-sun {
+  --cuyo-wash: var(--color-sun);
+  background-color: color-mix(in srgb, var(--cuyo-wash) 48%, var(--color-paper));
+}
+
+.cuyo-wash-dusk {
+  --cuyo-wash: var(--color-dusk);
+  background-color: color-mix(in srgb, var(--cuyo-wash) 40%, var(--color-paper));
+}
+
+.cuyo-paper-fiber {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: multiply;
+  opacity: 0.38;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cuyo-paper-fiber {
+    opacity: 0.18;
   }
 }

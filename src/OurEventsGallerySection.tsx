@@ -19,7 +19,12 @@ import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/AuthProvider'
 
-const MEMBERS_GALLERY_HEADING = 'Miembros de CuyoConnect'
+export const MEMBERS_GALLERY_HEADING = 'Miembros de CuyoConnect'
+export const MEMBERS_GALLERY_INTRO =
+  'Sumate con GitHub para aparecer en la galería. Tu link CuyoConnect y las redes salen de tu perfil de GitHub.'
+/** Alto fijo del escenario; lo comparte el fallback SSR para no desplazar el layout. */
+export const MEMBERS_GALLERY_STAGE_HEIGHT_CLASS =
+  'h-[340px] sm:h-[440px] md:h-[560px] lg:h-[600px]'
 
 export function OurEventsGallerySection() {
   const { hasAuthConfigured } = useAuth()
@@ -109,8 +114,7 @@ export function OurEventsGallerySection() {
             />
           </h2>
           <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-            Sumate con GitHub para aparecer en la galería. Tu link CuyoConnect y
-            las redes salen de tu perfil de GitHub.
+            {MEMBERS_GALLERY_INTRO}
           </p>
         </div>
 
@@ -123,7 +127,7 @@ export function OurEventsGallerySection() {
           <div
             className={cn(
               'relative w-full overflow-hidden bg-white',
-              'h-[340px] sm:h-[440px] md:h-[560px] lg:h-[600px]',
+              MEMBERS_GALLERY_STAGE_HEIGHT_CLASS,
             )}
           >
             {isLoading ? (

@@ -20,12 +20,12 @@
   --behind-glow-size: 25%;
   --inner-gradient: none;
   /* Espectro “holo” marca: amarillo → carbón (sin arcoíris genérico) */
-  --sunpillar-1: #ffec6b;
-  --sunpillar-2: #e8c94a;
+  --sunpillar-1: var(--color-sun);
+  --sunpillar-2: var(--color-sun-deep);
   --sunpillar-3: #c4b896;
   --sunpillar-4: #8c8a82;
-  --sunpillar-5: #3f3f42;
-  --sunpillar-6: #1d1d1f;
+  --sunpillar-5: var(--color-ink-soft);
+  --sunpillar-6: var(--color-ink);
   --sunpillar-clr-1: var(--sunpillar-1);
   --sunpillar-clr-2: var(--sunpillar-2);
   --sunpillar-clr-3: var(--sunpillar-3);

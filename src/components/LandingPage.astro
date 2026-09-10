@@ -9,12 +9,23 @@ import { TeamSection } from '@/TeamSection'
 import { FaqSection } from '@/FaqSection'
 import OurEventsGalleryIsland from '@/components/OurEventsGalleryIsland'
 import GitHubProjectsIsland from '@/components/github-map/GitHubProjectsIsland'
+import {
+  MEMBERS_GALLERY_HEADING,
+  MEMBERS_GALLERY_INTRO,
+  MEMBERS_GALLERY_STAGE_HEIGHT_CLASS,
+} from '@/OurEventsGallerySection'
+import {
+  DOME_STAGE_WIDTH_CLASS,
+  HERO_CONTENT_WIDTH_CLASS,
+} from '@/lib/content-width'
 
 interface Props {
   pathname: string
+  /** Sección a la que se hace scroll al entrar (rutas como /eventos o /miembros). */
+  targetId?: string
 }
 
-const { pathname } = Astro.props
+const { pathname, targetId = '' } = Astro.props
 const supabaseUrl =
   import.meta.env.PUBLIC_SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL ?? ''
 const supabaseAnonKey =
@@ -32,7 +43,48 @@ const supabaseAnonKey =
     client:only="react"
     supabaseUrl={supabaseUrl}
     supabaseAnonKey={supabaseAnonKey}
-  />
+  >
+    {/* Reserva el alto de la galería en el HTML: sin esto, el salto a #eventos aterriza corrido. */}
+    <section
+      slot="fallback"
+      class="bg-white py-16 text-neutral-950 sm:py-20"
+      aria-hidden="true"
+    >
+      <div class="w-full">
+        <div
+          class:list={[
+            'mx-auto w-full min-w-0 px-4 text-left sm:px-6',
+            HERO_CONTENT_WIDTH_CLASS,
+          ]}
+        >
+          <h2
+            class="w-full max-w-full text-balance text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl md:text-4xl"
+          >
+            {MEMBERS_GALLERY_HEADING}
+          </h2>
+          <p class="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
+            {MEMBERS_GALLERY_INTRO}
+          </p>
+        </div>
+        <div
+          class:list={[
+            'mx-auto mt-10 w-full min-w-0 sm:mt-12',
+            DOME_STAGE_WIDTH_CLASS,
+          ]}
+        >
+          <div
+            class:list={[
+              'flex w-full items-center justify-center bg-white text-neutral-400',
+              MEMBERS_GALLERY_STAGE_HEIGHT_CLASS,
+            ]}
+          >
+            Cargando comunidad...
+          </div>
+        </div>
+        <div class="mt-12 h-12 sm:mt-14"></div>
+      </div>
+    </section>
+  </OurEventsGalleryIsland>
   <PastEventsSliderSection client:visible />
   <EventsSection client:visible />
   <TeamSection client:visible />
@@ -52,3 +104,60 @@ const supabaseAnonKey =
   <FaqSection client:visible />
 </main>
 <SiteFooter />
+
+<script is:inline define:vars={{ targetId }}>
+  // Mantiene la sección destino (#eventos, /eventos, /miembros…) alineada mientras
+  // las islas de arriba terminan de montarse y cambian la altura de la página.
+  ;(() => {
+    const id = targetId || decodeURIComponent(location.hash.slice(1))
+    if (!id) return
+
+    const align = () => {
+      const section = document.getElementById(id)
+      if (!section) return false
+      const heading = section.querySelector('[id$="-heading"]')
+      ;(heading ?? section).scrollIntoView({ behavior: 'instant', block: 'start' })
+      return true
+    }
+
+    let cancelled = false
+
+    // Las secciones client:only (p. ej. #miembros) pueden tardar en aparecer con red lenta,
+    // y el evento `load` puede demorar mucho (imágenes de la galería), así que no dependemos de él.
+    const DEADLINE_MS = 15000
+    const SETTLE_AFTER_LOAD_MS = 4000
+
+    let observer = null
+    const stop = () => {
+      cancelled = true
+      observer?.disconnect()
+    }
+    for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+      window.addEventListener(type, stop, { once: true, passive: true })
+    }
+
+    const watch = () => {
+      const main = document.querySelector('main')
+      if (!main || typeof ResizeObserver === 'undefined') return
+      observer = new ResizeObserver(() => {
+        if (!cancelled) align()
+      })
+      observer.observe(main)
+      const settle = () => setTimeout(() => observer?.disconnect(), SETTLE_AFTER_LOAD_MS)
+      if (document.readyState === 'complete') settle()
+      else window.addEventListener('load', settle, { once: true })
+      setTimeout(() => observer?.disconnect(), DEADLINE_MS)
+    }
+
+    const deadline = performance.now() + DEADLINE_MS
+    const step = () => {
+      if (cancelled) return
+      if (align()) {
+        watch()
+        return
+      }
+      if (performance.now() < deadline) setTimeout(step, 50)
+    }
+    step()
+  })()
+</script>

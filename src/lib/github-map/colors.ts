@@ -1,3 +1,5 @@
+import { PALETTE } from '@/lib/palette'
+
 /**
  * Grises de sistema para las burbujas. El área ya ordena los proyectos, así que
  * el color no necesita repetir esa información a los gritos: apenas insinúa el
@@ -13,7 +15,7 @@ export const GITHUB_MAP_BUBBLE_SURFACES = [
   '#d2d2d7',
 ] as const
 
-export const GITHUB_MAP_INK = '#1d1d1f'
+export const GITHUB_MAP_INK = PALETTE.ink
 /** Filete de un píxel: define el borde sin dibujar un contorno. */
 export const GITHUB_MAP_HAIRLINE = 'rgba(29, 29, 31, 0.10)'
 export const GITHUB_MAP_EDGE = 'rgba(29, 29, 31, 0.18)'

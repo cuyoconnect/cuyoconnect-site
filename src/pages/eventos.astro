@@ -5,29 +5,8 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 const title = 'Eventos — CuyoConnect'
 const description =
   'Calendario de meetups, workshops y encuentros presenciales de la comunidad CuyoConnect.'
-const targetId = 'eventos'
 ---
 
 <BaseLayout title={title} description={description} canonical="/eventos">
-  <LandingPage pathname="/eventos" />
-  <script is:inline define:vars={{ targetId }}>
-    (() => {
-      let attempts = 0
-      const maxAttempts = 90
-      const step = () => {
-        const section = document.getElementById(targetId)
-        if (section) {
-          const heading = section.querySelector('[id$="-heading"]')
-          ;(heading ?? section).scrollIntoView({ behavior: 'auto' })
-          return
-        }
-        if (++attempts < maxAttempts) requestAnimationFrame(step)
-      }
-
-      const start = () => requestAnimationFrame(step)
-
-      if (document.readyState === 'complete') { start(); return }
-      window.addEventListener('load', start, { once: true })
-    })()
-  </script>
+  <LandingPage pathname="/eventos" targetId="eventos" />
 </BaseLayout>
