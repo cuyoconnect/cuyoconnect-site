@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useReducedMotion } from 'motion/react'
-import { ArchivePosterCard } from '@/components/ArchivePosterCard'
+import { useMemo } from 'react'
 import { BlurText } from '@/components/ui/blur-text'
+import FlexCarousel from '@/components/ui/FlexCarousel'
+import type { FlexCarouselItem } from '@/components/ui/FlexCarousel'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
 
 const SECTION_HEADING = 'Eventos anteriores'
-const SPEED = 22
 const INSTAGRAM_HREF = 'https://www.instagram.com/cuyoconnect/'
 
 const CURSOR_PHOTOS = [
@@ -84,102 +83,20 @@ function interleave(...groups: EventCard[][]): EventCard[] {
   return result
 }
 
-const INTERLEAVED = interleave(
+const EVENT_ITEMS: FlexCarouselItem[] = interleave(
   CURSOR_CARDS,
   ALEPH_CARDS,
   STELLAR_CARDS,
   LATINHACK_CARDS,
-)
+).map((card) => ({
+  src: card.image,
+  alt: `${card.title}, ${card.date}`,
+  title: card.title,
+  subtitle: card.date,
+}))
 
 export function PastEventsSliderSection() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
-  const reduceMotion = useReducedMotion()
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-
-  const items = useMemo(
-    () => [...INTERLEAVED, ...INTERLEAVED, ...INTERLEAVED],
-    [],
-  )
-
-  const trackRef = useRef<HTMLDivElement>(null)
-  const xRef = useRef(0)
-  const loopUnitRef = useRef(0)
-  const lastTsRef = useRef<number | null>(null)
-  const rafRef = useRef<number>(0)
-  const isPausedRef = useRef(false)
-  const isDraggingRef = useRef(false)
-  const wasDraggingRef = useRef(false)
-  const dragStartXRef = useRef(0)
-  const dragStartPosRef = useRef(0)
-
-  isPausedRef.current = hoveredIndex !== null
-
-  useEffect(() => {
-    const trackElement = trackRef.current
-    if (!trackElement) return
-
-    loopUnitRef.current = trackElement.scrollWidth / 3
-
-    function tick(timestamp: number) {
-      if (lastTsRef.current === null) lastTsRef.current = timestamp
-      const deltaSeconds = (timestamp - lastTsRef.current) / 1000
-      lastTsRef.current = timestamp
-
-      if (!isDraggingRef.current && !isPausedRef.current) {
-        xRef.current -= SPEED * deltaSeconds
-
-        if (xRef.current <= -loopUnitRef.current) {
-          xRef.current += loopUnitRef.current
-        }
-      }
-
-      trackElement!.style.transform = `translateX(${xRef.current}px)`
-      rafRef.current = requestAnimationFrame(tick)
-    }
-
-    rafRef.current = requestAnimationFrame(tick)
-
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [])
-
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.pointerType === 'mouse' && event.button !== 0) return
-
-    isDraggingRef.current = true
-    wasDraggingRef.current = false
-    lastTsRef.current = null
-    dragStartXRef.current = event.clientX
-    dragStartPosRef.current = xRef.current
-    setIsDragging(true)
-    setHoveredIndex(null)
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
-
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    if (!isDraggingRef.current) return
-
-    const deltaX = event.clientX - dragStartXRef.current
-    if (Math.abs(deltaX) > 4) wasDraggingRef.current = true
-
-    let newX = dragStartPosRef.current + deltaX
-    const unit = loopUnitRef.current
-
-    if (unit > 0) {
-      while (newX > 0) newX -= unit
-      while (newX < -unit) newX += unit
-    }
-
-    xRef.current = newX
-  }
-
-  function handlePointerUp() {
-    if (!isDraggingRef.current) return
-
-    isDraggingRef.current = false
-    lastTsRef.current = null
-    setIsDragging(false)
-  }
 
   return (
     <section
@@ -189,7 +106,7 @@ export function PastEventsSliderSection() {
     >
       <div
         className={cn(
-          'mx-auto mb-10 w-full min-w-0 px-4 text-left sm:mb-12 sm:px-6',
+          'mx-auto mb-6 w-full min-w-0 px-4 text-left sm:mb-8 sm:px-6',
           HERO_CONTENT_WIDTH_CLASS,
         )}
       >
@@ -206,72 +123,34 @@ export function PastEventsSliderSection() {
           />
         </h2>
         <p className="mt-4 max-w-2xl text-pretty text-base text-neutral-600 sm:text-lg">
-          Momentos de cada encuentro de nuestra comunidad.
+          Momentos de cada encuentro de nuestra comunidad.{' '}
+          <a
+            href={INSTAGRAM_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-neutral-950 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-950"
+          >
+            Ver en Instagram
+          </a>
         </p>
       </div>
 
-      <div
-        className={cn(
-          'relative mx-auto w-full min-w-0',
-          HERO_CONTENT_WIDTH_CLASS,
-        )}
-      >
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-5 sm:w-7"
-          style={{ background: 'linear-gradient(to right, #ffffff, transparent)' }}
-          aria-hidden
+      <div className="relative h-[28rem] w-full sm:h-[32rem]">
+        <FlexCarousel
+          className="flex-carousel--events"
+          items={EVENT_ITEMS}
+          preset="liquid"
+          intro="rise"
+          cardHeight={0.5}
+          gap={12}
+          radius={16}
+          squeeze={0.2}
+          focusOnClick
+          captions
+          fit="square"
+          autoplay
+          interval={4.5}
         />
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-5 sm:w-7"
-          style={{ background: 'linear-gradient(to left, #ffffff, transparent)' }}
-          aria-hidden
-        />
-
-        <div
-          className="overflow-hidden px-2 py-5 sm:py-6"
-          style={{
-            cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'pan-y',
-          }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onClickCapture={(event) => {
-            if (wasDraggingRef.current) {
-              event.stopPropagation()
-              event.preventDefault()
-              wasDraggingRef.current = false
-            }
-          }}
-        >
-          <div
-            ref={trackRef}
-            className="flex will-change-transform -mx-2"
-            style={{ gap: '14px', width: 'max-content' }}
-          >
-            {items.map((eventCard, index) => (
-              <ArchivePosterCard
-                key={index}
-                variant="slider"
-                imageSrc={eventCard.image}
-                title={eventCard.title}
-                dateLabel={eventCard.date}
-                href={INSTAGRAM_HREF}
-                ariaLabel={`Ver ${eventCard.title} en Instagram`}
-                external
-                cardIndex={index}
-                hoveredIndex={hoveredIndex}
-                isDragging={isDragging}
-                reduceMotion={reduceMotion}
-                onMouseEnter={() => {
-                  if (!isDragging) setHoveredIndex(index)
-                }}
-                onMouseLeave={() => setHoveredIndex(null)}
-              />
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   )
