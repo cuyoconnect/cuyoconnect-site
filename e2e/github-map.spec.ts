@@ -74,21 +74,4 @@ test.describe('mapa de burbujas de proyectos', () => {
     expect(popup.url()).toMatch(/^https:\/\/cuyo-app\.vercel\.app\/?$/)
   })
 
-  test('el teaser de la home muestra el mapa y el CTA', async ({ page }) => {
-    await mockGithubMap(page)
-    await page.goto('/')
-
-    const section = page.locator('#proyectos')
-    await section.scrollIntoViewIfNeeded()
-    await expect(
-      page.getByRole('heading', { name: 'Proyectos de la comunidad' }),
-    ).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Explorar el mapa' })).toHaveAttribute(
-      'href',
-      '/proyectos',
-    )
-    await expect(page.getByRole('button', { name: /cuyo-app/i })).toBeVisible({
-      timeout: 20_000,
-    })
-  })
 })

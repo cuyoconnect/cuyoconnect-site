@@ -21,6 +21,7 @@ type ImageItem =
       hrefLabel?: string;
       date?: string;
       links?: OverlayLink[];
+      fullSrc?: string;
     };
 
 type DomeGalleryProps = {
@@ -62,6 +63,7 @@ type ItemDef = {
   hrefLabel?: string;
   date?: string;
   links?: OverlayLink[];
+  fullSrc?: string;
   x: number;
   y: number;
   sizeX: number;
@@ -98,6 +100,14 @@ const DEFAULT_IMAGES: ImageItem[] = [
     alt: 'Social media image'
   }
 ];
+
+type DomeColumn = { angle: number; els: HTMLElement[]; visible: boolean };
+
+/**
+ * Las caras a más de ~70° del frente ya las descarta `backface-visibility`; ocultarlas con
+ * `display: none` (con margen) evita mantener ~la mitad de las capas 3D dentro del contexto `preserve-3d`.
+ */
+const BACK_CULL_DEG = 90;
 
 const DEFAULTS = {
   maxVerticalRotationDeg: 5,
@@ -157,6 +167,7 @@ type NormalizedTile = {
   hrefLabel?: string;
   date?: string;
   links?: OverlayLink[];
+  fullSrc?: string;
 };
 
 function domeTileMixSeed(totalSlots: number, poolLen: number, identityKey: string): number {
@@ -369,6 +380,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       hrefLabel: undefined,
       date: undefined,
       links: undefined,
+      fullSrc: undefined,
     }));
   }
 
@@ -385,6 +397,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
         hrefLabel: undefined,
         date: undefined,
         links: undefined,
+        fullSrc: undefined,
       };
     }
     return {
@@ -398,6 +411,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
       hrefLabel: image.hrefLabel,
       date: image.date,
       links: image.links,
+      fullSrc: image.fullSrc,
     };
   });
 
@@ -417,6 +431,7 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
     hrefLabel: usedImages[i].hrefLabel,
     date: usedImages[i].date,
     links: usedImages[i].links,
+    fullSrc: usedImages[i].fullSrc,
   }));
 }
 
@@ -503,6 +518,11 @@ export default function DomeGallery({
   const autoRotationSpeedRef = useRef(autoRotationSpeed);
   autoRotationSpeedRef.current = autoRotationSpeed;
   const resumeAutoRotationRef = useRef<() => void>(() => {});
+  const inViewRef = useRef(true);
+  const reducedMotionRef = useRef(
+    typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  );
+  const columnsRef = useRef<DomeColumn[]>([]);
 
   const openTileExternal = useCallback(() => {
     if (!tileTapExternalHref) return;
@@ -514,10 +534,20 @@ export default function DomeGallery({
 
   const items = useMemo(() => buildItems(images, segments), [images, segments]);
 
+  const updateColumnVisibility = (yDeg: number) => {
+    for (const col of columnsRef.current) {
+      const show = Math.abs(wrapAngleSigned(col.angle + yDeg)) <= BACK_CULL_DEG;
+      if (show === col.visible) continue;
+      col.visible = show;
+      for (const el of col.els) el.style.display = show ? '' : 'none';
+    }
+  };
+
   const applyTransform = (xDeg: number, yDeg: number) => {
     const el = sphereRef.current;
     if (el) {
       el.style.transform = `translateZ(calc(var(--radius) * -1)) rotateX(${xDeg}deg) rotateY(${yDeg}deg)`;
+      updateColumnVisibility(yDeg);
     }
   };
 
@@ -526,14 +556,17 @@ export default function DomeGallery({
       cancelAnimationFrame(autoRotateRAF.current);
       autoRotateRAF.current = null;
     }
-    if (autoRotationSpeedRef.current === 0) return;
-    const tick = () => {
+    if (autoRotationSpeedRef.current === 0 || reducedMotionRef.current || !inViewRef.current) return;
+    let prev = performance.now();
+    const tick = (now: number) => {
       const speed = autoRotationSpeedRef.current;
-      if (speed === 0) {
+      if (speed === 0 || !inViewRef.current) {
         autoRotateRAF.current = null;
         return;
       }
-      rotationRef.current.y += speed;
+      const frames = Math.min((now - prev) / (1000 / 60), 3);
+      prev = now;
+      rotationRef.current.y += speed * frames;
       applyTransform(rotationRef.current.x, rotationRef.current.y);
       autoRotateRAF.current = requestAnimationFrame(tick);
     };
@@ -600,7 +633,48 @@ export default function DomeGallery({
   ]);
 
   useEffect(() => {
+    const sphere = sphereRef.current;
+    if (!sphere) return;
+    const unit = 360 / segments / 2;
+    const byAngle = new Map<number, DomeColumn>();
+    items.forEach((it, i) => {
+      const el = sphere.children[i] as HTMLElement | undefined;
+      if (!el) return;
+      const angle = unit * (it.x + (it.sizeX - 1) / 2);
+      const col = byAngle.get(angle) ?? { angle, els: [], visible: true };
+      col.els.push(el);
+      byAngle.set(angle, col);
+    });
+    columnsRef.current = [...byAngle.values()];
     applyTransform(rotationRef.current.x, rotationRef.current.y);
+  }, [items, segments]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inViewRef.current = entry.isIntersecting;
+        if (!entry.isIntersecting) {
+          if (autoRotateRAF.current != null) {
+            cancelAnimationFrame(autoRotateRAF.current);
+            autoRotateRAF.current = null;
+          }
+          return;
+        }
+        if (
+          !draggingRef.current &&
+          inertiaRAF.current == null &&
+          !focusedElRef.current &&
+          !openingRef.current
+        ) {
+          resumeAutoRotationRef.current();
+        }
+      },
+      { rootMargin: '160px 0px' }
+    );
+    io.observe(root);
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -997,7 +1071,7 @@ export default function DomeGallery({
     const overlay = document.createElement('div');
     overlay.className = 'enlarge';
     overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35); pointer-events: auto;`;
-    const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
+    const rawSrc = parent.dataset.fullSrc || parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
     const rawTitle = parent.dataset.title || rawAlt;
     const rawSubtitle = parent.dataset.subtitle || parent.dataset.date || '';
@@ -1364,6 +1438,7 @@ export default function DomeGallery({
                   data-href={it.href || ''}
                   data-href-label={it.hrefLabel || ''}
                   data-links={it.links?.length ? JSON.stringify(it.links) : ''}
+                  data-full-src={it.fullSrc || ''}
                   data-date={it.date || ''}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
@@ -1422,6 +1497,7 @@ export default function DomeGallery({
                     <img
                       src={it.src}
                       draggable={false}
+                      decoding="async"
                       alt={it.alt || it.title}
                       className="w-full h-full object-cover pointer-events-none"
                       style={{

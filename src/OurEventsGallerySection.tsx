@@ -8,6 +8,7 @@ import {
   getMemberProfileHref,
   getMemberPublicSocialLinks,
   getMemberSubtitle,
+  getMemberThumbAvatarUrl,
   type MemberProfile,
 } from '@/lib/member-profiles'
 import { useEnsureMemberProfile } from '@/lib/use-ensure-member-profile'
@@ -70,16 +71,21 @@ export function OurEventsGallerySection() {
     }
   }, [hasAuthConfigured])
 
-  const images = profiles.map((profile) => ({
-    id: profile.id,
-    src: profile.avatar_url,
-    alt: getMemberDisplayName(profile),
-    title: getMemberDisplayName(profile),
-    subtitle: getMemberSubtitle(profile),
-    href: getMemberProfileHref(profile),
-    hrefLabel: `Abrir perfil de ${getMemberDisplayName(profile)} en CuyoConnect`,
-    links: getMemberPublicSocialLinks(profile),
-  }))
+  const images = useMemo(
+    () =>
+      profiles.map((profile) => ({
+        id: profile.id,
+        src: getMemberThumbAvatarUrl(profile),
+        fullSrc: profile.avatar_url,
+        alt: getMemberDisplayName(profile),
+        title: getMemberDisplayName(profile),
+        subtitle: getMemberSubtitle(profile),
+        href: getMemberProfileHref(profile),
+        hrefLabel: `Abrir perfil de ${getMemberDisplayName(profile)} en CuyoConnect`,
+        links: getMemberPublicSocialLinks(profile),
+      })),
+    [profiles],
+  )
 
   const emptyStateMessage = hasAuthConfigured
     ? 'Todavia no hay personas visibles en la comunidad.'

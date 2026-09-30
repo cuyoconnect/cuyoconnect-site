@@ -10,17 +10,21 @@ import { POSTER_HEIGHT, POSTER_WIDTH, u } from './shared'
 export function PosterFrame({
   children,
   className,
+  width = POSTER_WIDTH,
+  height = POSTER_HEIGHT,
 }: {
   children: ReactNode
   className?: string
+  width?: number
+  height?: number
 }) {
   return (
     <div className="w-full [container-type:inline-size]">
       <div
         className={cn('relative w-full overflow-hidden', className)}
         style={{
-          aspectRatio: `${POSTER_WIDTH} / ${POSTER_HEIGHT}`,
-          ['--p' as string]: `calc(100cqw / ${POSTER_WIDTH})`,
+          aspectRatio: `${width} / ${height}`,
+          ['--p' as string]: `calc(100cqw / ${width})`,
         }}
       >
         {children}

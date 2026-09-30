@@ -45,6 +45,7 @@ export interface FlexCarouselProps extends Partial<PresetValues> {
   captureWheel?: boolean;
   onChange?: (index: number, item: FlexCarouselItem) => void;
   onSelect?: (index: number, item: FlexCarouselItem) => void;
+  controlsRef?: { current: FlexCarouselHandle | null };
   className?: string;
   style?: CSSProperties;
 }
@@ -114,7 +115,11 @@ interface Draw {
   alpha: number;
 }
 
-interface Engine {
+export interface FlexCarouselHandle {
+  nudge: (delta: number) => void;
+}
+
+interface Engine extends FlexCarouselHandle {
   wake: () => void;
   setItems: (items: FlexCarouselItem[]) => void;
 }
@@ -177,7 +182,12 @@ const BEND_PRESETS: Record<BendPreset, PresetValues> = {
 
 const FIT_ASPECT: Record<string, number> = { portrait: 0.75, square: 1, landscape: 4 / 3 };
 const TAPS = 12;
-const PIXEL_BUDGET = 4.5e6;
+const PIXEL_BUDGET = 3e6;
+const MIN_QUALITY = 0.55;
+const SLOW_FRAME_MS = 28;
+const IDLE_WAKE_MS = 250;
+const INTRO_NEAR_CARDS = 3;
+const INTRO_MAX_WAIT_MS = 2500;
 const INTRO_DURATION: Record<string, number> = { rise: 2.1, bloom: 1.6, spin: 2.2, deal: 1.5, fade: 0.35 };
 
 const wrap = (value: number, size: number) => ((((value + size / 2) % size) + size) % size) - size / 2;
@@ -372,10 +382,13 @@ const FlexCarousel = ({
   captureWheel = false,
   onChange,
   onSelect,
+  controlsRef,
   className = '',
   style
 }: FlexCarouselProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const controlsRefHolder = useRef(controlsRef);
+  controlsRefHolder.current = controlsRef;
   const settingsRef = useRef<Settings | null>(null);
   const itemsRef = useRef<FlexCarouselItem[]>(items ?? []);
   const engineRef = useRef<Engine | null>(null);
@@ -514,6 +527,15 @@ const FlexCarousel = ({
     let mode = 'spring';
     let wheelAt = 0;
     let raf = 0;
+    let idleTimer = 0;
+    let inFrame = false;
+    let chained = false;
+    let lastFrameAt = 0;
+    let frameMs = 16;
+    let slowStreak = 0;
+    let learnedQuality = 1;
+    let quality = 1;
+    let qualityChangedAt = 0;
     let last = performance.now();
     let visible = true;
     let alive = true;
@@ -779,25 +801,57 @@ const FlexCarousel = ({
       }
     };
 
-    const resize = () => {
-      width = Math.max(1, container.clientWidth);
-      height = Math.max(1, container.clientHeight);
-      renderer.dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (width * height)));
+    const applyResolution = () => {
+      renderer.dpr =
+        Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (width * height))) * quality;
       renderer.setSize(width, height);
       target.setSize(Math.max(2, Math.round(width * renderer.dpr)), Math.max(2, Math.round(height * renderer.dpr)));
       lensUniforms.tScene.value = target.texture;
+    };
+
+    const resize = () => {
+      width = Math.max(1, container.clientWidth);
+      height = Math.max(1, container.clientHeight);
+      applyResolution();
       dirty = true;
       start();
+    };
+
+    const setQuality = (next: number) => {
+      if (next === quality) return;
+      quality = next;
+      applyResolution();
+      dirty = true;
+    };
+
+    const schedule = () => {
+      if (raf || !alive) return;
+      chained = true;
+      raf = requestAnimationFrame(frame);
+    };
+
+    const scheduleIdleWake = () => {
+      if (idleTimer || !alive) return;
+      idleTimer = window.setTimeout(() => {
+        idleTimer = 0;
+        start();
+      }, IDLE_WAKE_MS);
     };
 
     const frame = (now: number) => {
       raf = 0;
       if (!alive) return;
+      inFrame = true;
+      const wasChained = chained;
+      chained = false;
+      const gap = now - lastFrameAt;
+      lastFrameAt = now;
       const s = settingsRef.current;
       const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
       last = now;
       if (!s || !slots.length) {
-        if (visible) raf = requestAnimationFrame(frame);
+        inFrame = false;
+        if (visible) schedule();
         return;
       }
 
@@ -819,8 +873,14 @@ const FlexCarousel = ({
       layout = m;
 
       if (!introState.running && !introState.done) {
-        const allSettled = slots.every(slot => slot.loaded || slot.failed);
-        if (allSettled || now - introState.readyAt > 3500) {
+        // Solo hace falta que estén listas las tarjetas cercanas al centro; el resto aparece
+        // con su fundido (`slot.ready`) a medida que llega, sin bloquear la intro.
+        const center = nearest(m, pos);
+        const nearSettled = slots.every((slot, i) => {
+          const dist = Math.abs(i - center);
+          return Math.min(dist, n - dist) > INTRO_NEAR_CARDS || slot.loaded || slot.failed;
+        });
+        if (nearSettled || now - introState.readyAt > INTRO_MAX_WAIT_MS) {
           goal = snapPoint(m, goal);
           pos = goal;
           beginIntro(s, m);
@@ -897,9 +957,8 @@ const FlexCarousel = ({
       ) {
         autoplayAt = now;
         step(m, 1);
+        animating = true;
       }
-      if (s.autoplay && !reducedMotion) animating = true;
-
       const travel = Math.abs(pos - lastPos) / dt;
       lastPos = pos;
       const energyTarget = reducedMotion ? 0 : Math.min(travel / 2600, 1);
@@ -954,8 +1013,23 @@ const FlexCarousel = ({
         animating = true;
 
       const cardH = m.cardH;
-      let halfW = (s.lensWidth * width) / 2;
-      let halfH = (s.lensHeight * width) / 2;
+      // Size the glass so only the center card stays flat. A wide desktop
+      // lens would otherwise leave a whole row of square photos in the middle.
+      let tilt = width < 760 ? Math.min(s.tilt, 12) : Math.min(s.tilt, 20);
+      let reach = Math.min(s.reach, 0.3);
+      const hhRatio = 1.15;
+      let halfW = cardH;
+      let halfH = halfW * hhRatio;
+      for (let pass = 0; pass < 2; pass++) {
+        const inner = Math.max(4, reach * (halfW + halfH) * 0.5);
+        const edgeAt = cardH * 0.5 + inner + cardH * 0.16;
+        const radians = (tilt * Math.PI) / 180;
+        const ca = Math.cos(radians);
+        const sa = Math.sin(radians);
+        halfW = edgeAt * Math.sqrt(ca * ca + (sa * sa) / (hhRatio * hhRatio));
+        halfW = Math.max(halfW, cardH * 0.72);
+        halfH = halfW * hhRatio;
+      }
       const squash = Math.abs(deform) * liquidAmount;
       halfW *= 1 + squash * 0.16;
       halfH *= 1 - squash * 0.08;
@@ -970,6 +1044,27 @@ const FlexCarousel = ({
       }
 
       const waiting = !introState.done;
+      const moving = animating || pointer.dragging;
+      if (moving) {
+        // Solo cuenta el ritmo sostenido: se ignoran los tirones aislados (>60 ms: cambio de pestaña,
+        // decodificación de imágenes, carga del iframe de Luma) para no bajar la calidad sin motivo.
+        if (wasChained && introState.done && gap < 60) {
+          frameMs += (gap - frameMs) * 0.12;
+          slowStreak = frameMs > SLOW_FRAME_MS ? slowStreak + 1 : 0;
+        }
+        if (slowStreak > 30 && learnedQuality > MIN_QUALITY) {
+          learnedQuality = Math.max(MIN_QUALITY, learnedQuality * 0.8);
+          qualityChangedAt = now;
+          frameMs = 16;
+          slowStreak = 0;
+        } else if (learnedQuality < 1 && frameMs < 20 && now - qualityChangedAt > 8000) {
+          learnedQuality = Math.min(1, learnedQuality / 0.8);
+          qualityChangedAt = now;
+        }
+        setQuality(learnedQuality);
+      } else if (learnedQuality < 1) {
+        setQuality(1);
+      }
       if (dirty || animating || pointer.dragging) {
         dirty = false;
         instances = [];
@@ -988,6 +1083,9 @@ const FlexCarousel = ({
             const fx = effects.card ? effects.card(rel) : null;
             let x = homeX + rel + (fx ? fx.x : 0);
             let scale = shrink * (fx ? fx.scale : 1);
+            const along = Math.abs(rel) / Math.max(w + s.gap, 1);
+            scale *= 1 / (1 + along * along * 0.22);
+            if (rel !== 0) x -= Math.sign(rel) * ((w * (1 - scale)) / 2);
             let alpha = fx ? fx.alpha : 1;
             if (focusAmount > 0) {
               if (i === focus.index && Math.abs(rel) < w) {
@@ -1039,11 +1137,11 @@ const FlexCarousel = ({
         lensUniforms.uDpr.value = dpr;
         lensUniforms.uCenter.value = [lensX, lens.y];
         lensUniforms.uHalf.value = [Math.max(halfW, 1), Math.max(halfH, 1)];
-        lensUniforms.uAngle.value = (s.tilt * Math.PI) / 180;
+        lensUniforms.uAngle.value = (tilt * Math.PI) / 180;
         lensUniforms.uExponent.value = 2 + Math.pow(1 - clamp01(s.roundness), 1.5) * 10;
         const spanW = Math.max(halfW, 1);
         const spanH = Math.max(halfH, 1);
-        const inner = Math.max(4, s.reach * (spanW + spanH) * 0.5);
+        const inner = Math.max(4, reach * (spanW + spanH) * 0.5);
         lensUniforms.uInner.value = inner;
         lensUniforms.uOuter.value = inner * 1.6;
         lensUniforms.uFlow.value = s.bend * (spanW + spanH) * 0.45;
@@ -1068,12 +1166,16 @@ const FlexCarousel = ({
         else container.removeAttribute('data-hover');
       }
 
-      if (visible && (animating || waiting || dirty || pointer.down)) raf = requestAnimationFrame(frame);
+      inFrame = false;
+      if (!visible) return;
+      if (animating || waiting || dirty || pointer.down) schedule();
+      else if (s.autoplay && !reducedMotion) scheduleIdleWake();
     };
 
     const start = () => {
-      if (raf || !visible || !alive) return;
+      if (raf || inFrame || !visible || !alive) return;
       last = performance.now();
+      lastFrameAt = last;
       raf = requestAnimationFrame(frame);
     };
 
@@ -1291,13 +1393,25 @@ const FlexCarousel = ({
     });
     intersectionObserver.observe(container);
 
-    engineRef.current = {
+    const nudge = (delta: number) => {
+      const s = settingsRef.current;
+      if (!s || !slots.length) return;
+      skipIntro();
+      closeFocus();
+      interactedAt = performance.now();
+      step(metrics(s), delta);
+    };
+
+    const engine: Engine = {
       wake: () => {
         dirty = true;
         start();
       },
-      setItems
+      setItems,
+      nudge
     };
+    engineRef.current = engine;
+    if (controlsRefHolder.current) controlsRefHolder.current.current = engine;
 
     resize();
     setItems(itemsRef.current);
@@ -1306,7 +1420,9 @@ const FlexCarousel = ({
       alive = false;
       visible = false;
       engineRef.current = null;
+      if (controlsRefHolder.current) controlsRefHolder.current.current = null;
       cancelAnimationFrame(raf);
+      window.clearTimeout(idleTimer);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       container.removeEventListener('pointerdown', onPointerDown);

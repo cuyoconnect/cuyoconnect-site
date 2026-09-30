@@ -8,7 +8,6 @@ import SiteFooter from '@/SiteFooter.astro'
 import { TeamSection } from '@/TeamSection'
 import { FaqSection } from '@/FaqSection'
 import OurEventsGalleryIsland from '@/components/OurEventsGalleryIsland'
-import GitHubProjectsIsland from '@/components/github-map/GitHubProjectsIsland'
 import {
   MEMBERS_GALLERY_HEADING,
   MEMBERS_GALLERY_INTRO,
@@ -85,22 +84,9 @@ const supabaseAnonKey =
       </div>
     </section>
   </OurEventsGalleryIsland>
-  <PastEventsSliderSection client:visible />
+  <PastEventsSliderSection client:visible={{ rootMargin: '900px' }} />
   <EventsSection client:visible />
   <TeamSection client:visible />
-  <GitHubProjectsIsland
-    client:only="react"
-    supabaseUrl={supabaseUrl}
-    supabaseAnonKey={supabaseAnonKey}
-  >
-    <section
-      slot="fallback"
-      class="px-4 py-16 sm:px-6 sm:py-20"
-      aria-hidden="true"
-    >
-      <div class="mx-auto h-[32rem] max-w-3xl animate-pulse rounded-[2rem] bg-neutral-100"></div>
-    </section>
-  </GitHubProjectsIsland>
   <FaqSection client:visible />
 </main>
 <SiteFooter />

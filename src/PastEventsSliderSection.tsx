@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { BlurText } from '@/components/ui/blur-text'
 import FlexCarousel from '@/components/ui/FlexCarousel'
-import type { FlexCarouselItem } from '@/components/ui/FlexCarousel'
+import type { FlexCarouselHandle, FlexCarouselItem } from '@/components/ui/FlexCarousel'
 import { HERO_CONTENT_WIDTH_CLASS } from '@/lib/content-width'
 import { heroTopicTailHighlight } from '@/lib/hero-topic-highlight'
 import { cn } from '@/lib/utils'
@@ -97,6 +98,7 @@ const EVENT_ITEMS: FlexCarouselItem[] = interleave(
 
 export function PastEventsSliderSection() {
   const tailHighlight = useMemo(() => heroTopicTailHighlight(2), [])
+  const carouselRef = useRef<FlexCarouselHandle | null>(null)
 
   return (
     <section
@@ -135,22 +137,55 @@ export function PastEventsSliderSection() {
         </p>
       </div>
 
-      <div className="relative h-[28rem] w-full sm:h-[32rem]">
+      <div
+        className={cn(
+          'relative mx-auto h-[26rem] w-full min-w-0 overflow-hidden sm:h-[34rem] lg:h-[38rem]',
+          HERO_CONTENT_WIDTH_CLASS,
+        )}
+      >
         <FlexCarousel
           className="flex-carousel--events"
+          controlsRef={carouselRef}
           items={EVENT_ITEMS}
           preset="liquid"
           intro="rise"
-          cardHeight={0.5}
-          gap={12}
+          cardHeight={0.62}
+          gap={8}
           radius={16}
           squeeze={0.2}
+          bend={0.5}
           focusOnClick
           captions
           fit="square"
           autoplay
           interval={4.5}
         />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 sm:w-8"
+          style={{ background: 'linear-gradient(to right, #ffffff, transparent)' }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 sm:w-8"
+          style={{ background: 'linear-gradient(to left, #ffffff, transparent)' }}
+          aria-hidden
+        />
+        <button
+          type="button"
+          aria-label="Foto anterior"
+          onClick={() => carouselRef.current?.nudge(-1)}
+          className="absolute top-[42%] left-2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-950 shadow-sm transition-colors hover:bg-neutral-50 sm:left-3"
+        >
+          <ChevronLeft className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          aria-label="Foto siguiente"
+          onClick={() => carouselRef.current?.nudge(1)}
+          className="absolute top-[42%] right-2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-950 shadow-sm transition-colors hover:bg-neutral-50 sm:right-3"
+        >
+          <ChevronRight className="h-5 w-5" aria-hidden />
+        </button>
       </div>
     </section>
   )

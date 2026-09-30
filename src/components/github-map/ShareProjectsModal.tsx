@@ -29,10 +29,7 @@ function GitHubMark({ className }: { className?: string }) {
 function oauthRedirectTo() {
   if (typeof window === 'undefined') return undefined
   const origin = window.location.origin
-  if (window.location.pathname === '/proyectos') {
-    return `${origin}/proyectos?thanks=proyectos`
-  }
-  return `${origin}/?thanks=proyectos#proyectos`
+  return `${origin}/proyectos?thanks=proyectos`
 }
 
 export function ShareProjectsModal({ open, onClose }: ShareProjectsModalProps) {

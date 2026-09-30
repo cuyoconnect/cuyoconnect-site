@@ -13,6 +13,8 @@ interface Props {
   /** `summary` encaja mejor con avatares cuadrados (GitHub). */
   twitterCard?: 'summary' | 'summary_large_image'
   preloadHeroImage?: boolean
+  /** Abre la conexión a los avatares de GitHub por adelantado (páginas con el globo de miembros). */
+  preconnectAvatars?: boolean
 }
 
 const {
@@ -24,6 +26,7 @@ const {
   ogImageHeight = 1080,
   twitterCard = 'summary_large_image',
   preloadHeroImage = false,
+  preconnectAvatars = false,
 } = Astro.props
 
 const siteUrl = (
@@ -86,6 +89,10 @@ const ogUrl = canonicalUrl || toAbsolute(Astro.url.pathname)
         href="/cuyo-connect-hero.webp"
         fetchpriority="high"
       />
+    ) : null}
+
+    {preconnectAvatars ? (
+      <link rel="preconnect" href="https://avatars.githubusercontent.com" />
     ) : null}
 
   </head>

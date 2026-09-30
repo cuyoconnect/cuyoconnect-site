@@ -1,0 +1,16 @@
+---
+import { SpeakerCallPosterPage } from '@/SpeakerCallPosterPage'
+import { SiteHeader } from '@/SiteHeader'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const title = 'Poster speakers — CuyoConnect'
+const description =
+  '¿Querés ser speaker? En CuyoConnect compartimos lo que estamos aprendiendo y construyendo. Mandanos tu propuesta.'
+---
+
+<BaseLayout title={title} description={description} canonical="/poster">
+  <SiteHeader client:load pathname="/poster" />
+  <main>
+    <SpeakerCallPosterPage client:load />
+  </main>
+</BaseLayout>

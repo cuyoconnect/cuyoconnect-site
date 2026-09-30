@@ -356,6 +356,25 @@ export function getMemberOgAvatarUrl(profile: MemberProfile): string | null {
   }
 }
 
+/**
+ * Avatar a tamaño de miniatura. GitHub devuelve 460px por defecto; en el domo cada tile mide ~120px,
+ * así que pedir `s=256` reduce a ~1/3 la memoria de decodificación/textura de GPU.
+ */
+export function getMemberThumbAvatarUrl(profile: MemberProfile, size = 256): string {
+  const raw = profile.avatar_url?.trim()
+  if (!raw) return ''
+  try {
+    const url = new URL(raw)
+    if (url.hostname.toLowerCase().endsWith('.githubusercontent.com')) {
+      url.searchParams.set('s', String(size))
+      return url.toString()
+    }
+  } catch {
+    return raw
+  }
+  return raw
+}
+
 export function getMemberSubtitle(profile: MemberProfile) {
   const login = profile.github_login.trim()
   if (login) return `@${login}`
