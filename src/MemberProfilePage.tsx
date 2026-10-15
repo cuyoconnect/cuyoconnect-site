@@ -1,13 +1,25 @@
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight, MapPin } from 'lucide-react'
+import { ArrowUpRight, QrCode } from 'lucide-react'
 import { toString as qrToSvgString } from 'qrcode'
 
+import { LogoQrCode } from '@/components/logo-qr/LogoQrCode'
+import { ProfileQrMorph, type QrMorphPhase } from '@/components/profile-qr/ProfileQrMorph'
+import {
+  loadAvatarSampler,
+  measureQrMorph,
+  type AvatarSampler,
+  type QrMorphLayout,
+} from '@/components/profile-qr/profile-qr-morph'
 import { SideCircuitDecor } from '@/components/SideCircuitDecor'
 import {
   getMemberDisplayName,
   getMemberPublicSocialLinks,
+  getMemberPublicUrl,
+  getMemberSlug,
+  getMemberThumbAvatarUrl,
+  isValidMemberSlug,
   type MemberProfile,
   type MemberProfileSocialLinkId,
 } from '@/lib/member-profiles'
@@ -187,16 +199,37 @@ const springPanel = {
 }
 
 function InteractiveProfileCardFrame({ children }: { children: ReactNode }) {
+  return <div className="relative [&_a]:relative [&_a]:z-10">{children}</div>
+}
+
+function ShareQrBody({ publicUrl }: { publicUrl: string }) {
+  const [qrView, setQrView] = useState<'logo' | 'qr'>('logo')
   return (
-    <div
-      className={cn(
-        'relative [&_a]:relative [&_a]:z-10 rounded-[2rem] bg-[rgba(255,255,255,0.97)]',
-        'shadow-[0_0_165px_68px_rgba(255,255,255,0.78),_0_0_330px_138px_rgba(255,255,255,0.52),_0_0_490px_195px_rgba(255,255,255,0.32),_0_40px_130px_-14px_rgba(15,_23,_42,_0.048),_0_80px_210px_-42px_rgba(255,_255,_255,_0.62),_0_120px_300px_-56px_rgba(15,_23,_42,_0.03)]',
-      )}
-    >
-      {children}
+    <div className="px-5 pb-6 pt-2 text-center">
+      <LogoQrCode
+        value={publicUrl}
+        fallback={
+          <QrFallback onShown={() => setQrView('qr')}>
+            <CuyoQrCode value={publicUrl} />
+          </QrFallback>
+        }
+        onViewChange={setQrView}
+      />
+      <p className="mt-4 text-sm font-medium text-neutral-950">
+        {qrView === 'qr' ? 'Escaneame para compartir' : 'Tocá el logo para revelar el QR'}
+      </p>
+      <p className="mt-1 break-all text-xs leading-relaxed text-neutral-500">
+        {publicUrl}
+      </p>
     </div>
   )
+}
+
+function QrFallback({ onShown, children }: { onShown: () => void; children: ReactNode }) {
+  useEffect(() => {
+    onShown()
+  }, [onShown])
+  return <>{children}</>
 }
 
 export function ProfileShareQrModal({
@@ -210,7 +243,6 @@ export function ProfileShareQrModal({
 }) {
   const titleId = useId()
   const reduceMotion = useReducedMotion()
-
   useEffect(() => {
     if (!open) return
     const onKeyDown = (e: KeyboardEvent) => {
@@ -292,15 +324,7 @@ export function ProfileShareQrModal({
                 </svg>
               </button>
             </div>
-            <div className="px-5 pb-6 pt-2 text-center">
-              <CuyoQrCode value={publicUrl} />
-              <p className="mt-4 text-sm font-medium text-neutral-950">
-                Escaneame para compartir
-              </p>
-              <p className="mt-1 break-all text-xs leading-relaxed text-neutral-500">
-                {publicUrl}
-              </p>
-            </div>
+            <ShareQrBody publicUrl={publicUrl} />
           </motion.div>
         </motion.div>
       )}
@@ -399,85 +423,191 @@ export function MemberProfilePage({
 
   if (!profile) return null
 
+  return <MemberProfileCard profile={profile} />
+}
+
+const QR_MORPH_ORIGIN = 'https://cuyoconnect.com'
+
+function MemberProfileCard({ profile }: { profile: MemberProfile }) {
+  const reduceMotion = useReducedMotion() ?? false
+  const cardRef = useRef<HTMLDivElement>(null)
+  const qrTriggerRef = useRef<HTMLButtonElement>(null)
+  const avatarSamplerRef = useRef<AvatarSampler | null>(null)
+  const [qrPhase, setQrPhase] = useState<QrMorphPhase>('idle')
+  const [qrLayout, setQrLayout] = useState<QrMorphLayout | null>(null)
+
   const displayName = getMemberDisplayName(profile)
   const socialLinks = getMemberPublicSocialLinks(profile)
+  const memberSlug = getMemberSlug(profile)
+  const publicUrl = isValidMemberSlug(memberSlug) ? getMemberPublicUrl(memberSlug, QR_MORPH_ORIGIN) : ''
+  const avatarSampleSrc = getMemberThumbAvatarUrl(profile, 64) || '/logo.png'
+  const qrActive = qrPhase === 'to-qr' || qrPhase === 'qr'
+
+  useEffect(() => {
+    let cancelled = false
+    void loadAvatarSampler(avatarSampleSrc).then((sampler) => {
+      if (!cancelled) avatarSamplerRef.current = sampler
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [avatarSampleSrc])
+
+  const openQr = () => {
+    const card = cardRef.current
+    if (!card || !publicUrl) return
+    setQrLayout(measureQrMorph(card, publicUrl, displayName, avatarSamplerRef.current))
+    setQrPhase('to-qr')
+  }
+
+  const closeQr = useCallback(() => {
+    setQrPhase((phase) => (phase === 'to-qr' || phase === 'qr' ? 'to-page' : phase))
+  }, [])
+
+  const handleQrSettled = useCallback((next: 'qr' | 'idle') => {
+    setQrPhase(next)
+    if (next === 'idle') qrTriggerRef.current?.focus({ preventScroll: true })
+  }, [])
+
+  useEffect(() => {
+    if (!qrActive) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeQr()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [qrActive, closeQr])
+
+  useEffect(() => {
+    if (qrPhase !== 'qr' || !publicUrl) return
+    const onResize = () => {
+      const card = cardRef.current
+      if (card) setQrLayout(measureQrMorph(card, publicUrl, displayName, avatarSamplerRef.current))
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [qrPhase, publicUrl, displayName])
 
   return (
     <ProfileShell>
       <article className="mx-auto w-full max-w-xl">
         <ProfileSocialMarkerTextureDefs />
         <InteractiveProfileCardFrame>
-          <div className="relative p-5 sm:p-6">
-            <header className="flex flex-col items-center text-center">
-              <div className="flex w-full flex-col items-center justify-center gap-5 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
-                <div className="shrink-0">
-                  <img
-                    src={profile.avatar_url || '/logo.png'}
-                    alt=""
-                    width={112}
-                    height={112}
-                    className="h-28 w-28 rounded-full border border-white/50 bg-white/20 object-cover shadow-[0_18px_44px_-24px_rgba(15,23,42,0.35)]"
-                  />
-                </div>
-                <div className="flex min-w-0 flex-col items-center text-center sm:items-start sm:text-left sm:pt-0.5">
-                  <h1 className="text-balance text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl [&::selection]:bg-[#fae673] [&::selection]:text-neutral-950">
-                    {displayName}
-                  </h1>
-                  <p className="mt-2 text-center text-sm text-neutral-500 sm:text-left">
-                    @{profile.slug}
-                  </p>
-                </div>
-              </div>
-              {profile.location ? (
-                <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-sm text-neutral-500">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  {profile.location}
-                </p>
-              ) : null}
-            </header>
-
-            <div className="mt-6 flex justify-center">
-              {socialLinks.length > 0 ? (
-                <nav
-                  className="flex w-full flex-row flex-wrap items-start justify-center gap-4 sm:gap-8"
-                  aria-label="Links sociales"
-                >
-                  {socialLinks.map((link) => (
-                    <a
-                      key={link.id}
-                      href={link.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group inline-flex min-w-20 flex-col items-center gap-3 text-center text-neutral-950 transition-opacity duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:opacity-80 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-neutral-400"
-                      aria-label={`Abrir ${link.label}`}
-                      title={link.label}
-                    >
-                      <span className="relative flex h-16 w-20 items-center justify-center">
-                        <ProfileSocialMarkerSpot className="-rotate-6 scale-95 opacity-95 transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:-rotate-3 group-hover:scale-100 group-hover:duration-[240ms] group-hover:delay-0" />
-                        <ProfileSocialIcon
-                          id={link.id}
-                          className="relative h-9 w-9 text-neutral-950 [filter:url(#profile-social-ink-roughen)] transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-hover:duration-[240ms] group-hover:delay-0"
-                        />
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="text-xs font-medium leading-none underline decoration-neutral-950/45 decoration-1 underline-offset-4">
-                          {link.displayLabel}
-                        </span>
-                        <ArrowUpRight
-                          className="h-3.5 w-3.5 shrink-0 text-neutral-950/50 transition-colors duration-[420ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-neutral-950/80 group-hover:duration-[240ms]"
-                          strokeWidth={2.25}
-                          aria-hidden
-                        />
-                      </span>
-                    </a>
-                  ))}
-                </nav>
-              ) : (
-                <p className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 px-5 py-4 text-center text-sm text-neutral-500">
-                  Este perfil todavía no tiene redes públicas en GitHub.
-                </p>
+          <div ref={cardRef} className="relative p-5 sm:p-6">
+            <div
+              inert={qrActive}
+              className={cn(
+                'relative isolate transition-[opacity,filter]',
+                qrActive
+                  ? 'opacity-0 blur-[6px] duration-300 ease-out'
+                  : 'opacity-100 blur-[0px] duration-500 ease-out',
               )}
+              style={{ transitionDelay: qrPhase === 'to-page' && !reduceMotion ? '520ms' : '0ms' }}
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-x-6 -inset-y-8 -z-10 rounded-[3rem] bg-white/95 blur-2xl sm:-inset-x-12 sm:-inset-y-10"
+              />
+              <header className="flex flex-col items-center text-center">
+                <div className="flex w-full flex-row items-center justify-center gap-4 sm:gap-6">
+                  <div className="relative shrink-0">
+                    <img
+                      data-qr-source="avatar"
+                      src={profile.avatar_url || '/logo.png'}
+                      alt=""
+                      width={112}
+                      height={112}
+                      className="h-20 w-20 rounded-full border border-white/50 bg-white/20 object-cover shadow-[0_18px_44px_-24px_rgba(15,23,42,0.35)] min-[420px]:h-24 min-[420px]:w-24 sm:h-28 sm:w-28"
+                    />
+                    {publicUrl ? (
+                      <button
+                        ref={qrTriggerRef}
+                        type="button"
+                        onClick={openQr}
+                        aria-label={`Mostrar el QR de ${displayName}`}
+                        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#1d1d1f] text-white shadow-[0_8px_18px_-8px_rgba(15,23,42,0.65)] transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:scale-105 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 sm:h-9 sm:w-9"
+                      >
+                        <QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} aria-hidden />
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="flex min-w-0 flex-col items-start text-left">
+                    <h1
+                      data-qr-source
+                      className="text-balance text-2xl font-semibold tracking-tight text-neutral-950 min-[420px]:text-3xl sm:text-4xl [&::selection]:bg-[#fae673] [&::selection]:text-neutral-950"
+                    >
+                      {displayName}
+                    </h1>
+                    <p data-qr-source className="mt-1.5 text-left text-sm text-neutral-500 sm:mt-2">
+                      @{profile.slug}
+                    </p>
+                  </div>
+                </div>
+              </header>
+
+              <div className="mt-6 flex justify-center">
+                {socialLinks.length > 0 ? (
+                  <nav
+                    className="flex w-full flex-row flex-wrap items-start justify-center gap-4 sm:gap-8"
+                    aria-label="Links sociales"
+                  >
+                    {socialLinks.map((link) => (
+                      <a
+                        key={link.id}
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group inline-flex min-w-20 flex-col items-center gap-3 text-center text-neutral-950 transition-opacity duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] hover:opacity-80 hover:duration-[240ms] hover:delay-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-neutral-400"
+                        aria-label={`Abrir ${link.label}`}
+                        title={link.label}
+                      >
+                        <span data-qr-spot className="relative flex h-16 w-20 items-center justify-center">
+                          <ProfileSocialMarkerSpot className="-rotate-6 scale-95 opacity-95 transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:-rotate-3 group-hover:scale-100 group-hover:duration-[240ms] group-hover:delay-0" />
+                          <span data-qr-source className="relative flex text-neutral-950">
+                            <ProfileSocialIcon
+                              id={link.id}
+                              className="relative h-9 w-9 text-neutral-950 [filter:url(#profile-social-ink-roughen)] transition-transform duration-[420ms] delay-[90ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105 group-hover:duration-[240ms] group-hover:delay-0"
+                            />
+                          </span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            data-qr-source
+                            className="text-xs font-medium leading-none underline decoration-neutral-950/45 decoration-1 underline-offset-4"
+                          >
+                            {link.displayLabel}
+                          </span>
+                          <ArrowUpRight
+                            className="h-3.5 w-3.5 shrink-0 text-neutral-950/50 transition-colors duration-[420ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-neutral-950/80 group-hover:duration-[240ms]"
+                            strokeWidth={2.25}
+                            aria-hidden
+                          />
+                        </span>
+                      </a>
+                    ))}
+                  </nav>
+                ) : (
+                  <p
+                    data-qr-source
+                    className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 px-5 py-4 text-center text-sm text-neutral-500"
+                  >
+                    Este perfil todavía no tiene redes públicas en GitHub.
+                  </p>
+                )}
+              </div>
             </div>
+
+            {qrLayout && qrPhase !== 'idle' ? (
+              <ProfileQrMorph
+                layout={qrLayout}
+                phase={qrPhase}
+                reducedMotion={reduceMotion}
+                name={displayName}
+                spot={<ProfileSocialMarkerSpot className="opacity-95" />}
+                onSettled={handleQrSettled}
+                onClose={closeQr}
+              />
+            ) : null}
           </div>
         </InteractiveProfileCardFrame>
       </article>
