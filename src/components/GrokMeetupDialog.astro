@@ -1,0 +1,254 @@
+---
+const dateWithTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/
+const startValue = import.meta.env.PUBLIC_GROK_MEETUP_START ?? ''
+const endValue = import.meta.env.PUBLIC_GROK_MEETUP_END ?? ''
+const start = Date.parse(startValue)
+const end = Date.parse(endValue)
+const enabled =
+  import.meta.env.PUBLIC_GROK_MEETUP_ENABLED === 'true' &&
+  dateWithTimezone.test(startValue) &&
+  dateWithTimezone.test(endValue) &&
+  start < end
+---
+
+{
+  enabled && (
+    <dialog
+      id="grok-meetup-dialog"
+      aria-labelledby="grok-meetup-title"
+      aria-describedby="grok-meetup-description"
+      data-start={start}
+      data-end={end}
+    >
+      <div class="meetup-art" aria-hidden="true">
+        <img data-src="/grok-meetup-poster.jpg" alt="" width="1200" height="1189" decoding="async" />
+      </div>
+      <div class="meetup-copy">
+        <p class="meetup-name">Grok Bot Meetup Mendoza</p>
+        <h2 id="grok-meetup-title">Canjeá tus créditos de Grok Bot</h2>
+        <p id="grok-meetup-description">
+          Si estás en el meetup, podés canjearlos desde acá.
+        </p>
+        <div class="meetup-actions">
+          <a
+            class="meetup-cta"
+            href="https://grok-bot-meetup.vercel.app/canjear-creditos"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Canjear créditos
+            <span aria-hidden="true">↗</span>
+            <span class="sr-only"> (abre en otra pestaña)</span>
+          </a>
+          <button
+            class="meetup-cta meetup-cta-secondary"
+            type="button"
+            aria-haspopup="dialog"
+            data-join-community
+          >
+            Unite a la comunidad
+          </button>
+        </div>
+      </div>
+      <form class="meetup-dismiss" method="dialog">
+        <button class="meetup-close" type="submit" aria-label="Cerrar aviso del meetup">
+          <span aria-hidden="true">×</span>
+        </button>
+      </form>
+    </dialog>
+  )
+}
+
+<script>
+  import { requestOpenJoinCommunityModal } from '@/lib/join-community-modal-request'
+
+  const dialog = document.querySelector<HTMLDialogElement>('#grok-meetup-dialog')
+
+  if (dialog && typeof dialog.showModal === 'function') {
+    const start = Number(dialog.dataset.start)
+    const end = Number(dialog.dataset.end)
+    const storageKey = `grok-meetup-dismissed:${start}:${end}`
+    const art = dialog.querySelector<HTMLImageElement>('img[data-src]')
+    const maxDelay = 2_147_483_647
+    let dismissed = false
+    let timer: number | undefined
+
+    try {
+      dismissed = !import.meta.env.DEV && sessionStorage.getItem(storageKey) === '1'
+    } catch {
+      // También funciona si el navegador tiene el almacenamiento deshabilitado.
+    }
+
+    const update = () => {
+      window.clearTimeout(timer)
+      const now = Date.now()
+
+      if (now >= end) {
+        if (dialog.open) dialog.close()
+        return
+      }
+
+      if (dismissed || document.hidden) return
+
+      if (now >= start && !dialog.open) {
+        if (art?.dataset.src) art.src = art.dataset.src
+        dialog.showModal()
+      }
+
+      const nextChange = now < start ? start : end
+      timer = window.setTimeout(update, Math.min(nextChange - now, maxDelay))
+    }
+
+    dialog.addEventListener('close', () => {
+      if (Date.now() >= end) return
+      dismissed = true
+      window.clearTimeout(timer)
+      try {
+        if (!import.meta.env.DEV) sessionStorage.setItem(storageKey, '1')
+      } catch {
+        // El cierre se conserva mientras la página siga abierta.
+      }
+    })
+    dialog.querySelector('[data-join-community]')?.addEventListener('click', () => {
+      dialog.close()
+      requestOpenJoinCommunityModal()
+    })
+    document.addEventListener('visibilitychange', update)
+    window.addEventListener('pageshow', update)
+    update()
+  }
+</script>
+
+<style>
+  dialog {
+    position: fixed;
+    inset: 0;
+    width: min(30rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #363636;
+    border-radius: 1.5rem;
+    background: #080808;
+    color: #fff;
+    box-shadow: 0 24px 90px #0008;
+  }
+
+  dialog::backdrop {
+    background: rgb(16 16 16 / 66%);
+    backdrop-filter: blur(5px);
+  }
+
+  .meetup-copy {
+    padding: 1.25rem clamp(1.5rem, 5vw, 2rem) 1.75rem;
+  }
+
+  .meetup-name {
+    color: #ffb54a;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  h2 {
+    margin-top: 0.75rem;
+    font-size: clamp(2.25rem, 6.25vw, 3.75rem);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.065em;
+    text-wrap: balance;
+  }
+
+  #grok-meetup-description {
+    margin-top: 1rem;
+    max-width: 30ch;
+    color: #ccc;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .meetup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 1.5rem;
+  }
+
+  .meetup-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    min-height: 2.875rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: 999px;
+    background: #fff;
+    color: #111;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .meetup-cta:hover {
+    background: #e9e9e9;
+  }
+
+  .meetup-cta-secondary {
+    background: transparent;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px #606060;
+    cursor: pointer;
+  }
+
+  .meetup-cta-secondary:hover {
+    background: #222;
+  }
+
+  .meetup-art {
+    margin: 1rem 1rem 0;
+    overflow: hidden;
+    border-radius: 1rem;
+    aspect-ratio: 1.55;
+  }
+
+  .meetup-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+  }
+
+  .meetup-dismiss {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+  }
+
+  .meetup-close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 50%;
+    background: #222;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .meetup-close:hover {
+    background: #393939;
+  }
+
+  :is(.meetup-cta, .meetup-close):focus-visible {
+    outline: 2px solid #ffb54a;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 38rem) {
+    .meetup-cta {
+      width: 100%;
+    }
+  }
+</style>
