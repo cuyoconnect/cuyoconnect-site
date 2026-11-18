@@ -47,7 +47,7 @@ export const RECURSO_COVER_FALLBACKS: readonly string[] = [
 export const RECURSOS: RecursoItem[] = [
   {
     id: 'grok-bot-valentin-mathey',
-    title: 'Mis bots trabajan mientras duermo: cómo armé un equipo de agentes de IA con su propio dashboard',
+    title: 'Cómo armé un equipo de agentes de IA con su propio dashboard',
     description: 'Presentación de Valentín Mathey en el encuentro Grok Bot.',
     speaker: 'Valentín Mathey',
     category: 'presentaciones',
@@ -58,7 +58,6 @@ export const RECURSOS: RecursoItem[] = [
     coverImage: '/recursos/valentin-portrait.webp',
     coverPosition: 'center top',
     colorOnHover: true,
-    hideDate: true,
   },
   {
     id: 'grok-bot-julio-marquez',
@@ -74,7 +73,6 @@ export const RECURSOS: RecursoItem[] = [
     coverImage: '/recursos/julio-portrait.webp',
     coverPosition: 'center top',
     colorOnHover: true,
-    hideDate: true,
   },
   {
     id: 'grok-bot-simon-puebla',
@@ -90,7 +88,6 @@ export const RECURSOS: RecursoItem[] = [
     colorOnHover: true,
     coverScale: 1.7,
     coverOrigin: '58% 55%',
-    hideDate: true,
   },
   {
     id: 'stellar-sprint-incuba-web3',
