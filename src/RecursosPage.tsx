@@ -169,7 +169,7 @@ export function RecursosPage() {
             {itemsOrdered.map((item, index) => {
               const coverSrc =
                 coverById.get(item.id) ?? RECURSO_COVER_FALLBACKS[0]!
-              const external = /^https?:\/\//i.test(item.href)
+              const external = /^https?:\/\//i.test(item.href ?? '')
               const ariaSuffix = external ? ' (se abre en una pestaña nueva)' : ''
 
               return (
@@ -183,10 +183,16 @@ export function RecursosPage() {
                   <ArchivePosterCard
                     variant={IS_SINGLE_RESOURCE_PAGE ? 'slider' : 'grid'}
                     imageSrc={coverSrc}
+                    imagePosition={item.coverPosition}
+                    colorOnHover={item.colorOnHover}
+                    imageScale={item.coverScale}
+                    imageOrigin={item.coverOrigin}
                     title={item.title}
                     dateLabel={item.date}
+                    hideDate={item.hideDate}
                     dateTime={item.dateSort}
                     href={item.href}
+                    subtitle={item.speaker}
                     ariaLabel={`${item.title}${ariaSuffix}`}
                     external={external}
                     cardIndex={index}

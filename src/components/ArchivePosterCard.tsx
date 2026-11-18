@@ -43,11 +43,18 @@ export type ArchivePosterVariant = 'slider' | 'grid'
 export type ArchivePosterCardProps = {
   variant: ArchivePosterVariant
   imageSrc: string
+  imagePosition?: 'right' | 'center top'
+  colorOnHover?: boolean
+  imageScale?: number
+  imageOrigin?: string
   title: string
   dateLabel: string
+  hideDate?: boolean
   /** Si está definido, la fecha se renderiza como `<time dateTime={…}>`. */
   dateTime?: string
-  href: string
+  href?: string
+  subtitle?: string
+  statusLabel?: string
   ariaLabel: string
   external?: boolean
   cardIndex: number
@@ -63,10 +70,17 @@ export type ArchivePosterCardProps = {
 export function ArchivePosterCard({
   variant,
   imageSrc,
+  imagePosition,
+  colorOnHover = false,
+  imageScale,
+  imageOrigin,
   title,
   dateLabel,
+  hideDate = false,
   dateTime,
   href,
+  subtitle,
+  statusLabel,
   ariaLabel,
   external = false,
   cardIndex,
@@ -141,7 +155,7 @@ export function ArchivePosterCard({
           'sm:size-9',
         )}
         style={{
-          opacity: isActiveCard ? 1 : 0,
+          opacity: isActiveCard && href ? 1 : 0,
           transform:
             reduceMotion === true
               ? undefined
@@ -156,7 +170,7 @@ export function ArchivePosterCard({
         <ArrowUpRightIcon className="size-3.5 shrink-0 sm:size-4" />
       </div>
 
-      <a
+      {href && <a
         href={href}
         className={cn(
           'absolute inset-0 z-30 rounded-2xl',
@@ -172,13 +186,20 @@ export function ArchivePosterCard({
               rel: 'noopener noreferrer',
             }
           : {})}
-      />
+      />}
 
       <div className="relative z-0 aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-200">
         <img
           src={imageSrc}
           alt={title}
           className="relative z-0 size-full object-cover object-center"
+          style={{
+            objectPosition: imagePosition,
+            transform: imageScale ? `scale(${imageScale})` : undefined,
+            transformOrigin: imageOrigin,
+            filter: colorOnHover ? `grayscale(${isActiveCard ? 0 : 1})` : undefined,
+            transition: colorOnHover && reduceMotion !== true ? 'filter 420ms ease' : undefined,
+          }}
           width={400}
           height={500}
           loading="lazy"
@@ -195,10 +216,11 @@ export function ArchivePosterCard({
             aria-hidden
           />
           <div className="relative z-10 px-4 pb-5 pt-5 sm:px-5 sm:pb-6">
+            {subtitle && <p className="mb-1 text-xs text-white/90">{subtitle}</p>}
             <h3 className="text-balance text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)] sm:text-base">
               {title}
             </h3>
-            <p
+            {!hideDate && <p
               className={cn(
                 'mt-0.5 flex items-center gap-1 text-[11px] font-normal leading-relaxed text-white/90',
                 'sm:mt-1 sm:gap-1.5 sm:text-xs',
@@ -213,7 +235,8 @@ export function ArchivePosterCard({
               ) : (
                 <span className="leading-none">{dateLabel}</span>
               )}
-            </p>
+            </p>}
+            {statusLabel && <p className="mt-2 text-xs text-white/90">{statusLabel}</p>}
           </div>
         </div>
       </div>
