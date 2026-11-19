@@ -193,6 +193,7 @@ export function RecursosPage() {
                     dateTime={item.dateSort}
                     href={item.href}
                     subtitle={item.speaker}
+                    links={item.links}
                     ariaLabel={`${item.title}${ariaSuffix}`}
                     external={external}
                     cardIndex={index}

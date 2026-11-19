@@ -54,6 +54,7 @@ export type ArchivePosterCardProps = {
   dateTime?: string
   href?: string
   subtitle?: string
+  links?: { label: string; href: string }[]
   statusLabel?: string
   ariaLabel: string
   external?: boolean
@@ -80,6 +81,7 @@ export function ArchivePosterCard({
   dateTime,
   href,
   subtitle,
+  links,
   statusLabel,
   ariaLabel,
   external = false,
@@ -206,7 +208,7 @@ export function ArchivePosterCard({
           decoding="async"
           draggable={false}
         />
-        <div className="absolute inset-x-0 bottom-0 z-10">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
           <div
             className={cn(
               'absolute inset-0 -top-16 bg-neutral-950/40 backdrop-blur-md backdrop-saturate-125 sm:-top-22',
@@ -236,6 +238,17 @@ export function ArchivePosterCard({
                 <span className="leading-none">{dateLabel}</span>
               )}
             </p>}
+            {links && <div className="mt-3 flex flex-wrap gap-3">
+              {links.map(link => <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto rounded text-xs font-medium text-white underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+                onFocus={() => setLinkFocused(true)}
+                onBlur={() => setLinkFocused(false)}
+              >{link.label}<span className="sr-only"> (se abre en una pestaña nueva)</span></a>)}
+            </div>}
             {statusLabel && <p className="mt-2 text-xs text-white/90">{statusLabel}</p>}
           </div>
         </div>

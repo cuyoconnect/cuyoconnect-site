@@ -15,6 +15,7 @@ export type RecursoItem = {
   kind: RecursoKind
   /** URL pública; omitir cuando el material todavía no está disponible. */
   href?: string
+  links?: { label: string; href: string }[]
   linkLabel?: string
   speaker?: string
   /** Fecha legible (mismo criterio que eventos en la landing). */
@@ -76,6 +77,11 @@ export const RECURSOS: RecursoItem[] = [
   },
   {
     id: 'grok-bot-simon-puebla',
+    href: 'https://www.anden.tech/',
+    links: [
+      { label: 'Anden', href: 'https://www.anden.tech/' },
+      { label: 'Ver publicación en X', href: 'https://x.com/simonpuebla_/status/2117363673723195466' },
+    ],
     title: 'Grokbot y negocio: cómo ponerlo a conseguir reuniones para tu empresa',
     description: 'Charla de Simón Puebla en el encuentro Grok Bot.',
     speaker: 'Simón Puebla',
